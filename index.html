@@ -29,15 +29,64 @@ label{display:block;font-size:13px;color:var(--mu);text-align:left}
 .ghost{background:transparent;border:1px solid var(--bd);border-radius:12px;padding:10px 14px;cursor:pointer}
 .danger{color:var(--red);border-color:var(--red)}
 .err{color:var(--red);font-size:14px;min-height:20px}
-header{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;background:var(--bg);border-bottom:1px solid var(--bd)}
-header h1{font-size:20px;margin:0}
-header button{background:none;border:0;font-size:20px;cursor:pointer}
-main{padding:12px 16px 120px;max-width:720px;margin:0 auto;min-height:calc(100vh - 56px)}
-nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom);z-index:5}
-nav button{flex:1;background:none;border:0;padding:8px 0 10px;font-size:11px;color:var(--mu);cursor:pointer}
-nav button span{display:block;font-size:20px}
-nav button.on{color:var(--pri);font-weight:600}
-#fab{position:fixed;right:18px;bottom:calc(76px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;border:0;background:var(--pri);color:var(--on-pri);font-size:28px;box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer;z-index:6}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(14px + env(safe-area-inset-top)) 16px 10px;background:var(--bg);max-width:720px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand img{width:34px;height:34px;border-radius:9px;display:block}
+.brand h1{font-size:24px;font-weight:800;letter-spacing:-.01em;margin:0;white-space:nowrap}
+.hbtns{display:flex;gap:8px}
+.icobtn{width:40px;height:40px;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);display:grid;place-items:center;padding:0;cursor:pointer}
+.icobtn svg{width:20px;height:20px}
+.ptitle{font-size:22px;font-weight:800;margin:4px 0 8px}
+#searchBar{display:flex;gap:8px;align-items:center;max-width:720px;margin:0 auto;padding:0 16px 6px}
+#searchBar input{margin:0;flex:1}
+#searchBar button{background:none;border:0;color:var(--pri);font-weight:600;cursor:pointer;padding:8px 4px}
+.hit{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:10px 14px;margin:0 0 8px;cursor:pointer;color:var(--tx)}
+.hit .ai{width:36px;height:36px;flex:none;border-radius:10px;background:var(--pri2);color:var(--pri);display:grid;place-items:center}
+.hit .ai svg{width:19px;height:19px}
+.hit .at{flex:1;min-width:0;display:grid;line-height:1.3}
+.hit .at small{color:var(--mu);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+main{padding:4px 16px 140px;max-width:720px;margin:0 auto;min-height:calc(100vh - 56px)}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav .in{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav button{background:none;border:0;padding:6px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;color:var(--mu);cursor:pointer}
+nav button i{display:grid;place-items:center;width:60px;height:30px;border-radius:99px;transition:background .2s}
+nav button svg{width:22px;height:22px}
+nav button.on{color:var(--pri);font-weight:700}
+nav button.on i{background:var(--pri2)}
+#fab{position:fixed;right:18px;bottom:calc(80px + env(safe-area-inset-bottom));height:54px;min-width:54px;padding:0 20px 0 16px;border-radius:18px;border:0;background:var(--pri);color:var(--on-pri);font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(60,10,25,.3);cursor:pointer;z-index:24;transition:border-radius .3s,padding .3s}
+#fab svg{width:20px;height:20px;transition:transform .4s cubic-bezier(.3,1.35,.5,1)}
+#fab .lbl{display:inline-block;max-width:4em;margin-left:8px;overflow:hidden;white-space:nowrap;transition:max-width .28s,margin .28s,opacity .2s}
+#fab.open{border-radius:50%;padding:0}
+#fab.open svg{transform:rotate(135deg)}
+#fab.open .lbl{max-width:0;margin-left:0;opacity:0}
+.fan{position:fixed;inset:0;z-index:22}
+.fan .fs{position:absolute;inset:0;background:rgba(20,5,10,.32);opacity:0;transition:opacity .22s}
+.fan.show .fs{opacity:1}
+.fan .fi{position:absolute;right:18px;bottom:calc(146px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.fan .fi button{display:flex;align-items:center;gap:10px;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:14px;padding:12px 16px;font-weight:700;font-size:16px;box-shadow:0 4px 14px rgba(0,0,0,.14);cursor:pointer;opacity:0;transform:translateY(12px) scale(.96)}
+.fan.show .fi button{opacity:1;transform:none;transition:opacity .2s,transform .42s cubic-bezier(.3,1.35,.5,1);transition-delay:calc(var(--n) * 45ms)}
+.fan .fi svg{width:20px;height:20px;color:var(--pri);flex:none}
+#sheet{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-end;justify-content:center}
+#sheet .sbg{position:absolute;inset:0;background:rgba(20,5,10,.38);opacity:0;transition:opacity .25s}
+#sheet.show .sbg{opacity:1}
+#spanel{position:relative;background:var(--card);width:100%;max-width:720px;max-height:92%;overflow-y:auto;overscroll-behavior:contain;border-radius:20px 20px 0 0;padding:8px 16px calc(20px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .32s cubic-bezier(.2,.85,.25,1)}
+#sheet.show #spanel{transform:none}
+.grab{width:44px;height:5px;border-radius:3px;background:var(--bd);margin:2px auto 10px}
+.shead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
+.shead h2{font-size:22px;font-weight:800;margin:0}
+.sintro{display:flex;gap:8px;align-items:flex-start;font-size:14px;color:var(--mu);margin:0 0 14px}
+.sintro svg{width:18px;height:18px;flex:none;color:var(--ok);margin-top:1px}
+.acc{border:1px solid var(--bd);border-radius:14px;background:var(--card);margin-bottom:10px;overflow:hidden}
+.acc>summary{list-style:none;display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer}
+.acc>summary::-webkit-details-marker{display:none}
+.acc .ai{width:36px;height:36px;flex:none;border-radius:10px;background:var(--pri2);color:var(--pri);display:grid;place-items:center}
+.acc .ai svg{width:19px;height:19px}
+.acc .at{flex:1;min-width:0;display:grid;line-height:1.3;font-weight:800}
+.acc .at small{color:var(--mu);font-size:13px;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acc .chev{width:20px;height:20px;color:var(--mu);flex:none;transition:transform .25s}
+.acc[open] .chev{transform:rotate(180deg)}
+.accb{padding:4px 14px 14px;border-top:1px solid var(--bd)}
+@media (prefers-reduced-motion:reduce){#spanel,#sheet .sbg,.fan .fs,.fan .fi button,#fab,#fab svg,#fab .lbl{transition:none!important}}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:14px;margin:10px 0}
 .card h3{margin:0 0 4px;font-size:16px}
 .meta{color:var(--mu);font-size:14px}
@@ -88,7 +137,6 @@ svg.chart{width:100%;height:auto;background:var(--card);border:1px solid var(--b
 .recent small{display:block;font-size:12px;opacity:.75;overflow:hidden;text-overflow:ellipsis}
 .recent .chev{opacity:.6}
 .chipdoc{display:inline-block;font-size:13px;padding:4px 10px;border-radius:999px;background:var(--pri2);color:var(--pri);border:0;margin:6px 6px 0 0;cursor:pointer}
-nav button{font-size:11px!important}
 .hello{font-size:22px;font-weight:700;margin:6px 0 2px}
 .status{font-size:13px;color:var(--mu);margin-bottom:6px;background:none;border:0;padding:0;text-align:left;cursor:pointer}
 .status.bad{color:var(--red)}
@@ -150,16 +198,25 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 </div>
 
 <div id="app" hidden>
-  <header><h1 id="title">Termine</h1><button id="lockNow" title="Sperren" aria-label="Sperren">🔒</button></header>
+  <header><div class="brand"><img src="icon-192.png" alt="" width="34" height="34"><h1>MyGesundBox</h1></div>
+    <div class="hbtns"><button class="icobtn" id="searchBtn" type="button" aria-label="Suchen" title="Suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg></button><button class="icobtn" id="lockNow" type="button" aria-label="Sperren" title="Sperren"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></button><button class="icobtn" id="menuBtn" type="button" aria-label="Daten &amp; Sicherheit" title="Daten &amp; Sicherheit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button></div></header>
+  <div id="searchBar" hidden><input id="q" type="search" placeholder="Termine, Ärzte, Dokumente …" autocomplete="off" aria-label="Suchen"><button type="button" id="qX">Fertig</button></div>
   <main id="main"></main>
-  <button id="fab" aria-label="Neu">+</button>
-  <nav>
-    <button data-tab="start" class="on"><span>🏠</span>Start</button>
-    <button data-tab="termine"><span>📅</span>Termine</button>
-    <button data-tab="werte"><span>📈</span>Werte</button>
-    <button data-tab="dok"><span>📄</span>Dokumente</button>
-    <button data-tab="mehr"><span>⚙️</span>Mehr</button>
-  </nav>
+  <div class="fan" id="fan" hidden><div class="fs"></div><div class="fi">
+    <button type="button" data-act="q-dok" style="--n:4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>Dokument fotografieren</button>
+    <button type="button" data-act="q-termin" style="--n:3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Termin</button>
+    <button type="button" data-act="q-wert" style="--n:2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>Messung</button>
+    <button type="button" data-act="q-arzt" style="--n:1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/><path d="M12 14v4M10 16h4"/></svg>Arzt</button>
+    <button type="button" data-act="q-vorsorge" style="--n:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>Vorsorge</button>
+  </div></div>
+  <button id="fab" type="button" aria-expanded="false" aria-controls="fan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="lbl">Neu</span></button>
+  <nav aria-label="Bereiche"><div class="in">
+    <button type="button" data-tab="start" class="on"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></i>Start</button>
+    <button type="button" data-tab="termine"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></i>Termine</button>
+    <button type="button" data-tab="werte"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16"/><path d="M5 15l4-5 4 3 6-7"/></svg></i>Werte</button>
+    <button type="button" data-tab="dok"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></i>Dokumente</button>
+  </div></nav>
+  <div id="sheet" hidden><div class="sbg"></div><div id="spanel" role="dialog" aria-modal="true" aria-labelledby="sheetH"><div class="grab"></div><div class="shead"><h2 id="sheetH">Daten &amp; Sicherheit</h2><button type="button" class="icobtn" id="sheetX" aria-label="Schließen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div id="sheetBody"></div></div></div>
 </div>
 
 <dialog id="dlg"><form id="dlgForm" autocomplete="off"></form></dialog>
@@ -170,7 +227,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <script>
 'use strict';
-const APP_VERSION='2.1.2';
+const APP_VERSION='2.2.0';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -286,6 +343,7 @@ function save(opt){
 /* ---------- Sperrbildschirm ---------- */
 function showLock(auto){
   KEY=null;D=null;FKEY=null;LOCKING=true;closeDlg();LOCKING=false;CUR_FORM=null;closeViewer();
+  try{setFan(false);const sh=$('#sheet');sh.classList.remove('show');sh.hidden=true;SEARCH=null;$('#searchBar').hidden=true}catch{}
   $('#verLock').textContent='Version '+APP_VERSION;
   $('#app').hidden=true;$('#lock').hidden=false;
   const has=!!vaultJson;
@@ -527,15 +585,39 @@ const wDate=w=>w.cnt?fmtD(w.datum.slice(0,10))+' · Tageswert aus '+w.cnt+' Mess
 function wertText(w){if(w.typ==='puls'&&w.min!=null)return `Ø ${fmtNum(w.v1,0)} bpm · ${fmtNum(w.min,0)}–${fmtNum(w.max,0)}`;if(w.typ==='bp')return `${fmtNum(w.v1,0)}/${fmtNum(w.v2,0)} mmHg${w.v3!=null?' · Puls '+fmtNum(w.v3,0):''}`;return `${fmtNum(w.v1)} ${TYP[w.typ]?.u||''}`}
 
 /* ---------- Rendering ---------- */
+/* ---------- Suche, Menü (Daten & Sicherheit), Neu-Auswahl – wie in der MyBelegBox ---------- */
+let SEARCH=null;const ACC_OPEN=new Set();
+const sheetOpen=()=>!$('#sheet').hidden;
+const ICON={cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>',lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',doctor:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/><path d="M12 14v4M10 16h4"/></svg>',repeat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>',down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',import:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>',pkg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>',list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>'};
+const icon=k=>ICON[k]||'';
+function rSearch(){
+  const q=SEARCH.trim().toLowerCase();
+  if(!q)return '<div class="empty">Suche in Terminen, Ärzten, Vorsorge und Dokumenten.</div>';
+  const has=(...f)=>f.some(x=>String(x||'').toLowerCase().includes(q));
+  const row=(act,id,ic,t,sub)=>`<button class="hit" data-act="${act}" data-id="${esc(id)}"><span class="ai">${icon(ic)}</span><span class="at">${esc(t)}<small>${esc(sub)}</small></span></button>`;
+  let h='',n=0;const grp=(title,items)=>{if(items.length){n+=items.length;h+=`<div class="sec">${title}</div>`+items.join('')}};
+  grp('Termine',D.termine.filter(t=>has(t.titel,t.notiz,t.fragen,t.nachher,t.ort,arzt(t.arztId)?.name)).sort((a,b)=>b.datum.localeCompare(a.datum)).map(t=>row('t-edit',t.id,'cal',t.titel,fmtDT(t.datum)+(arzt(t.arztId)?' · '+arzt(t.arztId).name:''))));
+  grp('Ärzte',D.aerzte.filter(a=>has(a.name,a.fach,a.adresse,a.notiz,a.tel)).map(a=>row('a-edit',a.id,'doctor',a.name,[a.fach,a.tel].filter(Boolean).join(' · '))));
+  grp('Vorsorge',D.vorsorge.filter(v=>has(v.name,v.notiz)).map(v=>row('v-edit',v.id,'repeat',v.name,vStatus(v).txt)));
+  grp('Dokumente',D.dokumente.filter(d=>has(dokTitel(d),d.notiz,DOKTYP[d.typ],arzt(d.arztId)?.name)).map(d=>row('d-view',d.id,'doc',dokTitel(d),(DOKTYP[d.typ]||'Dokument')+(d.datum?' · '+fmtD(d.datum):''))));
+  return n?h:`<div class="empty">Nichts gefunden für „${esc(SEARCH.trim())}“.</div>`;
+}
+function openSearch(){if(sheetOpen())closeSheet();setFan(false);SEARCH='';$('#searchBar').hidden=false;render();$('#q').value='';$('#q').focus()}
+function closeSearch(){SEARCH=null;$('#searchBar').hidden=true;$('#q').blur();render()}
+function openSheet(){setFan(false);const sh=$('#sheet');sh.hidden=false;$('#sheetBody').innerHTML=rMehr();setTimeout(showStorage,0);$('#spanel').scrollTop=0;requestAnimationFrame(()=>requestAnimationFrame(()=>sh.classList.add('show')));buzz(6)}
+function closeSheet(){const sh=$('#sheet');if(sh.hidden)return;sh.classList.remove('show');setTimeout(()=>{if(!sh.classList.contains('show'))sh.hidden=true},motion()?300:0)}
+function setFan(on){const f=$('#fan'),b=$('#fab');if(!f)return;b.classList.toggle('open',on);b.setAttribute('aria-expanded',on);
+  if(on){f.hidden=false;requestAnimationFrame(()=>requestAnimationFrame(()=>f.classList.add('show')));buzz(6)}
+  else{f.classList.remove('show');setTimeout(()=>{if(!f.classList.contains('show'))f.hidden=true},motion()?220:0)}}
 const TITLES={start:'MyGesundBox',termine:'Termine',aerzte:'Ärzte',vorsorge:'Vorsorge',werte:'Werte',dok:'Dokumente',mehr:'Mehr'};
 function render(keep){
   if(!D)return;const y=window.scrollY;
-  $('#title').textContent=TITLES[TAB];
   const navTab=['aerzte','vorsorge'].includes(TAB)?'termine':TAB;
-  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===navTab));
-  $('#fab').hidden=TAB==='mehr'||TAB==='start';
-  if(TAB==='mehr')setTimeout(showStorage,0);
-  $('#main').innerHTML=(['termine','aerzte','vorsorge'].includes(TAB)?segBar():'')+({start:rStart,termine:rTermine,aerzte:rAerzte,vorsorge:rVorsorge,werte:rWerte,dok:rDok,mehr:rMehr})[TAB]();
+  document.querySelectorAll('nav button').forEach(b=>{const on=b.dataset.tab===navTab;b.classList.toggle('on',on);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+  $('#fab').hidden=SEARCH!==null;
+  if(sheetOpen()){$('#sheetBody').innerHTML=rMehr();setTimeout(showStorage,0)}
+  if(SEARCH!==null){$('#main').innerHTML=rSearch();return}
+  $('#main').innerHTML=(['werte','dok'].includes(TAB)?`<h2 class="ptitle">${TITLES[TAB]}</h2>`:'')+(['termine','aerzte','vorsorge'].includes(TAB)?segBar():'')+({start:rStart,termine:rTermine,aerzte:rAerzte,vorsorge:rVorsorge,werte:rWerte,dok:rDok})[TAB]();
   window.scrollTo(0,keep?y:0);
 }
 function segBar(){
@@ -685,22 +767,24 @@ function rWerte(){
 function avg(list,k){const v=list.slice(-30).map(x=>x[k]).filter(x=>x!=null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null}
 function rMehr(){
   const g=bkCfg(),lb=D.meta.lastBackup;
-  return `<div class="sec">Sicherung</div>
-  <div class="card">
+  const acc=(k,ic,t,sub,body,force)=>`<details class="acc" data-k="${k}"${ACC_OPEN.has(k)||force?' open':''}><summary><span class="ai">${icon(ic)}</span><span class="at">${t}<small>${sub}</small></span>${icon('chev').replace('<svg','<svg class="chev"')}</summary><div class="accb">${body}</div></details>`;
+  const bio=bioSupported()&&lsGet(BKEY);
+  return `<div class="sintro">${icon('shield')}<span>Verschlüsselt mit AES-256 · sperrt nach 5 Min. ohne Eingabe oder 1 Min. im Hintergrund</span></div>`
+  +acc('sec','lock','Sicherheit','Passwort · Fingerabdruck '+(bio?'an':'aus'),`<div class="meta" style="margin-top:12px">Alle Daten liegen verschlüsselt auf diesem Gerät und werden nirgendwohin gesendet – außer in deine eigene GitHub-Sicherung (ebenfalls verschlüsselt).</div><div class="acts">${bioSupported()?(lsGet(BKEY)?'<button data-act="bio-off">👆 Fingerabdruck deaktivieren</button>':'<button data-act="bio-on">👆 Fingerabdruck einrichten</button>'):''}<button data-act="pw-change">🔑 Passwort ändern</button><button data-act="wipe" class="danger">🗑️ Alle Daten löschen</button></div>`)
+  +acc('bk','down','Sicherung',(g?'GitHub '+(bkStat.err?'⚠️ Problem':'an'):'GitHub aus')+' · '+(lb?'Datei '+fmtD(lb):'keine Datei'),`
+    <div class="srow" style="margin-top:8px"><span>☁️ GitHub</span><span class="meta" id="bkStatus">${g?bkText():'nicht eingerichtet'}</span></div>
     <div class="srow"><span>☁️ GitHub</span><span class="meta" id="bkStatus">${g?bkText():'nicht eingerichtet'}</span></div>
     <div class="srow" style="border:0"><span>💾 Sicherungsdatei</span><span class="meta">${lb?'zuletzt '+esc(fmtD(lb)):'noch keine'}</span></div>
     ${g&&bkStat.conflict?`<div class="conflict">Im Repo liegt ein anderer Tresor (z. B. von einem früheren Gerät). Er bleibt in der Versionsgeschichte von GitHub erhalten, wenn du ihn ersetzt.<div class="acts"><button data-act="bk-pull">⬇️ GitHub-Stand laden</button><button data-act="bk-force" class="danger">⬆️ Durch diesen Tresor ersetzen</button></div></div>`:''}
     <div class="acts">${g?'<button data-act="bk-now">☁️ Jetzt sichern</button>':'<button data-act="bk-setup">☁️ GitHub einrichten</button>'}<button data-act="bk-export">💾 Datei erstellen</button><button data-act="bk-restore">📂 Wiederherstellen</button></div>
     <div class="hint">${g?`GitHub sichert automatisch nach jeder Änderung in <b>${esc(g.owner)}/${esc(g.repo)}</b>.`:'Mit GitHub wird nach jeder Änderung automatisch gesichert.'} Die Datei ist eine zusätzliche Kopie, die du selbst ablegst. Beides ist mit deinem Passwort verschlüsselt.</div>
-    ${g?'<details><summary>GitHub-Sicherung trennen</summary><div class="acts"><button data-act="bk-off">✖ Trennen</button></div></details>':''}
-  </div>
-  <div class="sec">Sicherheit</div><div class="card"><div class="meta">Alle Daten liegen verschlüsselt (AES-256) auf diesem Gerät. Automatische Sperre nach 5 Minuten Inaktivität oder 1 Minute im Hintergrund.</div><div class="acts">${bioSupported()?(lsGet(BKEY)?'<button data-act="bio-off">👆 Fingerabdruck deaktivieren</button>':'<button data-act="bio-on">👆 Fingerabdruck einrichten</button>'):''}<button data-act="pw-change">🔑 Passwort ändern</button><button data-act="wipe" class="danger">🗑️ Alle Daten löschen</button></div></div>
-  <div class="sec">Importieren</div><div class="card"><div class="acts"><button data-act="ics-import">📅 Termine aus .ics</button><button data-act="csv-import">📈 Werte aus CSV / Samsung Health</button></div>
+    ${g?'<details><summary>GitHub-Sicherung trennen</summary><div class="acts"><button data-act="bk-off">✖ Trennen</button></div></details>':''}`,g&&(bkStat.conflict||bkStat.err))
+  +acc('imp','import','Importieren','Termine (.ics) · Werte (CSV, Samsung Health)',`<div class="acts"><button data-act="ics-import">📅 Termine aus .ics</button><button data-act="csv-import">📈 Werte aus CSV / Samsung Health</button></div>
     <div class="hint">Samsung Health: Im Export-Ordner einfach <b>alle Dateien</b> auswählen – die MyGesundBox nimmt sich Blutdruck, Puls (als Tageswert) und Gewicht selbst heraus.</div>
-    <div class="hint">Tipp: In anderen Apps auf <b>Teilen → MyGesundBox</b> tippen. So kommen Terminbestätigungen (.ics oder Text), CSV-Messwerte, Samsung-Health-Exporte (CSV oder ZIP) sowie Fotos und PDFs (z. B. Arztbriefe) direkt hierher.</div></div>
-  <div class="sec">App-Update</div><div class="card">${D.github?`<div class="meta">Verbunden mit ${esc(D.github.repo)}</div><div class="acts"><button data-act="gh-upload">📦 Update-Zip hochladen</button><button data-act="gh-setup">🔧 Verbindung ändern</button><button data-act="gh-off">✖ Trennen</button></div>`:`<div class="meta">Neue Versionen als Zip direkt aus der App ins GitHub-Repo laden.</div><div class="acts"><button data-act="gh-setup">🔗 GitHub verbinden</button></div>`}<div id="updStatus" class="note" style="margin-top:8px">${UPD}</div></div>
-  <div class="sec">Übersicht</div><div class="card meta">${D.termine.length} Termine · ${D.aerzte.length} Ärzte · ${D.vorsorge.length} Vorsorge · ${D.werte.length} Messwerte · ${D.dokumente.length} Dokumente<br><span id="stor"></span></div>
-  <p class="meta" style="text-align:center">MyGesundBox · Version ${APP_VERSION}<br>Kein Ersatz für ärztlichen Rat.</p>`;
+    <div class="hint">Tipp: In anderen Apps auf <b>Teilen → MyGesundBox</b> tippen. So kommen Terminbestätigungen (.ics oder Text), CSV-Messwerte, Samsung-Health-Exporte (CSV oder ZIP) sowie Fotos und PDFs (z. B. Arztbriefe) direkt hierher.</div>`)
+  +acc('upd','pkg','App-Update','Version '+APP_VERSION+' · '+(D.github?'GitHub verbunden':'nicht verbunden'),`${D.github?`<div class="meta">Verbunden mit ${esc(D.github.repo)}</div><div class="acts"><button data-act="gh-upload">📦 Update-Zip hochladen</button><button data-act="gh-setup">🔧 Verbindung ändern</button><button data-act="gh-off">✖ Trennen</button></div>`:`<div class="meta">Neue Versionen als Zip direkt aus der App ins GitHub-Repo laden.</div><div class="acts"><button data-act="gh-setup">🔗 GitHub verbinden</button></div>`}<div id="updStatus" class="note" style="margin-top:8px">${UPD}</div>`,!!UPD)
+  +acc('cnt','list','Einträge',`${D.termine.length} Termine · ${D.dokumente.length} Dokumente`,`<div class="meta" style="margin-top:12px">${D.termine.length} Termine · ${D.aerzte.length} Ärzte · ${D.vorsorge.length} Vorsorge · ${D.werte.length} Messwerte · ${D.dokumente.length} Dokumente<br><span id="stor"></span></div>`)
+  +`<p class="meta" style="text-align:center">MyGesundBox · Version ${APP_VERSION}<br>Kein Ersatz für ärztlichen Rat.</p>`;
 }
 
 /* ---------- Formulare ---------- */
@@ -1209,7 +1293,7 @@ let bkTimer=0,bkBusy=false,bkAgain=null,bkPending=null;
 let bkStat=(()=>{try{return JSON.parse(lsGet(GHS))||{}}catch{return{}}})();
 function setBk(o){const prev=bkStat.err||'';bkStat={...bkStat,...o};lsSet(GHS,JSON.stringify(bkStat));
   const el=document.getElementById('bkStatus');if(el)el.innerHTML=bkText();
-  if(D&&o.err!==undefined&&(o.err||'')!==prev&&dlg.open===false&&(TAB==='termine'||TAB==='mehr'))render(true)}
+  if(D&&o.err!==undefined&&(o.err||'')!==prev&&dlg.open===false&&(TAB==='termine'||sheetOpen()))render(true)}
 function bkCfg(){const g=D?.backupGh;return g?{...g}:null}
 async function bkFetch(g,method,path,body,raw){
   const r=await fetch(`https://api.github.com/repos/${encodeURIComponent(g.owner)}/${encodeURIComponent(g.repo)}${path}`,{method,cache:'no-store',
@@ -1312,7 +1396,7 @@ async function wipe(){
 const PRESETS=[['Zahnarzt – Kontrolle',6],['Professionelle Zahnreinigung',12],['Hausarzt – Check-up',36],['Hautkrebs-Screening',24],['Augenarzt',24],['Tetanus/Diphtherie – Auffrischung',120]];
 
 /* ---------- Klick-Handler ---------- */
-$('#main').addEventListener('click',async e=>{
+async function onAct(e){
   const b=e.target.closest('[data-act]');if(!b)return;
   const id=b.dataset.id,act=b.dataset.act;
   const T=()=>D.termine.find(x=>x.id===id),A=()=>D.aerzte.find(x=>x.id===id),V=()=>D.vorsorge.find(x=>x.id===id);
@@ -1351,12 +1435,14 @@ $('#main').addEventListener('click',async e=>{
     case 'bk-force':if(confirm('Den Tresor im Repo durch diesen ersetzen? Der alte bleibt in der GitHub-Versionsgeschichte.')){await bkSync(true);render()}break;
     case 'bk-pull':if(confirm('Die Daten auf diesem Gerät durch den GitHub-Stand ersetzen?')){try{restoreVaultStr(await bkRestore(bkCfg()))}catch(e){toast(e.status?bkErrText(e):e.message)}}break;
     case 'bk-off':if(confirm('GitHub-Sicherung trennen? Im Repo bleibt alles liegen.')){delete D.backupGh;setBk({err:'',at:0,conflict:false});await save({clean:true});render();toast('GitHub-Sicherung getrennt.')}break;
-    case 'goto-mehr':TAB='mehr';render();break;
+    case 'goto-mehr':openSheet();break;
     case 'go':goTab(id);break;
     case 'w-go':WTYP=id;TAB='werte';render();break;
     case 'q-termin':editTermin();break;
     case 'q-dok':DTYP='alle';DARZT='';editDok(null,{});{const c=document.getElementById('pgCam');if(c)c.click()}break;
     case 'q-wert':WTYP='bp';editWert();break;
+    case 'q-arzt':editArzt();break;
+    case 'q-vorsorge':editVorsorge();break;
     case 'pw-change':changePw();break;
     case 'wipe':wipe();break;
     case 'bio-on':askPwThenBio();break;
@@ -1365,12 +1451,22 @@ $('#main').addEventListener('click',async e=>{
     case 'gh-off':if(confirm('GitHub-Verbindung entfernen? Den Token kannst du danach auf GitHub löschen.')){delete D.github;await save();render()}break;
     case 'bio-off':if(confirm('Fingerabdruck-Entsperrung deaktivieren?')){lsDel(BKEY);render();toast('Fingerabdruck deaktiviert. Den Passkey kannst du im Google Passwortmanager löschen.')}break;
   }
-});
-document.querySelector('nav').addEventListener('click',e=>{const b=e.target.closest('button');if(b)goTab(b.dataset.tab)});
-$('#fab').onclick=()=>({termine:()=>editTermin(),aerzte:()=>editArzt(),vorsorge:()=>editVorsorge(),werte:()=>editWert(),dok:()=>editDok(null,{...(DTYP!=='alle'?{typ:DTYP}:{}),...(DARZT?{arztId:DARZT}:{})})})[TAB]?.();
+}
+$('#main').addEventListener('click',onAct);
+$('#sheetBody').addEventListener('click',onAct);
+$('#sheetBody').addEventListener('toggle',e=>{const d=e.target;if(d.matches?.('details.acc')){d.open?ACC_OPEN.add(d.dataset.k):ACC_OPEN.delete(d.dataset.k)}},true);
+$('#fan').addEventListener('click',e=>{const b=e.target.closest('[data-act]');setFan(false);if(b)onAct(e)});
+$('#fab').onclick=()=>setFan(!$('#fab').classList.contains('open'));
+$('#menuBtn').onclick=()=>{if(SEARCH!==null){SEARCH=null;$('#searchBar').hidden=true}openSheet()};
+$('#sheetX').onclick=closeSheet;$('#sheet .sbg').onclick=closeSheet;
+$('#searchBtn').onclick=()=>SEARCH===null?openSearch():closeSearch();
+$('#qX').onclick=closeSearch;
+$('#q').addEventListener('input',()=>{SEARCH=$('#q').value;render()});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape'||dlg.open||!$('#viewer').hidden)return;if(!$('#fan').hidden)setFan(false);else if(sheetOpen())closeSheet();else if(SEARCH!==null)closeSearch()});
+document.querySelector('nav').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(SEARCH!==null){SEARCH=null;$('#searchBar').hidden=true;$('#q').blur();TAB=b.dataset.tab;render();return}goTab(b.dataset.tab)});
 
 /* ---------- Gesten: Wischen zwischen Bereichen, Ziehen zum Aktualisieren, Wischen zum Schließen ---------- */
-const TABS=['start','termine','aerzte','vorsorge','werte','dok','mehr'];
+const TABS=['start','termine','aerzte','vorsorge','werte','dok'];
 const motion=()=>!matchMedia('(prefers-reduced-motion: reduce)').matches;
 const buzz=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch{}};
 let tabBusy=false,swReg=null,refreshing=false;
@@ -1392,7 +1488,7 @@ function goTab(t,fromX){
 const ptr=$('#ptr'),appEl=$('#app');
 let G=null;
 document.addEventListener('touchstart',e=>{G=null;
-  if(e.touches.length!==1||!KEY||!D||tabBusy||dlg.open||!$('#viewer').hidden)return;
+  if(e.touches.length!==1||!KEY||!D||tabBusy||dlg.open||!$('#viewer').hidden||sheetOpen()||!$('#fan').hidden||SEARCH!==null)return;
   const t=e.target;if(!(appEl.contains(t)||t===document.body||t===document.documentElement)||(t.closest&&t.closest('nav,header,input,select,textarea,#fab')))return;
   const ch=t.closest('.chips,.seg'),p=e.touches[0];
   G={x:p.clientX,y:p.clientY,mode:null,chips:!!(ch&&ch.scrollWidth>ch.clientWidth+2),dx:0,dy:0,v:0,lx:p.clientX,lt:performance.now(),W:appEl.clientWidth||innerWidth,idx:TABS.indexOf(TAB),hit:false,edge:false};
@@ -1471,6 +1567,7 @@ function swipeClose(box,scroller,canClose,doClose){
 }
 swipeClose(dlg,()=>dlg,async()=>!$('#dlgForm')._dirty||confirm('Eingaben verwerfen?'),()=>closeDlg());
 swipeClose($('#viewer'),()=>$('#vBody'),async()=>true,()=>closeViewer());
+swipeClose($('#spanel'),()=>$('#spanel'),async()=>true,()=>closeSheet());
 
 /* ---------- Start ---------- */
 if(!window.crypto?.subtle){document.body.innerHTML='<p style="padding:24px">Diese App braucht HTTPS und einen aktuellen Browser.</p>'}
