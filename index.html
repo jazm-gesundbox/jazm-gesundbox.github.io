@@ -136,7 +136,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <script>
 'use strict';
-const APP_VERSION='1.8.0';
+const APP_VERSION='1.8.1';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -539,7 +539,7 @@ function chart(list){
 function rWerte(){
   const list=D.werte.filter(w=>w.typ===WTYP).sort((a,b)=>a.datum.localeCompare(b.datum));
   let h=`<div class="chips">${Object.entries(TYP).map(([k,t])=>`<button data-act="w-typ" data-id="${k}" class="${k===WTYP?'on':''}">${t.n}</button>`).join('')}</div>
-  <div class="toolbar"><button class="ghost" data-act="csv-import">📥 CSV importieren</button></div>`;
+  <div class="toolbar"><button class="ghost" data-act="csv-import">📥 Importieren (CSV / Samsung Health)</button></div>`;
   if(!list.length)return h+`<div class="empty">Noch keine ${TYP[WTYP].n}-Werte.<br>Tippe auf <b>+</b> oder importiere eine CSV-Datei aus deiner Mess-App.</div>`;
   const last=list[list.length-1];
   h+=`<div class="card"><div class="meta">Letzter Wert · ${esc(fmtDT(last.datum))}</div><h3 style="font-size:22px">${esc(wertText(last))}</h3>${list.length>=2?`<div class="meta">${list.length} Messungen · Ø ${WTYP==='bp'?fmtNum(avg(list,'v1'),0)+'/'+fmtNum(avg(list,'v2'),0):fmtNum(avg(list,'v1'))} (letzte 30)</div>`:''}</div>`;
@@ -561,6 +561,7 @@ function rMehr(){
   </div>
   <div class="sec">Sicherheit</div><div class="card"><div class="meta">Alle Daten liegen verschlüsselt (AES-256) auf diesem Gerät. Automatische Sperre nach 5 Minuten Inaktivität oder 1 Minute im Hintergrund.</div><div class="acts">${bioSupported()?(lsGet(BKEY)?'<button data-act="bio-off">👆 Fingerabdruck deaktivieren</button>':'<button data-act="bio-on">👆 Fingerabdruck einrichten</button>'):''}<button data-act="pw-change">🔑 Passwort ändern</button><button data-act="wipe" class="danger">🗑️ Alle Daten löschen</button></div></div>
   <div class="sec">Importieren</div><div class="card"><div class="acts"><button data-act="ics-import">📅 Termine aus .ics</button><button data-act="csv-import">📈 Werte aus CSV / Samsung Health</button></div>
+    <div class="hint">Samsung Health: Im Export-Ordner einfach <b>alle Dateien</b> auswählen – die Gesundbox nimmt sich Blutdruck und Gewicht selbst heraus.</div>
     <div class="hint">Tipp: In anderen Apps auf <b>Teilen → Gesundbox</b> tippen. So kommen Terminbestätigungen (.ics oder Text), CSV-Messwerte, Samsung-Health-Exporte (CSV oder ZIP) sowie Fotos und PDFs (z. B. Arztbriefe) direkt hierher.</div></div>
   <div class="sec">App-Update</div><div class="card">${D.github?`<div class="meta">Verbunden mit ${esc(D.github.repo)}</div><div class="acts"><button data-act="gh-upload">📦 Update-Zip hochladen</button><button data-act="gh-setup">🔧 Verbindung ändern</button><button data-act="gh-off">✖ Trennen</button></div>`:`<div class="meta">Neue Versionen als Zip direkt aus der App ins GitHub-Repo laden.</div><div class="acts"><button data-act="gh-setup">🔗 GitHub verbinden</button></div>`}<div id="updStatus" class="note" style="margin-top:8px">${UPD}</div></div>
   <div class="sec">Übersicht</div><div class="card meta">${D.termine.length} Termine · ${D.aerzte.length} Ärzte · ${D.vorsorge.length} Vorsorge · ${D.werte.length} Messwerte · ${D.dokumente.length} Dokumente<br><span id="stor"></span></div>
@@ -647,8 +648,23 @@ async function importICSText(text){
 }
 const GUESS={datum:/^(datum|date|day|tag|zeitstempel|timestamp|messzeit|measurement date|start)/i,zeit:/^(uhrzeit|zeit|time)$/i,
   sys:/(sys|systol)/i,dia:/(dia(?!g)|diastol)/i,puls:/(puls|pulse|heart|herz|hr\b|bpm)/i,gewicht:/(gewicht|weight|kg)/i};
+/* Samsung-Export: nur Blutdruck und Gewicht lesen, alle anderen Tabellen gar nicht erst öffnen */
+const SAM_WANT=/blood_pressure[^/]*\.csv$|health\.weight[^/]*\.csv$/i;
+const isSamsungName=n=>/^com\.samsung\./i.test(n||'');
+async function importSamsungFiles(list){
+  const want=list.filter(f=>SAM_WANT.test(f.name||''));
+  if(!want.length){toast('Unter den Dateien ist keine Samsung-Health-Blutdruck- oder Gewichtstabelle.');return}
+  const res=[];for(const f of want){try{res.push(samsungParse(typeof f.text==='string'?f.text:await f.text()))}catch{}}
+  await importSamsungResults(res);
+}
+function pickFiles(accept){return new Promise(res=>{const i=$('#fileIn');i.value='';i.accept=accept;i.multiple=true;i.onchange=()=>{const l=[...i.files];i.multiple=false;res(l)};pickingUntil=Date.now()+5*60e3;i.click()})}
 async function importCSV(){
-  const file=await pickFile('.csv,.txt,.zip,text/csv,application/zip');if(!file)return;
+  const files=await pickFiles('.csv,.txt,.zip,text/csv,application/zip');if(!files.length)return;
+  if(files.length>1||files.some(f=>isSamsungName(f.name))){
+    const z=files.find(f=>/\.zip$/i.test(f.name));if(z&&files.length===1){importZip(await z.arrayBuffer());return}
+    if(files.some(f=>isSamsungName(f.name))){importSamsungFiles(files);return}
+    toast('Bitte nur eine Datei wählen – oder alle Dateien eines Samsung-Health-Exports.');return}
+  const file=files[0];
   if(/\.zip$/i.test(file.name)||/zip/.test(file.type)){importZip(await file.arrayBuffer());return}
   let text;try{text=await file.text()}catch{toast('Datei konnte nicht gelesen werden.');return}
   importCSVText(file.name,text);
@@ -969,6 +985,7 @@ async function handleShare(){
   if(docs.length){TAB='dok';render();
     editDok(null,{typ:guessTyp(docs.map(f=>f.name).join(' ')+' '+(sh.title||'')),titel:String(sh.title||'').slice(0,60)},docs.map(f=>new File([f.buf],f.name||'datei',{type:f.type||''})));
     toast('Geteilte Datei – Art und Arzt wählen, dann speichern.');return}
+  if(files.some(f=>isSamsungName(f.name))){importSamsungFiles(files);return}
   if(files.length){
     for(const f of files){
       const n=(f.name||'').toLowerCase(),t=f.text||'';

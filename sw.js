@@ -1,5 +1,5 @@
 // Gesundbox Service Worker – Netzwerk zuerst, offline aus dem Cache
-const CACHE = 'gesundbox-1.8.0';
+const CACHE = 'gesundbox-1.8.1';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -29,6 +29,7 @@ self.addEventListener('fetch', e => {
     try {
       const fd = await req.formData(), files = [];
       for (const f of fd.getAll('dateien')) {
+        if (f && typeof f !== 'string' && /^com\.samsung\./i.test(f.name || '') && !/blood_pressure|health\.weight/i.test(f.name)) continue; // übrige Samsung-Tabellen gar nicht erst speichern
         if (f && typeof f !== 'string' && f.size && f.size < 100e6) files.push({ name: f.name || '', type: f.type || '', buf: await f.arrayBuffer() });
       }
       await idbPut('share', { at: Date.now(), title: String(fd.get('title') || ''), text: String(fd.get('text') || ''), url: String(fd.get('url') || ''), files });
