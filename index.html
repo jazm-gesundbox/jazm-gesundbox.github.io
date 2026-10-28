@@ -136,7 +136,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <script>
 'use strict';
-const APP_VERSION='1.8.1';
+const APP_VERSION='1.8.2';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -537,7 +537,10 @@ function chart(list){
   return s;
 }
 function rWerte(){
-  const list=D.werte.filter(w=>w.typ===WTYP).sort((a,b)=>a.datum.localeCompare(b.datum));
+  let list=D.werte.filter(w=>w.typ===WTYP);
+  /* Puls: auch den Puls aus den Blutdruckmessungen zeigen (Bearbeiten öffnet die Blutdruckmessung) */
+  if(WTYP==='puls')list=list.concat(D.werte.filter(w=>w.typ==='bp'&&w.v3!=null).map(w=>({...w,typ:'puls',v1:w.v3,v2:null,v3:null,quelle:(w.quelle?w.quelle+' · ':'')+'aus Blutdruckmessung'})));
+  list.sort((a,b)=>a.datum.localeCompare(b.datum));
   let h=`<div class="chips">${Object.entries(TYP).map(([k,t])=>`<button data-act="w-typ" data-id="${k}" class="${k===WTYP?'on':''}">${t.n}</button>`).join('')}</div>
   <div class="toolbar"><button class="ghost" data-act="csv-import">📥 Importieren (CSV / Samsung Health)</button></div>`;
   if(!list.length)return h+`<div class="empty">Noch keine ${TYP[WTYP].n}-Werte.<br>Tippe auf <b>+</b> oder importiere eine CSV-Datei aus deiner Mess-App.</div>`;
