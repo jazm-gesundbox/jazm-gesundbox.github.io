@@ -165,7 +165,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <script>
 'use strict';
-const APP_VERSION='2.1.0';
+const APP_VERSION='2.1.1';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -487,9 +487,32 @@ function parseAnyDate(ds,ts){
 const arzt=id=>D.aerzte.find(a=>a.id===id);
 const arztOpts=()=>[['','– kein Arzt –'],...D.aerzte.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(a=>[a.id,a.name+(a.fach?' ('+a.fach+')':'')])];
 function addMonths(ds,n){const d=new Date(ds+'T00:00');const day=d.getDate();d.setMonth(d.getMonth()+n);if(d.getDate()<day)d.setDate(0);return d}
+/* Termine ↔ Vorsorge: ausdrücklich verknüpft (t.vorsorgeId) oder automatisch über Anlass/Arzt erkannt */
+const VSTOP=new Set(['arzt','kontrolle','termin','check','vorsorge','untersuchung','auffrischung','praxis','dr','prof','beim','bei','und','der','die','das']);
+const vWords=s=>new Set(String(s||'').toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss').split(/[^a-z0-9]+/).filter(w=>w.length>=4&&!VSTOP.has(w)));
+const vOverlap=(a,b)=>[...a].some(w=>b.has(w));
+function vMatches(t,v){
+  if(t.vorsorgeId)return t.vorsorgeId===v.id;            /* verknüpft oder „keine“ ('-') */
+  const tw=vWords(t.titel),vw=vWords(v.name);
+  if(vOverlap(tw,vw))return true;
+  if(D.vorsorge.some(x=>vOverlap(tw,vWords(x.name))))return false; /* Anlass passt zu einer anderen Vorsorge */
+  const a=arzt(t.arztId);if(!a)return false;
+  if(v.arztId&&v.arztId===a.id&&D.vorsorge.filter(x=>x.arztId===a.id).length===1)return true;
+  return vOverlap(vWords((a.fach||'')+' '+a.name),vw);
+}
+const vTermin=v=>D.termine.filter(t=>t.datum.slice(0,10)>=today()&&vMatches(t,v)).sort((a,b)=>a.datum.localeCompare(b.datum))[0];
+function vLetzte(v){ /* vergangener, ausdrücklich verknüpfter Termin zählt als „zuletzt gemacht“ */
+  let l=v.letzte||'';for(const t of D.termine)if(t.vorsorgeId===v.id){const d=t.datum.slice(0,10);if(d<today()&&d>l)l=d}return l;
+}
 function vStatus(v){
-  if(!v.letzte)return{cls:'b-red',txt:'Unbekannt – planen',next:null,rank:0};
-  const next=addMonths(v.letzte,+v.intervall||12);const days=Math.round((next-new Date(today()+'T00:00'))/864e5);
+  const st=vStatus0(v);if(st.rank>2)return st;
+  const t=vTermin(v);if(!t)return st;
+  return{cls:'b-ok',txt:'Termin geplant: '+new Date(t.datum).toLocaleDateString('de-DE'),next:st.next,rank:3,termin:t};
+}
+function vStatus0(v){
+  const letzte=vLetzte(v);
+  if(!letzte)return{cls:'b-red',txt:'Unbekannt – planen',next:null,rank:0};
+  const next=addMonths(letzte,+v.intervall||12);const days=Math.round((next-new Date(today()+'T00:00'))/864e5);
   if(days<0)return{cls:'b-red',txt:`Überfällig seit ${-days} Tagen`,next,rank:1};
   if(days<=30)return{cls:'b-or',txt:days===0?'Heute fällig':`Fällig in ${days} Tagen`,next,rank:2};
   return{cls:'b-ok',txt:'Fällig am '+next.toLocaleDateString('de-DE'),next,rank:3};
@@ -592,7 +615,7 @@ function rStart(){
 function terminCard(t){
   const a=arzt(t.arztId);
   return `<div class="card"><h3>${esc(t.titel)}</h3>
-  <div class="meta">${esc(fmtDT(t.datum))}${a?' · '+esc(a.name):''}${t.ort?'<br>📍 '+esc(t.ort):''}</div>
+  <div class="meta">${esc(fmtDT(t.datum))}${a?' · '+esc(a.name):''}${t.ort?'<br>📍 '+esc(t.ort):''}${(()=>{const v=D.vorsorge.find(v=>vMatches(t,v));return v?'<br>🔁 Vorsorge: '+esc(v.name):''})()}</div>
   ${t.notiz?`<div class="note">${esc(t.notiz.length>300?t.notiz.slice(0,300)+' …':t.notiz)}</div>`:''}
   ${t.fragen?`<div class="note"><b>Fragen:</b> ${esc(t.fragen)}</div>`:''}
   ${t.nachher?`<div class="note"><b>Ergebnis:</b> ${esc(t.nachher)}</div>`:''}
@@ -625,8 +648,8 @@ function rVorsorge(){
   return D.vorsorge.map(v=>({v,s:vStatus(v)})).sort((x,y)=>x.s.rank-y.s.rank||(x.s.next||0)-(y.s.next||0)).map(({v,s})=>{
     const a=arzt(v.arztId);
     return `<div class="card"><h3>${esc(v.name)}</h3><span class="badge ${s.cls}">${esc(s.txt)}</span>
-    <div class="meta" style="margin-top:6px">Alle ${esc(v.intervall)} Monate · zuletzt ${esc(fmtD(v.letzte))}${a?' · '+esc(a.name):''}</div>
-    <div class="acts"><button data-act="v-done" data-id="${v.id}">✅ Heute erledigt</button><button data-act="v-termin" data-id="${v.id}">➕ Termin</button>${s.next?`<button data-act="v-ics" data-id="${v.id}">📅 Erinnerung</button>`:''}<button data-act="v-edit" data-id="${v.id}">✏️</button></div></div>`}).join('');
+    <div class="meta" style="margin-top:6px">Alle ${esc(v.intervall)} Monate · zuletzt ${esc(fmtD(vLetzte(v)))}${a?' · '+esc(a.name):''}</div>
+    <div class="acts"><button data-act="v-done" data-id="${v.id}">✅ Heute erledigt</button>${s.termin?`<button data-act="t-edit" data-id="${s.termin.id}">📅 Zum Termin</button>`:`<button data-act="v-termin" data-id="${v.id}">➕ Termin</button>`}${s.next?`<button data-act="v-ics" data-id="${v.id}">📅 Erinnerung</button>`:''}<button data-act="v-edit" data-id="${v.id}">✏️</button></div></div>`}).join('');
 }
 function chart(list){
   const pts=list.slice(-30);if(pts.length<2)return '';
@@ -683,6 +706,7 @@ function editTermin(t,preset){
     {k:'datum',l:'Datum & Uhrzeit',t:'datetime-local',req:true},
     {k:'dauer',l:'Dauer (Minuten)',t:'number'},
     {k:'arztId',l:'Arzt',t:'select',opts:arztOpts()},
+    ...(D.vorsorge.length?[{k:'vorsorgeId',l:'Gehört zur Vorsorge',t:'select',opts:[['','– automatisch erkennen –'],['-','– keine –'],...D.vorsorge.map(v=>[v.id,v.name])]}]:[]),
     {k:'ort',l:'Ort (leer = Adresse des Arztes)'},
     {k:'notiz',l:'Notiz',t:'textarea'},
     {k:'fragen',l:'Fragen für den Termin',t:'textarea'},
@@ -714,7 +738,7 @@ function editVorsorge(v){
     {k:'name',l:'Untersuchung',req:true},{k:'intervall',l:'Intervall (Monate)',t:'number',req:true},
     {k:'letzte',l:'Zuletzt gemacht',t:'date'},{k:'arztId',l:'Arzt',t:'select',opts:arztOpts()},{k:'notiz',l:'Notiz',t:'textarea'},
   ],v,async x=>{Object.assign(v,x,{intervall:Math.max(1,+x.intervall||12)});if(isNew)D.vorsorge.push(v);await save()},
-  {draft:{kind:'vorsorge',id:isNew?null:v.id},del:isNew?null:async()=>{D.vorsorge=D.vorsorge.filter(y=>y.id!==v.id);await save()}});
+  {draft:{kind:'vorsorge',id:isNew?null:v.id},del:isNew?null:async()=>{D.vorsorge=D.vorsorge.filter(y=>y.id!==v.id);D.termine.forEach(t=>{if(t.vorsorgeId===v.id)t.vorsorgeId=''});await save()}});
 }
 function editWert(w){
   const isNew=!w;const typ=w?.typ||WTYP;w=w||{id:uid(),typ,datum:localDT(new Date())};
@@ -1304,7 +1328,7 @@ $('#main').addEventListener('click',async e=>{
     case 'a-termin':editTermin(null,{arztId:id,titel:A().fach?A().fach+' – Termin':'Termin'});break;
     case 'v-edit':editVorsorge(V());break;
     case 'v-done':{const v=V();v.letzte=today();await save();render();toast('Erledigt – nächster Termin neu berechnet.');break}
-    case 'v-termin':{const v=V();editTermin(null,{titel:v.name,arztId:v.arztId||''});break}
+    case 'v-termin':{const v=V();editTermin(null,{titel:v.name,arztId:v.arztId||'',vorsorgeId:v.id});break}
     case 'v-ics':{const v=V(),s=vStatus(v);if(!s.next)break;const st=s.next<new Date()?new Date():s.next;
       download(`vorsorge-${localD(st)}.ics`,makeICS([{uid:v.id+'-'+localD(st),titel:'Vorsorge fällig: '+v.name,start:st,allDay:true,notiz:'Termin vereinbaren',alarms:['PT9H']}]),'text/calendar');break}
     case 'v-presets':PRESETS.forEach(([name,intervall])=>D.vorsorge.push({id:uid(),name,intervall,letzte:'',arztId:''}));await save();render();toast('Bitte „Zuletzt gemacht“ bei jedem Eintrag ergänzen.');break;
