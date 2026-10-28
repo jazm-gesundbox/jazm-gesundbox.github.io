@@ -54,7 +54,10 @@
             ".pdf",
             ".jpg",
             ".jpeg",
-            ".png"
+            ".png",
+            "application/zip",
+            "application/x-zip-compressed",
+            ".zip"
           ]
         }
       ]

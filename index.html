@@ -136,7 +136,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <script>
 'use strict';
-const APP_VERSION='1.7.0';
+const APP_VERSION='1.8.0';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -426,7 +426,7 @@ function icsToDate(p){
 
 /* ---------- CSV ---------- */
 function parseCSV(text){
-  text=text.replace(/^\uFEFF/,'');
+  text=text.replace(/^(\uFEFF|\u00EF\u00BB\u00BF)+/,'');
   const first=text.split(/\r?\n/)[0]||'';
   const d=[';','\t',','].reduce((a,c)=>first.split(c).length>first.split(a).length?c:a,',');
   const rows=[];let row=[],f='',q=false;
@@ -560,8 +560,8 @@ function rMehr(){
     ${g?'<details><summary>GitHub-Sicherung trennen</summary><div class="acts"><button data-act="bk-off">✖ Trennen</button></div></details>':''}
   </div>
   <div class="sec">Sicherheit</div><div class="card"><div class="meta">Alle Daten liegen verschlüsselt (AES-256) auf diesem Gerät. Automatische Sperre nach 5 Minuten Inaktivität oder 1 Minute im Hintergrund.</div><div class="acts">${bioSupported()?(lsGet(BKEY)?'<button data-act="bio-off">👆 Fingerabdruck deaktivieren</button>':'<button data-act="bio-on">👆 Fingerabdruck einrichten</button>'):''}<button data-act="pw-change">🔑 Passwort ändern</button><button data-act="wipe" class="danger">🗑️ Alle Daten löschen</button></div></div>
-  <div class="sec">Importieren</div><div class="card"><div class="acts"><button data-act="ics-import">📅 Termine aus .ics</button><button data-act="csv-import">📈 Werte aus CSV</button></div>
-    <div class="hint">Tipp: In anderen Apps auf <b>Teilen → Gesundbox</b> tippen. So kommen Terminbestätigungen (.ics oder Text), CSV-Messwerte sowie Fotos und PDFs (z. B. Arztbriefe) direkt hierher.</div></div>
+  <div class="sec">Importieren</div><div class="card"><div class="acts"><button data-act="ics-import">📅 Termine aus .ics</button><button data-act="csv-import">📈 Werte aus CSV / Samsung Health</button></div>
+    <div class="hint">Tipp: In anderen Apps auf <b>Teilen → Gesundbox</b> tippen. So kommen Terminbestätigungen (.ics oder Text), CSV-Messwerte, Samsung-Health-Exporte (CSV oder ZIP) sowie Fotos und PDFs (z. B. Arztbriefe) direkt hierher.</div></div>
   <div class="sec">App-Update</div><div class="card">${D.github?`<div class="meta">Verbunden mit ${esc(D.github.repo)}</div><div class="acts"><button data-act="gh-upload">📦 Update-Zip hochladen</button><button data-act="gh-setup">🔧 Verbindung ändern</button><button data-act="gh-off">✖ Trennen</button></div>`:`<div class="meta">Neue Versionen als Zip direkt aus der App ins GitHub-Repo laden.</div><div class="acts"><button data-act="gh-setup">🔗 GitHub verbinden</button></div>`}<div id="updStatus" class="note" style="margin-top:8px">${UPD}</div></div>
   <div class="sec">Übersicht</div><div class="card meta">${D.termine.length} Termine · ${D.aerzte.length} Ärzte · ${D.vorsorge.length} Vorsorge · ${D.werte.length} Messwerte · ${D.dokumente.length} Dokumente<br><span id="stor"></span></div>
   <p class="meta" style="text-align:center">Gesundbox · Version ${APP_VERSION}<br>Kein Ersatz für ärztlichen Rat.</p>`;
@@ -648,11 +648,84 @@ async function importICSText(text){
 const GUESS={datum:/^(datum|date|day|tag|zeitstempel|timestamp|messzeit|measurement date|start)/i,zeit:/^(uhrzeit|zeit|time)$/i,
   sys:/(sys|systol)/i,dia:/(dia(?!g)|diastol)/i,puls:/(puls|pulse|heart|herz|hr\b|bpm)/i,gewicht:/(gewicht|weight|kg)/i};
 async function importCSV(){
-  const file=await pickFile('.csv,.txt,text/csv');if(!file)return;
+  const file=await pickFile('.csv,.txt,.zip,text/csv,application/zip');if(!file)return;
+  if(/\.zip$/i.test(file.name)||/zip/.test(file.type)){importZip(await file.arrayBuffer());return}
   let text;try{text=await file.text()}catch{toast('Datei konnte nicht gelesen werden.');return}
   importCSVText(file.name,text);
 }
+
+/* ---------- Samsung Health: Export-CSV bzw. -ZIP ----------
+   Format: 1. Zeile Kennung (com.samsung.shealth.blood_pressure,…), 2. Zeile Spalten mit Präfix,
+   start_time in UTC plus eigene Spalte time_offset (z. B. UTC+0200). */
+function samsungTime(st,off){
+  const m=String(st||'').match(/(\d{4})-(\d{1,2})-(\d{1,2})[ T](\d{1,2}):(\d{2})(?::(\d{2}))?/);if(!m)return null;
+  let ms=Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+(m[6]||0));
+  const o=String(off||'').match(/UTC([+-])(\d{2}):?(\d{2})/);
+  if(!o)return localDT(new Date(ms));
+  ms+=(o[1]==='-'?-1:1)*(+o[2]*60+ +o[3])*6e4;const d=new Date(ms);
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+}
+function samsungParse(text){
+  text=String(text||'').replace(/^(\uFEFF|\u00EF\u00BB\u00BF)+/,'');
+  if(!/^com\.samsung\./.test(text))return null;
+  const rows=parseCSV(text);if(rows.length<2)return{typ:null,list:[],kind:rows[0]?.[0]||''};
+  const kind=rows[0][0];
+  const head=rows[1].map(h=>h.replace(/^com\.samsung\.(s?health)\.[a-z_.]+?\.(?=[a-z_]+$)/,''));
+  const ix=n=>head.indexOf(n);
+  const typ=/blood_pressure$/.test(kind)?'bp':/\.weight$/.test(kind)?'gewicht':null;
+  if(!typ)return{typ:null,list:[],kind};
+  const list=[];
+  for(const r of rows.slice(2)){
+    const datum=samsungTime(r[ix('start_time')],r[ix('time_offset')]);if(!datum)continue;
+    const n=k=>{const v=num(r[ix(k)]);return v&&v>0?v:null};
+    const w=typ==='bp'?{v1:n('systolic'),v2:n('diastolic'),v3:n('pulse')}:{v1:n('weight'),v2:null,v3:null};
+    if(w.v1==null||(typ==='bp'&&w.v2==null))continue;
+    list.push({typ,datum,...w,sid:r[ix('datauuid')]||''});
+  }
+  return{typ,list,kind};
+}
+function addSamsung(res){
+  let n=0,dup=0;
+  for(const w of res.list){
+    if(D.werte.some(x=>(w.sid&&x.sid===w.sid)||(x.typ===w.typ&&x.datum===w.datum&&x.v1===w.v1))){dup++;continue}
+    D.werte.push({id:uid(),...w,quelle:'Samsung Health'});n++;
+  }
+  return{n,dup};
+}
+async function importSamsungResults(results){
+  const sum={bp:{n:0,dup:0},gewicht:{n:0,dup:0}};
+  for(const r of results){if(!r?.typ)continue;const x=addSamsung(r);sum[r.typ].n+=x.n;sum[r.typ].dup+=x.dup}
+  const total=sum.bp.n+sum.gewicht.n,dups=sum.bp.dup+sum.gewicht.dup;
+  if(!total&&!dups){toast('Keine Blutdruck- oder Gewichtswerte von Samsung Health gefunden.');return}
+  if(total)await save();
+  WTYP=sum.bp.n||!sum.gewicht.n?'bp':'gewicht';TAB='werte';render();
+  const parts=[];if(sum.bp.n)parts.push(sum.bp.n+' Blutdruckwerte');if(sum.gewicht.n)parts.push(sum.gewicht.n+' Gewichtswerte');
+  toast('Samsung Health: '+(parts.length?parts.join(' und ')+' importiert':'nichts Neues')+(dups?`, ${dups} schon vorhanden`:'')+'.');
+}
+/* Minimaler ZIP-Leser (Samsung-Export): nur die benötigten CSV-Dateien entpacken */
+async function zipEntries(buf,want){
+  const u=new Uint8Array(buf),dv=new DataView(buf);let e=-1;
+  for(let i=u.length-22;i>=Math.max(0,u.length-65558);i--)if(dv.getUint32(i,true)===0x06054b50){e=i;break}
+  if(e<0)throw new Error('Keine gültige ZIP-Datei.');
+  let p=dv.getUint32(e+16,true);const cnt=dv.getUint16(e+10,true),out=[];
+  for(let k=0;k<cnt&&dv.getUint32(p,true)===0x02014b50;k++){
+    const meth=dv.getUint16(p+10,true),csize=dv.getUint32(p+20,true),nl=dv.getUint16(p+28,true),xl=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),lo=dv.getUint32(p+42,true);
+    const name=td.decode(u.subarray(p+46,p+46+nl));p+=46+nl+xl+cl;
+    if(!want(name))continue;
+    const start=lo+30+dv.getUint16(lo+26,true)+dv.getUint16(lo+28,true),data=u.subarray(start,start+csize);
+    let raw;if(meth===0)raw=data;else if(meth===8)raw=new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());else continue;
+    out.push({name,text:td.decode(raw)});
+  }
+  return out;
+}
+async function importZip(buf){
+  let files;try{files=await zipEntries(buf,n=>/blood_pressure[^/]*\.csv$|health\.weight[^/]*\.csv$/i.test(n))}catch(e){toast(e.message);return}
+  if(!files.length){toast('In der ZIP-Datei wurden keine Samsung-Health-Blutdruck- oder Gewichtsdaten gefunden.');return}
+  await importSamsungResults(files.map(f=>samsungParse(f.text)));
+}
 function importCSVText(fname,text){
+  const sam=samsungParse(text);
+  if(sam){if(sam.typ)importSamsungResults([sam]);else toast('Diese Samsung-Health-Datei enthält weder Blutdruck noch Gewicht.');return}
   let rows;try{rows=parseCSV(text)}catch{toast('Datei konnte nicht gelesen werden.');return}
   if(rows.length<2){toast('Keine Daten in der Datei gefunden.');return}
   const head=rows[0],data=rows.slice(1);
@@ -891,7 +964,7 @@ async function handleShare(){
   if(!sh||!D)return;
   await idb.del('share').catch(()=>{});
   if(Date.now()-(sh.at||0)>24*3600e3)return; /* alte, liegengebliebene Teilungen verwerfen */
-  const files=(sh.files||[]).map(f=>({...f,text:f.text??(f.buf&&!/^(image\/|application\/pdf)/.test(f.type||'')?td.decode(f.buf):'')}));
+  const files=(sh.files||[]).map(f=>({...f,text:f.text??(f.buf&&!/^(image\/|application\/pdf|application\/(x-)?zip)/.test(f.type||'')&&!/\.zip$/i.test(f.name||'')?td.decode(f.buf):'')}));
   const docs=files.filter(f=>/^(image\/|application\/pdf)/.test(f.type||'')||/\.(pdf|jpe?g|png|heic|webp)$/i.test(f.name||''));
   if(docs.length){TAB='dok';render();
     editDok(null,{typ:guessTyp(docs.map(f=>f.name).join(' ')+' '+(sh.title||'')),titel:String(sh.title||'').slice(0,60)},docs.map(f=>new File([f.buf],f.name||'datei',{type:f.type||''})));
@@ -903,8 +976,9 @@ async function handleShare(){
       else if(n.endsWith('.gesundbox')||(/json/i.test(f.type)&&t.includes('"gesundbox"'))){
         let j;try{j=await readBackupFile(new File([t],n))}catch(e){toast(e.message);continue}
         if(confirm('Geteilte Sicherung laden? Die Daten auf diesem Gerät werden ersetzt.'))restoreVaultStr(j);return}
+      else if(n.endsWith('.zip')||/zip/i.test(f.type)){if(f.buf)importZip(f.buf);return}
       else if(n.endsWith('.csv')||/csv|comma/i.test(f.type)||n.endsWith('.txt')){TAB='werte';render();importCSVText(f.name||'Geteilte Datei',t);return}
-      else toast(`„${f.name||'Datei'}“ wird noch nicht unterstützt (nur Fotos, PDFs, .ics, .csv und Sicherungen).`);
+      else toast(`„${f.name||'Datei'}“ wird noch nicht unterstützt (nur Fotos, PDFs, .ics, .csv, Samsung-Health-Exporte und Sicherungen).`);
     }
     return;
   }
