@@ -136,7 +136,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <script>
 'use strict';
-const APP_VERSION='1.8.2';
+const APP_VERSION='1.9.0';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -465,7 +465,8 @@ function vStatus(v){
   return{cls:'b-ok',txt:'Fällig am '+next.toLocaleDateString('de-DE'),next,rank:3};
 }
 const TYP={bp:{n:'Blutdruck',u:'mmHg'},gewicht:{n:'Gewicht',u:'kg'},puls:{n:'Puls',u:'bpm'}};
-function wertText(w){if(w.typ==='bp')return `${fmtNum(w.v1,0)}/${fmtNum(w.v2,0)} mmHg${w.v3!=null?' · Puls '+fmtNum(w.v3,0):''}`;return `${fmtNum(w.v1)} ${TYP[w.typ]?.u||''}`}
+const wDate=w=>w.cnt?fmtD(w.datum.slice(0,10))+' · Tageswert aus '+w.cnt+' Messungen':fmtDT(w.datum);
+function wertText(w){if(w.typ==='puls'&&w.min!=null)return `Ø ${fmtNum(w.v1,0)} bpm · ${fmtNum(w.min,0)}–${fmtNum(w.max,0)}`;if(w.typ==='bp')return `${fmtNum(w.v1,0)}/${fmtNum(w.v2,0)} mmHg${w.v3!=null?' · Puls '+fmtNum(w.v3,0):''}`;return `${fmtNum(w.v1)} ${TYP[w.typ]?.u||''}`}
 
 /* ---------- Rendering ---------- */
 const TITLES={termine:'Termine',aerzte:'Ärzte',vorsorge:'Vorsorge',werte:'Werte',dok:'Dokumente',mehr:'Mehr'};
@@ -545,9 +546,9 @@ function rWerte(){
   <div class="toolbar"><button class="ghost" data-act="csv-import">📥 Importieren (CSV / Samsung Health)</button></div>`;
   if(!list.length)return h+`<div class="empty">Noch keine ${TYP[WTYP].n}-Werte.<br>Tippe auf <b>+</b> oder importiere eine CSV-Datei aus deiner Mess-App.</div>`;
   const last=list[list.length-1];
-  h+=`<div class="card"><div class="meta">Letzter Wert · ${esc(fmtDT(last.datum))}</div><h3 style="font-size:22px">${esc(wertText(last))}</h3>${list.length>=2?`<div class="meta">${list.length} Messungen · Ø ${WTYP==='bp'?fmtNum(avg(list,'v1'),0)+'/'+fmtNum(avg(list,'v2'),0):fmtNum(avg(list,'v1'))} (letzte 30)</div>`:''}</div>`;
+  h+=`<div class="card"><div class="meta">Letzter Wert · ${esc(wDate(last))}</div><h3 style="font-size:22px">${esc(wertText(last))}</h3>${list.length>=2?`<div class="meta">${list.length} Messungen · Ø ${WTYP==='bp'?fmtNum(avg(list,'v1'),0)+'/'+fmtNum(avg(list,'v2'),0):fmtNum(avg(list,'v1'))} (letzte 30)</div>`:''}</div>`;
   h+=chart(list);
-  h+=`<div class="sec">Messungen</div>`+list.slice().reverse().slice(0,100).map(w=>`<div class="card" style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px"><div><b>${esc(wertText(w))}</b><div class="meta">${esc(fmtDT(w.datum))}${w.quelle?' · '+esc(w.quelle):''}</div></div><button class="ghost" data-act="w-edit" data-id="${w.id}">✏️</button></div>`).join('');
+  h+=`<div class="sec">Messungen</div>`+list.slice().reverse().slice(0,100).map(w=>`<div class="card" style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px"><div><b>${esc(wertText(w))}</b><div class="meta">${esc(wDate(w))}${w.quelle?' · '+esc(w.quelle):''}</div></div><button class="ghost" data-act="w-edit" data-id="${w.id}">✏️</button></div>`).join('');
   return h;
 }
 function avg(list,k){const v=list.slice(-30).map(x=>x[k]).filter(x=>x!=null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null}
@@ -564,7 +565,7 @@ function rMehr(){
   </div>
   <div class="sec">Sicherheit</div><div class="card"><div class="meta">Alle Daten liegen verschlüsselt (AES-256) auf diesem Gerät. Automatische Sperre nach 5 Minuten Inaktivität oder 1 Minute im Hintergrund.</div><div class="acts">${bioSupported()?(lsGet(BKEY)?'<button data-act="bio-off">👆 Fingerabdruck deaktivieren</button>':'<button data-act="bio-on">👆 Fingerabdruck einrichten</button>'):''}<button data-act="pw-change">🔑 Passwort ändern</button><button data-act="wipe" class="danger">🗑️ Alle Daten löschen</button></div></div>
   <div class="sec">Importieren</div><div class="card"><div class="acts"><button data-act="ics-import">📅 Termine aus .ics</button><button data-act="csv-import">📈 Werte aus CSV / Samsung Health</button></div>
-    <div class="hint">Samsung Health: Im Export-Ordner einfach <b>alle Dateien</b> auswählen – die Gesundbox nimmt sich Blutdruck und Gewicht selbst heraus.</div>
+    <div class="hint">Samsung Health: Im Export-Ordner einfach <b>alle Dateien</b> auswählen – die Gesundbox nimmt sich Blutdruck, Puls (als Tageswert) und Gewicht selbst heraus.</div>
     <div class="hint">Tipp: In anderen Apps auf <b>Teilen → Gesundbox</b> tippen. So kommen Terminbestätigungen (.ics oder Text), CSV-Messwerte, Samsung-Health-Exporte (CSV oder ZIP) sowie Fotos und PDFs (z. B. Arztbriefe) direkt hierher.</div></div>
   <div class="sec">App-Update</div><div class="card">${D.github?`<div class="meta">Verbunden mit ${esc(D.github.repo)}</div><div class="acts"><button data-act="gh-upload">📦 Update-Zip hochladen</button><button data-act="gh-setup">🔧 Verbindung ändern</button><button data-act="gh-off">✖ Trennen</button></div>`:`<div class="meta">Neue Versionen als Zip direkt aus der App ins GitHub-Repo laden.</div><div class="acts"><button data-act="gh-setup">🔗 GitHub verbinden</button></div>`}<div id="updStatus" class="note" style="margin-top:8px">${UPD}</div></div>
   <div class="sec">Übersicht</div><div class="card meta">${D.termine.length} Termine · ${D.aerzte.length} Ärzte · ${D.vorsorge.length} Vorsorge · ${D.werte.length} Messwerte · ${D.dokumente.length} Dokumente<br><span id="stor"></span></div>
@@ -652,11 +653,11 @@ async function importICSText(text){
 const GUESS={datum:/^(datum|date|day|tag|zeitstempel|timestamp|messzeit|measurement date|start)/i,zeit:/^(uhrzeit|zeit|time)$/i,
   sys:/(sys|systol)/i,dia:/(dia(?!g)|diastol)/i,puls:/(puls|pulse|heart|herz|hr\b|bpm)/i,gewicht:/(gewicht|weight|kg)/i};
 /* Samsung-Export: nur Blutdruck und Gewicht lesen, alle anderen Tabellen gar nicht erst öffnen */
-const SAM_WANT=/blood_pressure[^/]*\.csv$|health\.weight[^/]*\.csv$/i;
+const SAM_WANT=/blood_pressure[^/]*\.csv$|health\.weight[^/]*\.csv$|tracker\.heart_rate\.\d*\.?csv$/i;
 const isSamsungName=n=>/^com\.samsung\./i.test(n||'');
 async function importSamsungFiles(list){
   const want=list.filter(f=>SAM_WANT.test(f.name||''));
-  if(!want.length){toast('Unter den Dateien ist keine Samsung-Health-Blutdruck- oder Gewichtstabelle.');return}
+  if(!want.length){toast('Unter den Dateien ist keine Samsung-Health-Tabelle für Blutdruck, Puls oder Gewicht.');return}
   const res=[];for(const f of want){try{res.push(samsungParse(typeof f.text==='string'?f.text:await f.text()))}catch{}}
   await importSamsungResults(res);
 }
@@ -691,6 +692,18 @@ function samsungParse(text){
   const kind=rows[0][0];
   const head=rows[1].map(h=>h.replace(/^com\.samsung\.(s?health)\.[a-z_.]+?\.(?=[a-z_]+$)/,''));
   const ix=n=>head.indexOf(n);
+  /* Herzfrequenz der Uhr: zehntausende Einzelwerte -> ein Wert pro Tag (Durchschnitt, min, max) */
+  if(/tracker\.heart_rate$/.test(kind)){
+    const days={};
+    for(const r of rows.slice(2)){
+      const datum=samsungTime(r[ix('start_time')],r[ix('time_offset')]);const hr=num(r[ix('heart_rate')]);
+      if(!datum||hr==null||hr<30||hr>220)continue;
+      const d=days[datum.slice(0,10)]||(days[datum.slice(0,10)]={sum:0,n:0,min:999,max:0});
+      d.sum+=hr;d.n++;if(hr<d.min)d.min=hr;if(hr>d.max)d.max=hr;
+    }
+    const list=Object.entries(days).map(([day,d])=>({typ:'puls',datum:day+'T12:00',v1:Math.round(d.sum/d.n),v2:null,v3:null,min:d.min,max:d.max,cnt:d.n,sid:'hr-'+day,upsert:true}));
+    return{typ:'puls',list,kind};
+  }
   const typ=/blood_pressure$/.test(kind)?'bp':/\.weight$/.test(kind)?'gewicht':null;
   if(!typ)return{typ:null,list:[],kind};
   const list=[];
@@ -705,21 +718,28 @@ function samsungParse(text){
 }
 function addSamsung(res){
   let n=0,dup=0;
-  for(const w of res.list){
+  for(const w0 of res.list){
+    const{upsert,...w}=w0;
+    if(upsert){ /* Tageswert: vorhandenen Tag aktualisieren, wenn inzwischen mehr Messungen vorliegen */
+      const x=D.werte.find(y=>y.sid===w.sid);
+      if(!x){D.werte.push({id:uid(),...w,quelle:'Samsung Health · Tageswert'});n++}
+      else if((w.cnt||0)>(x.cnt||0)){Object.assign(x,w);n++}else dup++;
+      continue;
+    }
     if(D.werte.some(x=>(w.sid&&x.sid===w.sid)||(x.typ===w.typ&&x.datum===w.datum&&x.v1===w.v1))){dup++;continue}
     D.werte.push({id:uid(),...w,quelle:'Samsung Health'});n++;
   }
   return{n,dup};
 }
 async function importSamsungResults(results){
-  const sum={bp:{n:0,dup:0},gewicht:{n:0,dup:0}};
+  const sum={bp:{n:0,dup:0},gewicht:{n:0,dup:0},puls:{n:0,dup:0}};
   for(const r of results){if(!r?.typ)continue;const x=addSamsung(r);sum[r.typ].n+=x.n;sum[r.typ].dup+=x.dup}
-  const total=sum.bp.n+sum.gewicht.n,dups=sum.bp.dup+sum.gewicht.dup;
-  if(!total&&!dups){toast('Keine Blutdruck- oder Gewichtswerte von Samsung Health gefunden.');return}
+  const total=sum.bp.n+sum.gewicht.n+sum.puls.n,dups=sum.bp.dup+sum.gewicht.dup+sum.puls.dup;
+  if(!total&&!dups){toast('Keine Blutdruck-, Puls- oder Gewichtswerte von Samsung Health gefunden.');return}
   if(total)await save();
-  WTYP=sum.bp.n||!sum.gewicht.n?'bp':'gewicht';TAB='werte';render();
-  const parts=[];if(sum.bp.n)parts.push(sum.bp.n+' Blutdruckwerte');if(sum.gewicht.n)parts.push(sum.gewicht.n+' Gewichtswerte');
-  toast('Samsung Health: '+(parts.length?parts.join(' und ')+' importiert':'nichts Neues')+(dups?`, ${dups} schon vorhanden`:'')+'.');
+  WTYP=sum.bp.n?'bp':sum.puls.n?'puls':sum.gewicht.n?'gewicht':WTYP;TAB='werte';render();
+  const parts=[];if(sum.bp.n)parts.push(sum.bp.n+' Blutdruckwerte');if(sum.puls.n)parts.push(sum.puls.n+' Puls-Tageswerte');if(sum.gewicht.n)parts.push(sum.gewicht.n+' Gewichtswerte');
+  toast('Samsung Health: '+(parts.length?parts.join(', ')+' importiert':'nichts Neues')+(dups?`, ${dups} schon vorhanden`:'')+'.');
 }
 /* Minimaler ZIP-Leser (Samsung-Export): nur die benötigten CSV-Dateien entpacken */
 async function zipEntries(buf,want){
@@ -738,8 +758,8 @@ async function zipEntries(buf,want){
   return out;
 }
 async function importZip(buf){
-  let files;try{files=await zipEntries(buf,n=>/blood_pressure[^/]*\.csv$|health\.weight[^/]*\.csv$/i.test(n))}catch(e){toast(e.message);return}
-  if(!files.length){toast('In der ZIP-Datei wurden keine Samsung-Health-Blutdruck- oder Gewichtsdaten gefunden.');return}
+  let files;try{files=await zipEntries(buf,n=>SAM_WANT.test(n.split('/').pop()))}catch(e){toast(e.message);return}
+  if(!files.length){toast('In der ZIP-Datei wurden keine Samsung-Health-Daten für Blutdruck, Puls oder Gewicht gefunden.');return}
   await importSamsungResults(files.map(f=>samsungParse(f.text)));
 }
 function importCSVText(fname,text){
