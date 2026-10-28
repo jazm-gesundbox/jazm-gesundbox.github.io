@@ -77,6 +77,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
     <div class="err" id="lockErr"></div>
     <button class="pri" style="width:100%" id="lockBtnGo">Entsperren</button>
     <button type="button" class="ghost" style="width:100%;margin-top:10px" id="bioBtn" hidden>👆 Mit Fingerabdruck entsperren</button>
+    <div class="meta" id="verLock" style="margin-top:16px;font-size:12px"></div>
   </form>
 </div>
 
@@ -99,6 +100,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <script>
 'use strict';
+const APP_VERSION='1.2.0';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -180,8 +182,9 @@ function normalize(o){const e=empty();for(const k of ['termine','aerzte','vorsor
 async function save(){const p=await encryptObj(D,KEY,SALT);if(!lsSet(VKEY,JSON.stringify(p)))toast('Speichern fehlgeschlagen – Speicher voll?')}
 
 /* ---------- Sperrbildschirm ---------- */
-function showLock(){
+function showLock(auto){
   KEY=null;D=null;closeDlg();
+  $('#verLock').textContent='Version '+APP_VERSION;
   $('#app').hidden=true;$('#lock').hidden=false;
   const has=!!lsGet(VKEY);
   $('#pw2').hidden=has;$('#pw2').required=!has;
@@ -191,6 +194,7 @@ function showLock(){
   $('#pw').value='';$('#pw2').value='';$('#lockErr').textContent='';
   $('#bioBtn').hidden=!(has&&lsGet(BKEY)&&bioSupported());
   if($('#bioBtn').hidden)setTimeout(()=>$('#pw').focus(),50);
+  else if(auto===true)setTimeout(tryBio,300);
 }
 async function unlockWith(pw){
   const p=JSON.parse(lsGet(VKEY));SALT=unb64(p.salt);KEY=await derive(pw,SALT);D=normalize(await decryptObj(p,KEY));
@@ -214,18 +218,25 @@ $('#lockForm').onsubmit=async e=>{
   }catch(err){KEY=null;$('#lockErr').textContent=stored?'Falsches Passwort.':'Fehler: '+err.message}
   finally{btn.disabled=false;btn.textContent=lsGet(VKEY)?'Entsperren':'Gesundbox anlegen'}
 };
-$('#bioBtn').onclick=async()=>{
+let bioBusy=false;
+async function tryBio(){
+  if(bioBusy||KEY||$('#bioBtn').hidden||document.hidden)return;bioBusy=true;
   const btn=$('#bioBtn');$('#lockErr').textContent='';btn.disabled=true;
   try{const pw=await bioGetPassword();await unlockWith(pw)}
   catch(err){KEY=null;$('#lockErr').textContent=err.message==='nopw'?'Fingerabdruck passt nicht mehr zum Passwort – bitte mit Passwort entsperren und neu einrichten.':(err.name==='NotAllowedError'?'Abgebrochen. Du kannst auch das Passwort nutzen.':'Fingerabdruck fehlgeschlagen – bitte Passwort nutzen.')}
-  finally{btn.disabled=false}
-};
-$('#lockNow').onclick=showLock;
+  finally{btn.disabled=false;bioBusy=false}
+}
+$('#bioBtn').onclick=tryBio;
+$('#lockNow').onclick=()=>showLock(false);
 /* Auto-Sperre: 5 Min. Inaktivität oder 1 Min. im Hintergrund */
 let idleT,hiddenAt=0;
-function resetIdle(){clearTimeout(idleT);if(KEY)idleT=setTimeout(showLock,5*60*1000)}
+function resetIdle(){clearTimeout(idleT);if(KEY)idleT=setTimeout(()=>showLock(false),5*60*1000)}
 ['pointerdown','keydown','scroll','touchstart'].forEach(ev=>addEventListener(ev,resetIdle,{passive:true}));
-document.addEventListener('visibilitychange',()=>{if(document.hidden)hiddenAt=Date.now();else if(KEY&&hiddenAt&&Date.now()-hiddenAt>60000)showLock()});
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){hiddenAt=Date.now();return}
+  if(KEY&&hiddenAt&&Date.now()-hiddenAt>60000)showLock(true);
+  else if(!KEY&&!$('#lock').hidden)setTimeout(tryBio,300);
+});
 
 /* ---------- Dialog ---------- */
 const dlg=$('#dlg');
@@ -418,7 +429,7 @@ function rMehr(){
   <div class="sec">Import</div><div class="card"><div class="acts"><button data-act="ics-import">📅 Termine aus .ics</button><button data-act="csv-import">📈 Werte aus CSV</button></div></div>
   <div class="sec">Sicherheit</div><div class="card"><div class="meta">Alle Daten liegen verschlüsselt (AES-256) nur auf diesem Gerät. Automatische Sperre nach 5 Minuten Inaktivität oder 1 Minute im Hintergrund.</div><div class="acts">${bioSupported()?(lsGet(BKEY)?'<button data-act="bio-off">👆 Fingerabdruck deaktivieren</button>':'<button data-act="bio-on">👆 Fingerabdruck einrichten</button>'):''}<button data-act="pw-change">🔑 Passwort ändern</button><button data-act="wipe" class="danger">🗑️ Alle Daten löschen</button></div></div>
   <div class="sec">Übersicht</div><div class="card meta">${D.termine.length} Termine · ${D.aerzte.length} Ärzte · ${D.vorsorge.length} Vorsorge · ${D.werte.length} Messwerte</div>
-  <p class="meta" style="text-align:center">Gesundbox V1.1 · Kein Ersatz für ärztlichen Rat.</p>`;
+  <p class="meta" style="text-align:center">Gesundbox · Version ${APP_VERSION}<br>Kein Ersatz für ärztlichen Rat.</p>`;
 }
 
 /* ---------- Formulare ---------- */
@@ -557,7 +568,7 @@ function changePw(){
 async function wipe(){
   if(!confirm('Wirklich ALLE Daten auf diesem Gerät löschen? Das kann nicht rückgängig gemacht werden.'))return;
   if(!confirm('Letzte Warnung: Hast du ein Backup?'))return;
-  lsDel(VKEY);lsDel(BKEY);showLock();
+  lsDel(VKEY);lsDel(BKEY);showLock(false);
 }
 const PRESETS=[['Zahnarzt – Kontrolle',6],['Professionelle Zahnreinigung',12],['Hausarzt – Check-up',36],['Hautkrebs-Screening',24],['Augenarzt',24],['Tetanus/Diphtherie – Auffrischung',120]];
 
@@ -596,7 +607,7 @@ $('#fab').onclick=()=>({termine:()=>editTermin(),aerzte:()=>editArzt(),vorsorge:
 
 /* ---------- Start ---------- */
 if(!window.crypto?.subtle){document.body.innerHTML='<p style="padding:24px">Diese App braucht HTTPS und einen aktuellen Browser.</p>'}
-else{showLock();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})}
+else{showLock(true);if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})}
 </script>
 </body>
 </html>
