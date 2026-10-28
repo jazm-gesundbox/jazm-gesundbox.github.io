@@ -82,6 +82,11 @@ svg.chart{width:100%;height:auto;background:var(--card);border:1px solid var(--b
 .pg button{background:none;border:0;color:var(--red);font-size:16px;cursor:pointer}
 .btnlike{display:inline-block;font-size:14px;padding:8px 12px;border:1px solid var(--bd);border-radius:10px;cursor:pointer;color:var(--tx);text-align:center}
 .dicon{font-size:26px;line-height:1}
+.recent{display:flex;flex-direction:column;gap:6px}
+.recent button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 12px;border-radius:12px;border:0;background:var(--pri2);color:var(--pri);cursor:pointer}
+.recent .tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.recent small{display:block;font-size:12px;opacity:.75;overflow:hidden;text-overflow:ellipsis}
+.recent .chev{opacity:.6}
 .chipdoc{display:inline-block;font-size:13px;padding:4px 10px;border-radius:999px;background:var(--pri2);color:var(--pri);border:0;margin:6px 6px 0 0;cursor:pointer}
 nav button{font-size:11px!important}
 .hello{font-size:22px;font-weight:700;margin:6px 0 2px}
@@ -165,7 +170,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <script>
 'use strict';
-const APP_VERSION='2.1.1';
+const APP_VERSION='2.1.2';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -605,7 +610,7 @@ function rStart(){
   </div>`;
   /* Zuletzt hinzugefügt */
   const docs=D.dokumente.slice(-3).reverse();
-  if(docs.length)h+=`<div class="sec">Zuletzt hinzugefügt</div><div>${docs.map(x=>`<button class="chipdoc" data-act="d-view" data-id="${x.id}">📎 ${esc(dokTitel(x))}</button>`).join('')}</div>`;
+  if(docs.length)h+=`<div class="sec">Zuletzt hinzugefügt</div><div class="recent">${docs.map(x=>`<button data-act="d-view" data-id="${x.id}"><span class="ti">📎</span><span class="tx">${esc(dokTitel(x))}<small>${esc(DOKTYP[x.typ]||'Dokument')}${x.datum?' · '+esc(fmtD(x.datum)):''}</small></span><span class="chev">›</span></button>`).join('')}</div>`;
   /* Schnellaktionen */
   h+=`<div class="sec">Schnell erfassen</div><div class="quick">
     <button data-act="q-termin">➕ Termin</button><button data-act="q-dok">📷 Dokument</button>
