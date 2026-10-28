@@ -134,23 +134,31 @@ async function prfKey(credId,prfSalt){
   const a=await navigator.credentials.get({publicKey:{challenge:rnd(32),rpId:location.hostname,allowCredentials:[{type:'public-key',id:credId}],userVerification:'required',timeout:60000,extensions:{prf:{eval:{first:prfSalt}}}}});
   const r=a.getClientExtensionResults()?.prf?.results?.first;
   if(!r)throw new Error('noprf');
+  return keyFromPrf(r,prfSalt);
+}
+async function keyFromPrf(r,prfSalt){
   const base=await crypto.subtle.importKey('raw',r,'HKDF',false,['deriveKey']);
   return crypto.subtle.deriveKey({name:'HKDF',hash:'SHA-256',salt:prfSalt,info:te.encode('gesundbox-bio-v1')},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
 }
 async function enableBio(pw){
   try{
+    const prfSalt=rnd(32);
     const cred=await navigator.credentials.create({publicKey:{challenge:rnd(32),rp:{name:'Gesundbox',id:location.hostname},
       user:{id:rnd(16),name:'Gesundbox',displayName:'Gesundbox'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
-      authenticatorSelection:{residentKey:'preferred',userVerification:'required'},timeout:60000,extensions:{prf:{}}}});
-    const credId=new Uint8Array(cred.rawId),prfSalt=rnd(32);
-    toast('Jetzt einmal zur Bestätigung den Finger auflegen …');
-    const k=await prfKey(credId,prfSalt);
+      authenticatorSelection:{residentKey:'required',requireResidentKey:true,userVerification:'required'},timeout:60000,
+      extensions:{prf:{eval:{first:prfSalt}}}}});
+    const credId=new Uint8Array(cred.rawId);
+    const ext=cred.getClientExtensionResults()?.prf;
+    if(ext&&ext.enabled===false)throw new Error('noprf');
+    let k;
+    if(ext?.results?.first)k=await keyFromPrf(ext.results.first,prfSalt); /* Google liefert das Geheimnis direkt beim Anlegen */
+    else{toast('Jetzt zur Bestätigung den Passkey „Gesundbox“ wählen …');k=await prfKey(credId,prfSalt)}
     const iv=rnd(12),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},k,te.encode(pw));
     lsSet(BKEY,JSON.stringify({cred:b64(credId),salt:b64(prfSalt),iv:b64(iv),ct:b64(ct)}));
     toast('Fingerabdruck eingerichtet ✓');render();
   }catch(err){
     if(err.message==='noprf')alert('Dein Passkey-Anbieter unterstützt diese Funktion nicht. Bitte beim Einrichten den Google Passwortmanager als Speicherort wählen und erneut versuchen.');
-    else if(err.name==='NotAllowedError')toast('Einrichtung abgebrochen.');
+    else if(err.name==='NotAllowedError')alert('Einrichtung abgebrochen oder Passkey nicht gefunden. Bitte erneut versuchen und beim Speichern den Google Passwortmanager wählen.');
     else toast('Fehler: '+err.message);
   }
 }
@@ -163,7 +171,7 @@ function askPwThenBio(){
   openForm('Fingerabdruck einrichten',[{k:'pw',l:'Zur Bestätigung dein Passwort',t:'password',req:true}],{},async v=>{
     try{const p=JSON.parse(lsGet(VKEY));await decryptObj(p,await derive(v.pw,unb64(p.salt)))}catch{toast('Passwort falsch.');return false}
     setTimeout(()=>enableBio(v.pw),50);
-  },{okText:'Weiter',html:'<div class="meta" style="margin-bottom:10px">Danach fragt dein Handy zweimal nach dem Fingerabdruck. Als Speicherort den Google Passwortmanager wählen.</div>'});
+  },{okText:'Weiter',html:'<div class="meta" style="margin-bottom:10px">Danach fragt dein Handy nach dem Fingerabdruck. Als Speicherort unbedingt den Google Passwortmanager wählen.</div>'});
 }
 
 let KEY=null,SALT=null,D=null,TAB='termine',WTYP='bp';
