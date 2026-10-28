@@ -45,7 +45,7 @@ nav button.on{color:var(--pri);font-weight:600}
 .acts button,.acts a{font-size:14px;padding:7px 12px;border:1px solid var(--bd);border-radius:10px;background:transparent;color:var(--tx);text-decoration:none;cursor:pointer}
 .sec{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:20px 0 4px}
 .badge{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px}
-.b-red{background:var(--redbg);color:var(--red)}.b-or{background:var(--orbg);color:var(--or)}.b-ok{background:var(--okbg);color:var(--ok)}
+.b-red{background:var(--redbg);color:var(--red)}.b-or{background:var(--orbg);color:var(--or)}.b-ok{background:var(--okbg);color:var(--ok)}.b-mu{background:var(--bd);color:var(--mu)}
 .banner{display:block;width:100%;text-align:left;background:var(--orbg);color:var(--or);border:0;border-radius:14px;padding:12px 14px;margin:8px 0;font-weight:600;cursor:pointer}
 .chips{display:flex;gap:8px;margin:6px 0;flex-wrap:wrap}
 .chips button{border:1px solid var(--bd);background:var(--card);border-radius:999px;padding:7px 14px;cursor:pointer}
@@ -136,7 +136,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <script>
 'use strict';
-const APP_VERSION='1.6.2';
+const APP_VERSION='1.7.0';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -745,7 +745,10 @@ async function watchRun(repo,tok,sha){
 /* ---------- Dokumente: Fotos & PDFs, verschlüsselt in IndexedDB ----------
    Jede Datei wird mit einem zufälligen Dateischlüssel (liegt im Tresor) verschlüsselt.
    So bleiben Dateien beim Passwortwechsel gültig und müssen nie neu hochgeladen werden. */
-const DOKTYP={ueberweisung:'Überweisung',rezept:'Rezept',brief:'Arztbrief',befund:'Befund',sonstiges:'Sonstiges'};
+const DOKTYP={ueberweisung:'Überweisung',rezept:'Rezept',medikationsplan:'Medikationsplan',brief:'Arztbrief',befund:'Befund',sonstiges:'Sonstiges'};
+/* MyTherapy (Android): öffnet die App, sonst den Play Store */
+const MYTHERAPY='intent://#Intent;package=eu.smartpatient.mytherapy;S.browser_fallback_url='+encodeURIComponent('https://play.google.com/store/apps/details?id=eu.smartpatient.mytherapy')+';end';
+const mtBtn=()=>`<a class="btnlike" href="${MYTHERAPY}">💊 MyTherapy öffnen</a>`;
 let FKEY=null,DTYP='alle',DARZT='';
 const kb=n=>n>=1e6?(n/1e6).toLocaleString('de-DE',{maximumFractionDigits:1})+' MB':Math.max(1,Math.round(n/1e3))+' KB';
 const allFids=()=>D?D.dokumente.flatMap(d=>(d.files||[]).map(f=>f.fid)).concat((D.meta.draft?.pages||[]).map(p=>p.fid).filter(Boolean)):[];
@@ -782,8 +785,14 @@ async function prepFile(file){
   }
   return{buf:await file.arrayBuffer(),mime:mime||'application/octet-stream',name:file.name||'datei'};
 }
-const guessTyp=n=>/rezept/i.test(n)?'rezept':/(über|ueber)weis/i.test(n)?'ueberweisung':/befund|labor|röntgen|mrt/i.test(n)?'befund':/brief|bericht/i.test(n)?'brief':'sonstiges';
+const guessTyp=n=>/medikation|medikamentenplan|mytherapy/i.test(n)?'medikationsplan':/rezept/i.test(n)?'rezept':/(über|ueber)weis/i.test(n)?'ueberweisung':/befund|labor|röntgen|mrt/i.test(n)?'befund':/brief|bericht/i.test(n)?'brief':'sonstiges';
 function dokBadge(d){
+  if(d.typ==='medikationsplan'){
+    const neu=D.dokumente.filter(x=>x.typ==='medikationsplan').sort((a,b)=>(b.datum||'').localeCompare(a.datum||''))[0];
+    if(neu&&neu.id!==d.id)return'<span class="badge b-mu">älterer Plan</span>';
+    const age=Math.round((new Date(today()+'T00:00')-new Date((d.datum||today())+'T00:00'))/864e5);
+    return age>90?`<span class="badge b-or">Stand vor ${age} Tagen – noch aktuell?</span>`:'<span class="badge b-ok">aktueller Plan</span>';
+  }
   if(!d.gueltig)return'';const days=Math.round((new Date(d.gueltig+'T00:00')-new Date(today()+'T00:00'))/864e5);
   return days<0?'<span class="badge b-red">abgelaufen</span>':days<=14?`<span class="badge b-or">noch ${days} Tage gültig</span>`:`<span class="badge b-ok">gültig bis ${esc(fmtD(d.gueltig))}</span>`;
 }
@@ -791,14 +800,14 @@ function rDok(){
   if(DARZT&&!arzt(DARZT))DARZT='';
   const base=D.dokumente.filter(d=>!DARZT||d.arztId===DARZT);
   const cnt=t=>base.filter(d=>t==='alle'||d.typ===t).length;
-  let h=`<div class="chips">${[['alle','Alle'],...Object.entries(DOKTYP)].filter(([k])=>k==='alle'||cnt(k)).map(([k,n])=>`<button data-act="d-typ" data-id="${k}" class="${k===DTYP?'on':''}">${n} ${cnt(k)}</button>`).join('')}</div>${DARZT?`<div class="chips"><button class="on" data-act="d-arzt-clear">🩺 ${esc(arzt(DARZT).name)} ✕</button></div>`:''}`;
+  let h=`<div class="chips">${[['alle','Alle'],...Object.entries(DOKTYP)].filter(([k])=>k==='alle'||cnt(k)).map(([k,n])=>`<button data-act="d-typ" data-id="${k}" class="${k===DTYP?'on':''}">${n} ${cnt(k)}</button>`).join('')}</div>${DARZT?`<div class="chips"><button class="on" data-act="d-arzt-clear">🩺 ${esc(arzt(DARZT).name)} ✕</button></div>`:''}${DTYP==='medikationsplan'?`<div class="card"><div class="meta">Deine Medikamente pflegst du in MyTherapy. Den Plan dort als PDF teilen → <b>Gesundbox</b>, dann liegt er hier verschlüsselt und ist in der Sicherung.</div><div class="acts">${mtBtn()}</div></div>`:''}`;
   const list=base.filter(d=>DTYP==='alle'||d.typ===DTYP).sort((a,b)=>(b.datum||'').localeCompare(a.datum||''));
-  if(!D.dokumente.length)return h+`<div class="empty">Noch keine Dokumente.<br>Tippe auf <b>+</b> und fotografiere z. B. eine Überweisung oder ein Rezept – oder teile ein PDF aus einer anderen App mit der Gesundbox.</div>`;
+  if(!D.dokumente.length)return h+`<div class="empty">Noch keine Dokumente.<br>Tippe auf <b>+</b> und fotografiere z. B. eine Überweisung oder ein Rezept – oder teile ein PDF aus einer anderen App mit der Gesundbox, etwa deinen Medikationsplan aus MyTherapy.<br><br>${mtBtn()}</div>`;
   return h+list.map(d=>{const a=arzt(d.arztId),t=D.termine.find(x=>x.id===d.terminId),n=(d.files||[]).length,pdf=(d.files||[]).some(f=>f.mime==='application/pdf');
     return `<div class="card"><div style="display:flex;gap:12px;align-items:flex-start"><div class="dicon">${pdf?'📄':'🖼️'}</div><div style="flex:1;min-width:0">
       <h3>${esc(dokTitel(d))}</h3><div class="meta">${esc(DOKTYP[d.typ]||'')} · ${esc(fmtD(d.datum))}${a?' · '+esc(a.name):''} · ${n} ${n===1?'Datei':'Dateien'}${t?'<br>📅 '+esc(t.titel)+', '+esc(fmtD(t.datum.slice(0,10))):''}</div>
       ${dokBadge(d)}${d.notiz?`<div class="note">${esc(d.notiz)}</div>`:''}</div></div>
-      <div class="acts"><button data-act="d-view" data-id="${d.id}">👁️ Ansehen</button><button data-act="d-edit" data-id="${d.id}">✏️ Bearbeiten</button></div></div>`}).join('');
+      <div class="acts"><button data-act="d-view" data-id="${d.id}">👁️ Ansehen</button><button data-act="d-edit" data-id="${d.id}">✏️ Bearbeiten</button>${d.typ==='medikationsplan'&&DTYP!=='medikationsplan'&&dokBadge(d).includes('b-mu')===false?mtBtn():''}</div></div>`}).join('');
 }
 function editDok(d,preset,incoming,draftPages){
   const isNew=!d;d=d||{id:uid(),titel:'',typ:'sonstiges',datum:today(),gueltig:'',arztId:'',terminId:'',notiz:'',files:[],...preset};
