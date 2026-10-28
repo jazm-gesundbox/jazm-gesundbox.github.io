@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://api.github.com; frame-ancestors 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#8c2f45">
 <title>Gesundbox</title>
@@ -100,7 +100,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <script>
 'use strict';
-const APP_VERSION='1.2.0';
+const APP_VERSION='1.3.0';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -178,7 +178,7 @@ function askPwThenBio(){
 
 let KEY=null,SALT=null,D=null,TAB='termine',WTYP='bp';
 const empty=()=>({v:1,termine:[],aerzte:[],vorsorge:[],werte:[]});
-function normalize(o){const e=empty();for(const k of ['termine','aerzte','vorsorge','werte'])e[k]=Array.isArray(o?.[k])?o[k]:[];return e}
+function normalize(o){const e=empty();for(const k of ['termine','aerzte','vorsorge','werte'])e[k]=Array.isArray(o?.[k])?o[k]:[];if(o?.github?.token)e.github={token:String(o.github.token),repo:String(o.github.repo||defaultRepo())};return e}
 async function save(){const p=await encryptObj(D,KEY,SALT);if(!lsSet(VKEY,JSON.stringify(p)))toast('Speichern fehlgeschlagen – Speicher voll?')}
 
 /* ---------- Sperrbildschirm ---------- */
@@ -426,6 +426,7 @@ function rWerte(){
 function avg(list,k){const v=list.slice(-30).map(x=>x[k]).filter(x=>x!=null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null}
 function rMehr(){
   return `<div class="sec">Backup</div><div class="card"><div class="meta">Das Backup ist mit deinem aktuellen Passwort verschlüsselt. Speichere es z. B. in deiner Cloud.</div><div class="acts"><button data-act="bk-export">💾 Backup exportieren</button><button data-act="bk-import">📂 Backup wiederherstellen</button></div></div>
+  <div class="sec">Update</div><div class="card">${D.github?`<div class="meta">Verbunden mit ${esc(D.github.repo)}</div><div class="acts"><button data-act="gh-upload">📦 Update-Zip hochladen</button><button data-act="gh-setup">🔧 Verbindung ändern</button><button data-act="gh-off">✖ Trennen</button></div>`:`<div class="meta">Neue Versionen als Zip direkt aus der App ins GitHub-Repo laden.</div><div class="acts"><button data-act="gh-setup">🔗 GitHub verbinden</button></div>`}<div id="updStatus" class="note" style="margin-top:8px">${UPD}</div></div>
   <div class="sec">Import</div><div class="card"><div class="acts"><button data-act="ics-import">📅 Termine aus .ics</button><button data-act="csv-import">📈 Werte aus CSV</button></div></div>
   <div class="sec">Sicherheit</div><div class="card"><div class="meta">Alle Daten liegen verschlüsselt (AES-256) nur auf diesem Gerät. Automatische Sperre nach 5 Minuten Inaktivität oder 1 Minute im Hintergrund.</div><div class="acts">${bioSupported()?(lsGet(BKEY)?'<button data-act="bio-off">👆 Fingerabdruck deaktivieren</button>':'<button data-act="bio-on">👆 Fingerabdruck einrichten</button>'):''}<button data-act="pw-change">🔑 Passwort ändern</button><button data-act="wipe" class="danger">🗑️ Alle Daten löschen</button></div></div>
   <div class="sec">Übersicht</div><div class="card meta">${D.termine.length} Termine · ${D.aerzte.length} Ärzte · ${D.vorsorge.length} Vorsorge · ${D.werte.length} Messwerte</div>
@@ -540,9 +541,67 @@ async function importCSV(){
   show({...guess,...autoCols(guess.typ)});
 }
 
+/* ---------- Update direkt aus der App (GitHub) ---------- */
+const defaultRepo=()=>{const h=location.hostname;return h.endsWith('.github.io')?h.split('.')[0]+'/'+h:''};
+let UPD='';
+function setUpd(html){UPD=html;const el=document.getElementById('updStatus');if(el)el.innerHTML=html;}
+async function gh(path,opt={},tok){
+  const g=tok?{token:tok}:D?.github;if(!g?.token)throw new Error('Kein GitHub-Token hinterlegt.');
+  const r=await fetch('https://api.github.com'+path,{...opt,headers:{'Accept':'application/vnd.github+json','Authorization':'Bearer '+g.token,'X-GitHub-Api-Version':'2022-11-28',...(opt.body?{'Content-Type':'application/json'}:{})}});
+  if(r.status===404&&opt.allow404)return null;
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(r.status===401?'Token ungültig oder abgelaufen.':r.status===403?'Keine Berechtigung (Token-Rechte prüfen).':r.status===404?'Repo nicht gefunden oder kein Zugriff.':(j.message||('Fehler '+r.status)));
+  return j;
+}
+function ghSetup(){
+  openForm('GitHub verbinden',[{k:'token',l:'Fine-grained Token (github_pat_…)',t:'password',req:true},{k:'repo',l:'Repo (Besitzer/Name)',req:true}],{repo:D.github?.repo||defaultRepo()},async v=>{
+    const repo=v.repo.trim().replace(/^https:\/\/github\.com\//,'').replace(/\/$/,''),token=v.token.trim();
+    try{const j=await gh('/repos/'+repo,{},token);if(j.permissions&&!j.permissions.push){toast('Token hat keine Schreibrechte für das Repo.');return false}}
+    catch(e){toast(e.message);return false}
+    D.github={token,repo};await save();toast('GitHub verbunden ✓');
+  },{okText:'Prüfen & speichern',html:'<div class="meta" style="margin-bottom:10px">Der Token wird verschlüsselt in der Gesundbox gespeichert und nur für Updates genutzt. Rechte: <b>Contents: Read and write</b> und <b>Actions: Read</b>, nur für dieses eine Repo.</div>'});
+}
+async function ghUpload(){
+  const file=await pickFile('.zip,application/zip');if(!file)return;
+  if(!/\.zip$/i.test(file.name)){toast('Bitte eine .zip-Datei wählen.');return}
+  const name=file.name.replace(/[^\w.\-]/g,'_'),repo=D.github.repo,tok=D.github.token;
+  if(!confirm(`„${name}“ (${Math.round(file.size/1024)} KB) ins Repo hochladen und veröffentlichen?`))return;
+  setUpd('⏳ Lade Zip hoch …');
+  try{
+    const old=await gh(`/repos/${repo}/contents/${encodeURIComponent(name)}`,{allow404:true},tok);
+    const res=await gh(`/repos/${repo}/contents/${encodeURIComponent(name)}`,{method:'PUT',body:JSON.stringify({message:'Paket '+name+' (aus der Gesundbox)',content:b64(await file.arrayBuffer()),branch:'main',...(old?.sha?{sha:old.sha}:{})})},tok);
+    setUpd('⚙️ Hochgeladen – GitHub entpackt und prüft das Paket …');
+    watchRun(repo,tok,res.commit.sha);
+  }catch(e){setUpd('❌ '+esc(e.message))}
+}
+async function watchRun(repo,tok,sha){
+  const t0=Date.now();let run=null;
+  while(Date.now()-t0<5*60e3){
+    await new Promise(r=>setTimeout(r,5000));
+    try{const j=await gh(`/repos/${repo}/actions/runs?head_sha=${sha}&per_page=5`,{},tok);run=j.workflow_runs?.[0]||run}catch(e){}
+    if(run&&run.status==='completed')break;
+  }
+  if(!run){setUpd('⚠️ Kein Ablauf gefunden. Ist <b>.github/workflows/paket.yml</b> im Repo angelegt?');return}
+  const link=safeUrl(run.html_url)?` <a href="${esc(run.html_url)}" target="_blank" rel="noopener noreferrer">Details</a>`:'';
+  if(run.status!=='completed'){setUpd('⏳ Ablauf läuft noch länger als üblich.'+link);return}
+  if(run.conclusion!=='success'){
+    let msg='';try{const jobs=await gh(`/repos/${repo}/actions/runs/${run.id}/jobs`,{},tok);const id=jobs.jobs?.[0]?.id;
+      if(id){const ann=await gh(`/repos/${repo}/check-runs/${id}/annotations`,{},tok);msg=(ann.find(a=>a.annotation_level==='failure')||ann[0])?.message||''}}catch(e){}
+    setUpd('❌ Paket abgelehnt'+(msg?': '+esc(msg.replace(/^Gesundbox:?/,'')):'.')+link);return;
+  }
+  setUpd('✅ Paket übernommen – warte auf die Veröffentlichung …'+link);
+  const t1=Date.now();
+  while(Date.now()-t1<4*60e3){
+    await new Promise(r=>setTimeout(r,10000));
+    try{const html=await (await fetch('./index.html?v='+Date.now(),{cache:'no-store'})).text();const v=(html.match(/APP_VERSION='([\d.]+)'/)||[])[1];
+      if(v&&v!==APP_VERSION){setUpd(`🎉 Version ${esc(v)} ist online. <button class="pri" style="padding:6px 12px;margin-left:6px" onclick="location.reload()">Jetzt neu laden</button>`);return}}catch(e){}
+  }
+  setUpd('✅ Paket übernommen. Die Seite ist noch nicht aktualisiert (gleiche Version oder GitHub braucht länger) – später neu laden.'+link);
+}
+
 /* ---------- Backup & Sicherheit ---------- */
 async function exportBackup(){
-  const p=await encryptObj(D,KEY,SALT);
+  const {github,...rest}=D;const p=await encryptObj(rest,KEY,SALT);
   download(`gesundbox-backup-${today()}.json`,JSON.stringify(p),'application/json');
   toast('Backup erstellt (verschlüsselt).');
 }
@@ -552,7 +611,7 @@ async function importBackup(){
   openForm('Backup wiederherstellen',[{k:'pw',l:'Passwort des Backups',t:'password',req:true}],{},async v=>{
     try{const k=await derive(v.pw,unb64(p.salt));const data=normalize(await decryptObj(p,k));
       if(!confirm(`Backup enthält ${data.termine.length} Termine, ${data.aerzte.length} Ärzte, ${data.vorsorge.length} Vorsorge, ${data.werte.length} Werte.\nAktuelle Daten werden ersetzt. Fortfahren?`))return;
-      D=data;await save();toast('Backup wiederhergestellt.');
+      if(D.github&&!data.github)data.github=D.github;D=data;await save();toast('Backup wiederhergestellt.');
     }catch{toast('Falsches Passwort.');return false}
   },{okText:'Wiederherstellen',html:'<div class="meta" style="margin-bottom:10px">Die Daten werden danach mit deinem aktuellen Passwort gespeichert.</div>'});
 }
@@ -599,6 +658,9 @@ $('#main').addEventListener('click',async e=>{
     case 'pw-change':changePw();break;
     case 'wipe':wipe();break;
     case 'bio-on':askPwThenBio();break;
+    case 'gh-setup':ghSetup();break;
+    case 'gh-upload':ghUpload();break;
+    case 'gh-off':if(confirm('GitHub-Verbindung entfernen? Den Token kannst du danach auf GitHub löschen.')){delete D.github;await save();render()}break;
     case 'bio-off':if(confirm('Fingerabdruck-Entsperrung deaktivieren?')){lsDel(BKEY);render();toast('Fingerabdruck deaktiviert. Den Passkey kannst du im Google Passwortmanager löschen.')}break;
   }
 });
