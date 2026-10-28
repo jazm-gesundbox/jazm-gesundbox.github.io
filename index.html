@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#8c2f45">
+<title>Gesundbox</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#f9f4f5;--card:#fff;--tx:#26161a;--mu:#6f5a60;--bd:#eddfe3;--pri:#8c2f45;--pri2:#f6e6ea;--on-pri:#fff;--red:#dc2626;--redbg:#fde8e8;--or:#c2410c;--orbg:#fff1e6;--ok:#15803d;--okbg:#e7f6ec}
+@media (prefers-color-scheme:dark){:root{--bg:#170d10;--card:#23151a;--tx:#f2e7ea;--mu:#ae979d;--bd:#3b272d;--pri:#e3909f;--pri2:#3a1d25;--on-pri:#2a0b13;--red:#f87171;--redbg:#3a1717;--or:#fb923c;--orbg:#3a2412;--ok:#4ade80;--okbg:#12301c}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+[hidden]{display:none!important}
+.screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.lockbox{width:100%;max-width:360px;background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:28px;text-align:center}
+.lockbox img{width:72px;height:72px;border-radius:18px}
+.lockbox h1{margin:12px 0 4px}
+.lockbox p{color:var(--mu);margin:0 0 18px;font-size:14px}
+input,select,textarea{width:100%;padding:12px;border:1px solid var(--bd);border-radius:12px;background:var(--bg);margin:4px 0 12px}
+textarea{min-height:80px;resize:vertical}
+label{display:block;font-size:13px;color:var(--mu);text-align:left}
+.pri{background:var(--pri);color:var(--on-pri);border:0;border-radius:12px;padding:12px 18px;font-weight:600;cursor:pointer}
+.ghost{background:transparent;border:1px solid var(--bd);border-radius:12px;padding:10px 14px;cursor:pointer}
+.danger{color:var(--red);border-color:var(--red)}
+.err{color:var(--red);font-size:14px;min-height:20px}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;background:var(--bg);border-bottom:1px solid var(--bd)}
+header h1{font-size:20px;margin:0}
+header button{background:none;border:0;font-size:20px;cursor:pointer}
+main{padding:12px 16px 120px;max-width:720px;margin:0 auto}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav button{flex:1;background:none;border:0;padding:8px 0 10px;font-size:11px;color:var(--mu);cursor:pointer}
+nav button span{display:block;font-size:20px}
+nav button.on{color:var(--pri);font-weight:600}
+#fab{position:fixed;right:18px;bottom:calc(76px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;border:0;background:var(--pri);color:var(--on-pri);font-size:28px;box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer;z-index:6}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:14px;margin:10px 0}
+.card h3{margin:0 0 4px;font-size:16px}
+.meta{color:var(--mu);font-size:14px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.acts button,.acts a{font-size:14px;padding:7px 12px;border:1px solid var(--bd);border-radius:10px;background:transparent;color:var(--tx);text-decoration:none;cursor:pointer}
+.sec{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:20px 0 4px}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px}
+.b-red{background:var(--redbg);color:var(--red)}.b-or{background:var(--orbg);color:var(--or)}.b-ok{background:var(--okbg);color:var(--ok)}
+.banner{display:block;width:100%;text-align:left;background:var(--orbg);color:var(--or);border:0;border-radius:14px;padding:12px 14px;margin:8px 0;font-weight:600;cursor:pointer}
+.chips{display:flex;gap:8px;margin:6px 0;flex-wrap:wrap}
+.chips button{border:1px solid var(--bd);background:var(--card);border-radius:999px;padding:7px 14px;cursor:pointer}
+.chips button.on{background:var(--pri);border-color:var(--pri);color:var(--on-pri)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px}
+.empty{text-align:center;color:var(--mu);padding:40px 10px}
+.note{white-space:pre-wrap;font-size:14px;margin-top:6px}
+dialog{border:0;border-radius:20px;padding:0;width:min(520px,94vw);max-height:90vh;background:var(--card);color:var(--tx)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog form{padding:20px}
+dialog h2{margin:0 0 14px;font-size:19px}
+.row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:6px}
+.row .left{margin-right:auto}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+svg.chart{width:100%;height:auto;background:var(--card);border:1px solid var(--bd);border-radius:16px}
+#toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:50;max-width:90vw}
+details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
+</style>
+</head>
+<body>
+
+<div id="lock" class="screen">
+  <form class="lockbox" id="lockForm" autocomplete="off">
+    <img src="icon-192.png" alt="">
+    <h1>Gesundbox</h1>
+    <p id="lockHint">Deine Gesundheitsdaten, verschlüsselt nur auf diesem Gerät.</p>
+    <input type="password" id="pw" placeholder="Passwort" autocomplete="current-password" required>
+    <input type="password" id="pw2" placeholder="Passwort wiederholen" autocomplete="new-password" hidden>
+    <div class="err" id="lockErr"></div>
+    <button class="pri" style="width:100%" id="lockBtnGo">Entsperren</button>
+  </form>
+</div>
+
+<div id="app" hidden>
+  <header><h1 id="title">Termine</h1><button id="lockNow" title="Sperren" aria-label="Sperren">🔒</button></header>
+  <main id="main"></main>
+  <button id="fab" aria-label="Neu">+</button>
+  <nav>
+    <button data-tab="termine" class="on"><span>📅</span>Termine</button>
+    <button data-tab="aerzte"><span>🩺</span>Ärzte</button>
+    <button data-tab="vorsorge"><span>🔁</span>Vorsorge</button>
+    <button data-tab="werte"><span>📈</span>Werte</button>
+    <button data-tab="mehr"><span>⚙️</span>Mehr</button>
+  </nav>
+</div>
+
+<dialog id="dlg"><form id="dlgForm" autocomplete="off"></form></dialog>
+<input type="file" id="fileIn" hidden>
+<div id="toast" hidden></div>
+
+<script>
+'use strict';
+/* ---------- Helfer ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));
+const pad=n=>String(n).padStart(2,'0');
+const localDT=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const localD=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today=()=>localD(new Date());
+const num=s=>{const v=parseFloat(String(s??'').replace(/\s/g,'').replace(',','.'));return isFinite(v)?v:null};
+const fmtNum=(v,d=1)=>v==null?'–':v.toLocaleString('de-DE',{maximumFractionDigits:d});
+const fmtDT=s=>{const d=new Date(s);return isNaN(d)?'':d.toLocaleString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})};
+const fmtD=s=>{if(!s)return '–';const d=new Date(s+'T00:00');return isNaN(d)?'–':d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})};
+const safeUrl=u=>/^https?:\/\//i.test(u||'')?u:'';
+let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,3000)}
+function lsGet(k){try{return localStorage.getItem(k)}catch{return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v);return true}catch{return false}}
+function lsDel(k){try{localStorage.removeItem(k)}catch{}}
+
+/* ---------- Verschlüsselung (AES-GCM, Schlüssel per PBKDF2 aus Passwort) ---------- */
+const VKEY='gesundbox_vault', ITER=310000;
+const te=new TextEncoder(), td=new TextDecoder();
+function b64(buf){const u=new Uint8Array(buf);let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)}
+function unb64(s){const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
+async function derive(pw,salt){const base=await crypto.subtle.importKey('raw',te.encode(pw),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:ITER,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+async function encryptObj(obj,k,s){const iv=crypto.getRandomValues(new Uint8Array(12));const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},k,te.encode(JSON.stringify(obj)));return{app:'gesundbox',v:1,iter:ITER,salt:b64(s),iv:b64(iv),ct:b64(ct)}}
+async function decryptObj(p,k){const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(p.iv)},k,unb64(p.ct));return JSON.parse(td.decode(pt))}
+
+let KEY=null,SALT=null,D=null,TAB='termine',WTYP='bp';
+const empty=()=>({v:1,termine:[],aerzte:[],vorsorge:[],werte:[]});
+function normalize(o){const e=empty();for(const k of ['termine','aerzte','vorsorge','werte'])e[k]=Array.isArray(o?.[k])?o[k]:[];return e}
+async function save(){const p=await encryptObj(D,KEY,SALT);if(!lsSet(VKEY,JSON.stringify(p)))toast('Speichern fehlgeschlagen – Speicher voll?')}
+
+/* ---------- Sperrbildschirm ---------- */
+function showLock(){
+  KEY=null;D=null;closeDlg();
+  $('#app').hidden=true;$('#lock').hidden=false;
+  const has=!!lsGet(VKEY);
+  $('#pw2').hidden=has;$('#pw2').required=!has;
+  $('#lockBtnGo').textContent=has?'Entsperren':'Gesundbox anlegen';
+  $('#lockHint').textContent=has?'Deine Gesundheitsdaten, verschlüsselt nur auf diesem Gerät.':'Lege ein Passwort fest (mind. 8 Zeichen). Ohne Passwort sind die Daten nicht wiederherstellbar.';
+  $('#pw').autocomplete=has?'current-password':'new-password';
+  $('#pw').value='';$('#pw2').value='';$('#lockErr').textContent='';
+  setTimeout(()=>$('#pw').focus(),50);
+}
+$('#lockForm').onsubmit=async e=>{
+  e.preventDefault();
+  const pw=$('#pw').value,btn=$('#lockBtnGo');$('#lockErr').textContent='';
+  const stored=lsGet(VKEY);
+  if(!stored){
+    if(pw.length<8){$('#lockErr').textContent='Mindestens 8 Zeichen.';return}
+    if(pw!==$('#pw2').value){$('#lockErr').textContent='Passwörter stimmen nicht überein.';return}
+  }
+  btn.disabled=true;btn.textContent='Bitte warten …';
+  try{
+    if(stored){const p=JSON.parse(stored);SALT=unb64(p.salt);KEY=await derive(pw,SALT);D=normalize(await decryptObj(p,KEY))}
+    else{SALT=crypto.getRandomValues(new Uint8Array(16));KEY=await derive(pw,SALT);D=empty();await save()}
+    $('#lock').hidden=true;$('#app').hidden=false;
+    try{navigator.storage?.persist?.()}catch{}
+    resetIdle();render();
+  }catch(err){KEY=null;$('#lockErr').textContent=stored?'Falsches Passwort.':'Fehler: '+err.message}
+  finally{btn.disabled=false;btn.textContent=lsGet(VKEY)?'Entsperren':'Gesundbox anlegen'}
+};
+$('#lockNow').onclick=showLock;
+/* Auto-Sperre: 5 Min. Inaktivität oder 1 Min. im Hintergrund */
+let idleT,hiddenAt=0;
+function resetIdle(){clearTimeout(idleT);if(KEY)idleT=setTimeout(showLock,5*60*1000)}
+['pointerdown','keydown','scroll','touchstart'].forEach(ev=>addEventListener(ev,resetIdle,{passive:true}));
+document.addEventListener('visibilitychange',()=>{if(document.hidden)hiddenAt=Date.now();else if(KEY&&hiddenAt&&Date.now()-hiddenAt>60000)showLock()});
+
+/* ---------- Dialog ---------- */
+const dlg=$('#dlg');
+function closeDlg(){if(dlg.open)dlg.close()}
+function field(fd,val){
+  const v=val??fd.def??'';const id='f_'+fd.k;
+  const req=fd.req?' required':'';
+  let inp;
+  if(fd.t==='textarea')inp=`<textarea id="${id}" name="${fd.k}"${req}>${esc(v)}</textarea>`;
+  else if(fd.t==='select')inp=`<select id="${id}" name="${fd.k}"${req}>${fd.opts.map(([ov,ol])=>`<option value="${esc(ov)}"${String(ov)===String(v)?' selected':''}>${esc(ol)}</option>`).join('')}</select>`;
+  else if(fd.t==='decimal')inp=`<input id="${id}" name="${fd.k}" type="text" inputmode="decimal" value="${esc(v)}"${req}>`;
+  else inp=`<input id="${id}" name="${fd.k}" type="${fd.t||'text'}" value="${esc(v)}"${req}${fd.ph?` placeholder="${esc(fd.ph)}"`:''}>`;
+  return `<div${fd.half?' class="half"':''}><label for="${id}">${esc(fd.l)}</label>${inp}</div>`;
+}
+/* fields: [{k,l,t,opts,req,def}] | onSave(vals) | opts.del, opts.okText, opts.html */
+function openForm(title,fields,values,onSave,o={}){
+  const f=$('#dlgForm');
+  f.innerHTML=`<h2>${esc(title)}</h2>${o.html||''}${fields.map(fd=>field(fd,values?.[fd.k])).join('')}
+  <div class="row">${o.del?'<button type="button" class="ghost danger left" data-x="del">Löschen</button>':''}
+  <button type="button" class="ghost" data-x="cancel">Abbrechen</button><button class="pri">${esc(o.okText||'Speichern')}</button></div>`;
+  f.querySelector('[data-x=cancel]').onclick=closeDlg;
+  const db=f.querySelector('[data-x=del]');if(db)db.onclick=async()=>{if(confirm('Wirklich löschen?')){await o.del();closeDlg();render()}};
+  f.onsubmit=async e=>{e.preventDefault();const vals=Object.fromEntries(new FormData(f).entries());const r=await onSave(vals,f);if(r!==false){closeDlg();render()}};
+  if(o.onOpen)o.onOpen(f);
+  if(!dlg.open)dlg.showModal();
+}
+function pickFile(accept){return new Promise(res=>{const i=$('#fileIn');i.value='';i.accept=accept;i.onchange=()=>res(i.files[0]||null);i.click()})}
+function download(name,text,type){const blob=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),10000)}
+
+/* ---------- ICS ---------- */
+function icsEsc(s){return String(s||'').replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;')}
+function icsDT(d){return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`}
+function icsD(d){return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`}
+function makeICS(events){
+  const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Gesundbox//DE','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
+  for(const ev of events){
+    L.push('BEGIN:VEVENT',`UID:${ev.uid}@gesundbox`,`DTSTAMP:${stamp}`);
+    if(ev.allDay){const e2=new Date(ev.start);e2.setDate(e2.getDate()+1);L.push(`DTSTART;VALUE=DATE:${icsD(ev.start)}`,`DTEND;VALUE=DATE:${icsD(e2)}`)}
+    else L.push(`DTSTART:${icsDT(ev.start)}`,`DTEND:${icsDT(ev.end)}`);
+    L.push(`SUMMARY:${icsEsc(ev.titel)}`);
+    if(ev.ort)L.push(`LOCATION:${icsEsc(ev.ort)}`);
+    if(ev.notiz)L.push(`DESCRIPTION:${icsEsc(ev.notiz)}`);
+    for(const tr of ev.alarms||[])L.push('BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:${icsEsc(ev.titel)}`,`TRIGGER:${tr}`,'END:VALARM');
+    L.push('END:VEVENT');
+  }
+  L.push('END:VCALENDAR');return L.join('\r\n')+'\r\n';
+}
+function parseICS(text){
+  const lines=text.replace(/\r?\n[ \t]/g,'').split(/\r?\n/);
+  const out=[];let cur=null,inAlarm=false;
+  for(const l of lines){
+    if(l==='BEGIN:VEVENT'){cur={};continue}
+    if(l==='END:VEVENT'){if(cur)out.push(cur);cur=null;continue}
+    if(!cur)continue;
+    if(l.startsWith('BEGIN:')){inAlarm=true;continue}
+    if(l.startsWith('END:')){inAlarm=false;continue}
+    if(inAlarm)continue;
+    const i=l.indexOf(':');if(i<0)continue;
+    const [name,...params]=l.slice(0,i).split(';');
+    cur[name.toUpperCase()]={val:l.slice(i+1),params:params.map(p=>p.toUpperCase())};
+  }
+  return out;
+}
+const icsUnesc=s=>String(s||'').replace(/\\n/gi,'\n').replace(/\\([,;\\])/g,'$1');
+function icsToDate(p){
+  if(!p)return null;
+  const m=p.val.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?(Z)?)?/);if(!m)return null;
+  const [,y,mo,d,h,mi,s,z]=m;
+  if(!h)return{date:new Date(+y,+mo-1,+d,0,0),allDay:true};
+  if(z)return{date:new Date(Date.UTC(+y,+mo-1,+d,+h,+mi,+(s||0))),allDay:false};
+  return{date:new Date(+y,+mo-1,+d,+h,+mi,+(s||0)),allDay:false};
+}
+
+/* ---------- CSV ---------- */
+function parseCSV(text){
+  text=text.replace(/^\uFEFF/,'');
+  const first=text.split(/\r?\n/)[0]||'';
+  const d=[';','\t',','].reduce((a,c)=>first.split(c).length>first.split(a).length?c:a,',');
+  const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(q){if(ch==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=ch}
+    else if(ch==='"')q=true;
+    else if(ch===d){row.push(f.trim());f=''}
+    else if(ch==='\n'){row.push(f.trim());rows.push(row);row=[];f=''}
+    else if(ch!=='\r')f+=ch;
+  }
+  if(f||row.length){row.push(f.trim());rows.push(row)}
+  return rows.filter(r=>r.some(c=>c!==''));
+}
+function parseAnyDate(ds,ts){
+  ds=String(ds||'').trim();let y,mo,d,h=0,mi=0,m;
+  if((m=ds.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?/))){
+    if(/(Z|[+-]\d{2}:?\d{2})$/.test(ds)){const x=new Date(ds);if(!isNaN(x))return localDT(x)}
+    [,y,mo,d]=m;if(m[4]){h=m[4];mi=m[5]}
+  }else if((m=ds.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})(?:,?\s+(\d{1,2}):(\d{2}))?/))){
+    [,d,mo,y]=m;if(y.length===2)y='20'+y;if(m[4]){h=m[4];mi=m[5]}
+  }else{const x=new Date(ds);if(isNaN(x))return null;return localDT(x)}
+  if(ts){const t=String(ts).match(/(\d{1,2}):(\d{2})/);if(t){h=t[1];mi=t[2]}}
+  const x=new Date(+y,+mo-1,+d,+h,+mi);return isNaN(x)?null:localDT(x);
+}
+
+/* ---------- Daten-Helfer ---------- */
+const arzt=id=>D.aerzte.find(a=>a.id===id);
+const arztOpts=()=>[['','– kein Arzt –'],...D.aerzte.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(a=>[a.id,a.name+(a.fach?' ('+a.fach+')':'')])];
+function addMonths(ds,n){const d=new Date(ds+'T00:00');const day=d.getDate();d.setMonth(d.getMonth()+n);if(d.getDate()<day)d.setDate(0);return d}
+function vStatus(v){
+  if(!v.letzte)return{cls:'b-red',txt:'Unbekannt – planen',next:null,rank:0};
+  const next=addMonths(v.letzte,+v.intervall||12);const days=Math.round((next-new Date(today()+'T00:00'))/864e5);
+  if(days<0)return{cls:'b-red',txt:`Überfällig seit ${-days} Tagen`,next,rank:1};
+  if(days<=30)return{cls:'b-or',txt:days===0?'Heute fällig':`Fällig in ${days} Tagen`,next,rank:2};
+  return{cls:'b-ok',txt:'Fällig am '+next.toLocaleDateString('de-DE'),next,rank:3};
+}
+const TYP={bp:{n:'Blutdruck',u:'mmHg'},gewicht:{n:'Gewicht',u:'kg'},puls:{n:'Puls',u:'bpm'}};
+function wertText(w){if(w.typ==='bp')return `${fmtNum(w.v1,0)}/${fmtNum(w.v2,0)} mmHg${w.v3!=null?' · Puls '+fmtNum(w.v3,0):''}`;return `${fmtNum(w.v1)} ${TYP[w.typ]?.u||''}`}
+
+/* ---------- Rendering ---------- */
+const TITLES={termine:'Termine',aerzte:'Ärzte',vorsorge:'Vorsorge',werte:'Werte',mehr:'Mehr'};
+function render(){
+  if(!D)return;
+  $('#title').textContent=TITLES[TAB];
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===TAB));
+  $('#fab').hidden=TAB==='mehr';
+  $('#main').innerHTML=({termine:rTermine,aerzte:rAerzte,vorsorge:rVorsorge,werte:rWerte,mehr:rMehr})[TAB]();
+  window.scrollTo(0,0);
+}
+function terminCard(t){
+  const a=arzt(t.arztId);
+  return `<div class="card"><h3>${esc(t.titel)}</h3>
+  <div class="meta">${esc(fmtDT(t.datum))}${a?' · '+esc(a.name):''}${t.ort?'<br>📍 '+esc(t.ort):''}</div>
+  ${t.fragen?`<div class="note"><b>Fragen:</b> ${esc(t.fragen)}</div>`:''}
+  ${t.nachher?`<div class="note"><b>Ergebnis:</b> ${esc(t.nachher)}</div>`:''}
+  <div class="acts"><button data-act="t-ics" data-id="${t.id}">📅 In Kalender</button>${a?.tel?`<a href="tel:${esc(a.tel.replace(/[^\d+]/g,''))}">📞 Anrufen</a>`:''}<button data-act="t-edit" data-id="${t.id}">✏️ Bearbeiten</button></div></div>`;
+}
+function rTermine(){
+  const now=Date.now()-2*3600e3;
+  const up=D.termine.filter(t=>new Date(t.datum)>=now).sort((a,b)=>a.datum.localeCompare(b.datum));
+  const past=D.termine.filter(t=>new Date(t.datum)<now).sort((a,b)=>b.datum.localeCompare(a.datum));
+  const due=D.vorsorge.filter(v=>vStatus(v).rank<=2).length;
+  let h=`<div class="toolbar"><button class="ghost" data-act="ics-import">📥 .ics importieren</button>${up.length>1?'<button class="ghost" data-act="ics-all">📅 Alle in Kalender</button>':''}</div>`;
+  if(due)h+=`<button class="banner" data-act="goto-vorsorge">🔔 ${due} Vorsorge-${due===1?'Untersuchung':'Untersuchungen'} fällig →</button>`;
+  if(!D.termine.length)return h+`<div class="empty">Noch keine Termine.<br>Tippe auf <b>+</b> oder importiere eine .ics-Datei aus einer Terminbestätigung.</div>`;
+  h+=`<div class="sec">Anstehend</div>`+(up.length?up.map(terminCard).join(''):'<div class="meta">Keine anstehenden Termine.</div>');
+  if(past.length)h+=`<details><summary>Vergangene Termine (${past.length})</summary>${past.map(terminCard).join('')}</details>`;
+  return h;
+}
+function rAerzte(){
+  if(!D.aerzte.length)return `<div class="empty">Noch keine Ärzte gespeichert.<br>Tippe auf <b>+</b>.</div>`;
+  return D.aerzte.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(a=>{
+    const tel=a.tel?a.tel.replace(/[^\d+]/g,''):'';const web=safeUrl(a.web);
+    return `<div class="card"><h3>${esc(a.name)}</h3><div class="meta">${esc(a.fach||'')}${a.adresse?'<br>📍 '+esc(a.adresse):''}${a.zeiten?'<br>🕒 '+esc(a.zeiten):''}</div>
+    ${a.notiz?`<div class="note">${esc(a.notiz)}</div>`:''}
+    <div class="acts">${tel?`<a href="tel:${esc(tel)}">📞 Anrufen</a>`:''}${a.adresse?`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a.adresse)}" target="_blank" rel="noopener noreferrer">🗺️ Route</a>`:''}${web?`<a href="${esc(web)}" target="_blank" rel="noopener noreferrer">🌐 Online-Termin</a>`:''}<button data-act="a-termin" data-id="${a.id}">➕ Termin</button><button data-act="a-edit" data-id="${a.id}">✏️</button></div></div>`}).join('');
+}
+function rVorsorge(){
+  if(!D.vorsorge.length)return `<div class="empty">Noch keine Vorsorge-Einträge.<br><br><button class="pri" data-act="v-presets">Vorschläge hinzufügen</button><br><br><span class="meta">Die Intervalle sind nur Startwerte – bitte mit deinem Arzt abstimmen und anpassen.</span></div>`;
+  return D.vorsorge.map(v=>({v,s:vStatus(v)})).sort((x,y)=>x.s.rank-y.s.rank||(x.s.next||0)-(y.s.next||0)).map(({v,s})=>{
+    const a=arzt(v.arztId);
+    return `<div class="card"><h3>${esc(v.name)}</h3><span class="badge ${s.cls}">${esc(s.txt)}</span>
+    <div class="meta" style="margin-top:6px">Alle ${esc(v.intervall)} Monate · zuletzt ${esc(fmtD(v.letzte))}${a?' · '+esc(a.name):''}</div>
+    <div class="acts"><button data-act="v-done" data-id="${v.id}">✅ Heute erledigt</button><button data-act="v-termin" data-id="${v.id}">➕ Termin</button>${s.next?`<button data-act="v-ics" data-id="${v.id}">📅 Erinnerung</button>`:''}<button data-act="v-edit" data-id="${v.id}">✏️</button></div></div>`}).join('');
+}
+function chart(list){
+  const pts=list.slice(-30);if(pts.length<2)return '';
+  const ser=WTYP==='bp'?[['v1','#b03a52'],['v2','#3b6fd8']]:[['v1','#b03a52']];
+  const all=pts.flatMap(p=>ser.map(([k])=>p[k])).filter(v=>v!=null);
+  let mn=Math.min(...all),mx=Math.max(...all);if(mx===mn){mx+=1;mn-=1}const padv=(mx-mn)*.1;mn-=padv;mx+=padv;
+  const W=340,H=170,X=i=>36+i*(W-46)/(pts.length-1),Y=v=>H-22-(v-mn)/(mx-mn)*(H-36);
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Verlauf">`;
+  for(const v of [mn+padv,(mn+mx)/2,mx-padv])s+=`<line x1="36" x2="${W-10}" y1="${Y(v)}" y2="${Y(v)}" stroke="currentColor" opacity=".12"/><text x="4" y="${Y(v)+4}" font-size="10" fill="currentColor" opacity=".6">${fmtNum(v,WTYP==='gewicht'?1:0)}</text>`;
+  for(const [k,c] of ser){const p=pts.map((q,i)=>q[k]!=null?`${X(i).toFixed(1)},${Y(q[k]).toFixed(1)}`:null).filter(Boolean).join(' ');s+=`<polyline points="${p}" fill="none" stroke="${c}" stroke-width="2.2" stroke-linejoin="round"/>`}
+  s+=`<text x="36" y="${H-6}" font-size="10" fill="currentColor" opacity=".6">${esc(fmtD(pts[0].datum.slice(0,10)))}</text><text x="${W-10}" y="${H-6}" font-size="10" text-anchor="end" fill="currentColor" opacity=".6">${esc(fmtD(pts[pts.length-1].datum.slice(0,10)))}</text></svg>`;
+  return s;
+}
+function rWerte(){
+  const list=D.werte.filter(w=>w.typ===WTYP).sort((a,b)=>a.datum.localeCompare(b.datum));
+  let h=`<div class="chips">${Object.entries(TYP).map(([k,t])=>`<button data-act="w-typ" data-id="${k}" class="${k===WTYP?'on':''}">${t.n}</button>`).join('')}</div>
+  <div class="toolbar"><button class="ghost" data-act="csv-import">📥 CSV importieren</button></div>`;
+  if(!list.length)return h+`<div class="empty">Noch keine ${TYP[WTYP].n}-Werte.<br>Tippe auf <b>+</b> oder importiere eine CSV-Datei aus deiner Mess-App.</div>`;
+  const last=list[list.length-1];
+  h+=`<div class="card"><div class="meta">Letzter Wert · ${esc(fmtDT(last.datum))}</div><h3 style="font-size:22px">${esc(wertText(last))}</h3>${list.length>=2?`<div class="meta">${list.length} Messungen · Ø ${WTYP==='bp'?fmtNum(avg(list,'v1'),0)+'/'+fmtNum(avg(list,'v2'),0):fmtNum(avg(list,'v1'))} (letzte 30)</div>`:''}</div>`;
+  h+=chart(list);
+  h+=`<div class="sec">Messungen</div>`+list.slice().reverse().slice(0,100).map(w=>`<div class="card" style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px"><div><b>${esc(wertText(w))}</b><div class="meta">${esc(fmtDT(w.datum))}${w.quelle?' · '+esc(w.quelle):''}</div></div><button class="ghost" data-act="w-edit" data-id="${w.id}">✏️</button></div>`).join('');
+  return h;
+}
+function avg(list,k){const v=list.slice(-30).map(x=>x[k]).filter(x=>x!=null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null}
+function rMehr(){
+  return `<div class="sec">Backup</div><div class="card"><div class="meta">Das Backup ist mit deinem aktuellen Passwort verschlüsselt. Speichere es z. B. in deiner Cloud.</div><div class="acts"><button data-act="bk-export">💾 Backup exportieren</button><button data-act="bk-import">📂 Backup wiederherstellen</button></div></div>
+  <div class="sec">Import</div><div class="card"><div class="acts"><button data-act="ics-import">📅 Termine aus .ics</button><button data-act="csv-import">📈 Werte aus CSV</button></div></div>
+  <div class="sec">Sicherheit</div><div class="card"><div class="meta">Alle Daten liegen verschlüsselt (AES-256) nur auf diesem Gerät. Automatische Sperre nach 5 Minuten Inaktivität oder 1 Minute im Hintergrund.</div><div class="acts"><button data-act="pw-change">🔑 Passwort ändern</button><button data-act="wipe" class="danger">🗑️ Alle Daten löschen</button></div></div>
+  <div class="sec">Übersicht</div><div class="card meta">${D.termine.length} Termine · ${D.aerzte.length} Ärzte · ${D.vorsorge.length} Vorsorge · ${D.werte.length} Messwerte</div>
+  <p class="meta" style="text-align:center">Gesundbox V1 · Kein Ersatz für ärztlichen Rat.</p>`;
+}
+
+/* ---------- Formulare ---------- */
+function editTermin(t,preset){
+  const isNew=!t;t=t||{id:uid(),datum:localDT(new Date(Date.now()+864e5)).slice(0,11)+'09:00',dauer:30,...preset};
+  openForm(isNew?'Neuer Termin':'Termin bearbeiten',[
+    {k:'titel',l:'Anlass',req:true,ph:'z. B. Kontrolle Zahnarzt'},
+    {k:'datum',l:'Datum & Uhrzeit',t:'datetime-local',req:true},
+    {k:'dauer',l:'Dauer (Minuten)',t:'number'},
+    {k:'arztId',l:'Arzt',t:'select',opts:arztOpts()},
+    {k:'ort',l:'Ort (leer = Adresse des Arztes)'},
+    {k:'fragen',l:'Fragen für den Termin',t:'textarea'},
+    {k:'nachher',l:'Ergebnis / Notiz nach dem Termin',t:'textarea'},
+  ],t,async v=>{
+    Object.assign(t,v,{dauer:+v.dauer||30});
+    if(isNew)D.termine.push(t);await save();
+    if(isNew&&confirm('Termin gespeichert. Gleich in den Kalender übernehmen?'))terminICS([t]);
+  },{del:isNew?null:async()=>{D.termine=D.termine.filter(x=>x.id!==t.id);await save()}});
+}
+function terminICS(list){
+  const evs=list.map(t=>{const a=arzt(t.arztId);const s=new Date(t.datum);const e=new Date(s.getTime()+(+t.dauer||30)*6e4);
+    return{uid:t.id,titel:t.titel+(a?' – '+a.name:''),start:s,end:e,ort:t.ort||a?.adresse||'',notiz:[t.fragen?'Fragen: '+t.fragen:'',a?.tel?'Tel: '+a.tel:''].filter(Boolean).join('\n'),alarms:['-P1D','-PT2H']}});
+  download(list.length===1?`termin-${list[0].datum.slice(0,10)}.ics`:'gesundbox-termine.ics',makeICS(evs),'text/calendar');
+}
+function editArzt(a){
+  const isNew=!a;a=a||{id:uid()};
+  openForm(isNew?'Neuer Arzt':'Arzt bearbeiten',[
+    {k:'name',l:'Name / Praxis',req:true},{k:'fach',l:'Fachrichtung',ph:'z. B. Zahnarzt'},
+    {k:'tel',l:'Telefon',t:'tel'},{k:'adresse',l:'Adresse'},
+    {k:'web',l:'Online-Termin-Link',t:'url',ph:'https://…'},{k:'zeiten',l:'Sprechzeiten'},
+    {k:'notiz',l:'Notiz',t:'textarea'},
+  ],a,async v=>{Object.assign(a,v);if(isNew)D.aerzte.push(a);await save()},
+  {del:isNew?null:async()=>{D.aerzte=D.aerzte.filter(x=>x.id!==a.id);D.termine.forEach(t=>{if(t.arztId===a.id)t.arztId=''});D.vorsorge.forEach(t=>{if(t.arztId===a.id)t.arztId=''});await save()}});
+}
+function editVorsorge(v){
+  const isNew=!v;v=v||{id:uid(),intervall:12};
+  openForm(isNew?'Neue Vorsorge':'Vorsorge bearbeiten',[
+    {k:'name',l:'Untersuchung',req:true},{k:'intervall',l:'Intervall (Monate)',t:'number',req:true},
+    {k:'letzte',l:'Zuletzt gemacht',t:'date'},{k:'arztId',l:'Arzt',t:'select',opts:arztOpts()},{k:'notiz',l:'Notiz',t:'textarea'},
+  ],v,async x=>{Object.assign(v,x,{intervall:Math.max(1,+x.intervall||12)});if(isNew)D.vorsorge.push(v);await save()},
+  {del:isNew?null:async()=>{D.vorsorge=D.vorsorge.filter(y=>y.id!==v.id);await save()}});
+}
+function editWert(w){
+  const isNew=!w;const typ=w?.typ||WTYP;w=w||{id:uid(),typ,datum:localDT(new Date())};
+  const f=[{k:'datum',l:'Datum & Uhrzeit',t:'datetime-local',req:true}];
+  if(typ==='bp')f.push({k:'v1',l:'Systolisch (oberer Wert)',t:'decimal',req:true},{k:'v2',l:'Diastolisch (unterer Wert)',t:'decimal',req:true},{k:'v3',l:'Puls (optional)',t:'decimal'});
+  else f.push({k:'v1',l:`${TYP[typ].n} (${TYP[typ].u})`,t:'decimal',req:true});
+  const vals={...w};['v1','v2','v3'].forEach(k=>{if(vals[k]!=null)vals[k]=String(vals[k]).replace('.',',')});
+  openForm(`${TYP[typ].n} ${isNew?'erfassen':'bearbeiten'}`,f,vals,async x=>{
+    const v1=num(x.v1),v2=num(x.v2),v3=num(x.v3);
+    if(v1==null||(typ==='bp'&&v2==null)){toast('Bitte gültige Zahlen eingeben.');return false}
+    Object.assign(w,{datum:x.datum,v1,v2:typ==='bp'?v2:null,v3:typ==='bp'?v3:null});
+    if(isNew)D.werte.push(w);await save();
+  },{del:isNew?null:async()=>{D.werte=D.werte.filter(y=>y.id!==w.id);await save()}});
+}
+
+/* ---------- Import ---------- */
+async function importICS(){
+  const file=await pickFile('.ics,text/calendar');if(!file)return;
+  try{
+    const evs=parseICS(await file.text());let n=0,dup=0;
+    for(const e of evs){
+      const st=icsToDate(e.DTSTART);if(!st)continue;
+      const en=icsToDate(e.DTEND);
+      const titel=icsUnesc(e.SUMMARY?.val)||'Termin';
+      const datum=localDT(st.date);
+      if(D.termine.some(t=>t.titel===titel&&t.datum===datum)){dup++;continue}
+      const ort=icsUnesc(e.LOCATION?.val);
+      const a=D.aerzte.find(x=>x.name&&(titel+' '+ort).toLowerCase().includes(x.name.toLowerCase()));
+      D.termine.push({id:uid(),titel,datum,dauer:en&&!st.allDay?Math.max(5,Math.round((en.date-st.date)/6e4)):30,ort,arztId:a?.id||'',fragen:'',nachher:'',notiz:icsUnesc(e.DESCRIPTION?.val)});n++;
+    }
+    await save();TAB='termine';render();
+    toast(n?`${n} Termin${n>1?'e':''} importiert${dup?`, ${dup} schon vorhanden`:''}.`:(dup?'Alle Termine waren schon vorhanden.':'Keine Termine in der Datei gefunden.'));
+  }catch(e){toast('Datei konnte nicht gelesen werden.')}
+}
+const GUESS={datum:/^(datum|date|day|tag|zeitstempel|timestamp|messzeit|measurement date|start)/i,zeit:/^(uhrzeit|zeit|time)$/i,
+  sys:/(sys|systol)/i,dia:/(dia(?!g)|diastol)/i,puls:/(puls|pulse|heart|herz|hr\b|bpm)/i,gewicht:/(gewicht|weight|kg)/i};
+async function importCSV(){
+  const file=await pickFile('.csv,.txt,text/csv');if(!file)return;
+  let rows;try{rows=parseCSV(await file.text())}catch{toast('Datei konnte nicht gelesen werden.');return}
+  if(rows.length<2){toast('Keine Daten in der Datei gefunden.');return}
+  const head=rows[0],data=rows.slice(1);
+  const cols=[['','– keine –'],...head.map((h,i)=>[String(i),h||('Spalte '+(i+1))])];
+  const g=re=>{const i=head.findIndex(h=>re.test(h));return i<0?'':String(i)};
+  const guess={typ:g(GUESS.sys)?'bp':g(GUESS.gewicht)?'gewicht':g(GUESS.puls)?'puls':WTYP,cd:g(GUESS.datum)||'0',ct:g(GUESS.zeit),c1:'',c2:'',c3:''};
+  const fieldsFor=typ=>{
+    const f=[{k:'typ',l:'Art der Werte',t:'select',opts:Object.entries(TYP).map(([k,t])=>[k,t.n])},{k:'cd',l:'Spalte Datum',t:'select',opts:cols.slice(1),req:true},{k:'ct',l:'Spalte Uhrzeit (falls getrennt)',t:'select',opts:cols}];
+    if(typ==='bp')f.push({k:'c1',l:'Spalte Systolisch',t:'select',opts:cols,req:true},{k:'c2',l:'Spalte Diastolisch',t:'select',opts:cols,req:true},{k:'c3',l:'Spalte Puls',t:'select',opts:cols});
+    else f.push({k:'c1',l:`Spalte ${TYP[typ].n}`,t:'select',opts:cols,req:true});
+    return f;
+  };
+  const autoCols=typ=>typ==='bp'?{c1:g(GUESS.sys),c2:g(GUESS.dia),c3:g(GUESS.puls)}:{c1:g(GUESS[typ]),c2:'',c3:''};
+  const show=vals=>{
+    const preview=`<div class="meta" style="margin-bottom:10px">${data.length} Zeilen gefunden in „${esc(file.name)}“. Ordne die Spalten zu:</div>`;
+    openForm('CSV importieren',fieldsFor(vals.typ),vals,async v=>{
+      const typ=v.typ;let n=0,skip=0,dup=0;
+      for(const r of data){
+        const datum=parseAnyDate(r[+v.cd],v.ct!==''?r[+v.ct]:null);
+        const v1=v.c1!==''?num(r[+v.c1]):null,v2=typ==='bp'&&v.c2!==''?num(r[+v.c2]):null,v3=typ==='bp'&&v.c3!==''?num(r[+v.c3]):null;
+        if(!datum||v1==null||(typ==='bp'&&v2==null)){skip++;continue}
+        if(D.werte.some(w=>w.typ===typ&&w.datum===datum&&w.v1===v1)){dup++;continue}
+        D.werte.push({id:uid(),typ,datum,v1,v2,v3,quelle:'Import'});n++;
+      }
+      await save();WTYP=typ;TAB='werte';
+      toast(`${n} Werte importiert${dup?`, ${dup} doppelt`:''}${skip?`, ${skip} übersprungen`:''}.`);
+    },{okText:'Importieren',html:preview,onOpen:f=>{f.querySelector('[name=typ]').onchange=e=>{const cur=Object.fromEntries(new FormData(f).entries());show({...cur,typ:e.target.value,...autoCols(e.target.value)})}}});
+  };
+  show({...guess,...autoCols(guess.typ)});
+}
+
+/* ---------- Backup & Sicherheit ---------- */
+async function exportBackup(){
+  const p=await encryptObj(D,KEY,SALT);
+  download(`gesundbox-backup-${today()}.json`,JSON.stringify(p),'application/json');
+  toast('Backup erstellt (verschlüsselt).');
+}
+async function importBackup(){
+  const file=await pickFile('.json,application/json');if(!file)return;
+  let p;try{p=JSON.parse(await file.text());if(p.app!=='gesundbox'||!p.ct)throw 0}catch{toast('Keine gültige Gesundbox-Sicherung.');return}
+  openForm('Backup wiederherstellen',[{k:'pw',l:'Passwort des Backups',t:'password',req:true}],{},async v=>{
+    try{const k=await derive(v.pw,unb64(p.salt));const data=normalize(await decryptObj(p,k));
+      if(!confirm(`Backup enthält ${data.termine.length} Termine, ${data.aerzte.length} Ärzte, ${data.vorsorge.length} Vorsorge, ${data.werte.length} Werte.\nAktuelle Daten werden ersetzt. Fortfahren?`))return;
+      D=data;await save();toast('Backup wiederhergestellt.');
+    }catch{toast('Falsches Passwort.');return false}
+  },{okText:'Wiederherstellen',html:'<div class="meta" style="margin-bottom:10px">Die Daten werden danach mit deinem aktuellen Passwort gespeichert.</div>'});
+}
+function changePw(){
+  openForm('Passwort ändern',[{k:'old',l:'Aktuelles Passwort',t:'password',req:true},{k:'n1',l:'Neues Passwort (mind. 8 Zeichen)',t:'password',req:true},{k:'n2',l:'Neues Passwort wiederholen',t:'password',req:true}],{},async v=>{
+    try{const p=JSON.parse(lsGet(VKEY));await decryptObj(p,await derive(v.old,unb64(p.salt)))}catch{toast('Aktuelles Passwort falsch.');return false}
+    if(v.n1.length<8){toast('Mindestens 8 Zeichen.');return false}
+    if(v.n1!==v.n2){toast('Neue Passwörter stimmen nicht überein.');return false}
+    SALT=crypto.getRandomValues(new Uint8Array(16));KEY=await derive(v.n1,SALT);await save();toast('Passwort geändert. Alte Backups brauchen weiter das alte Passwort.');
+  },{okText:'Ändern'});
+}
+async function wipe(){
+  if(!confirm('Wirklich ALLE Daten auf diesem Gerät löschen? Das kann nicht rückgängig gemacht werden.'))return;
+  if(!confirm('Letzte Warnung: Hast du ein Backup?'))return;
+  lsDel(VKEY);showLock();
+}
+const PRESETS=[['Zahnarzt – Kontrolle',6],['Professionelle Zahnreinigung',12],['Hausarzt – Check-up',36],['Hautkrebs-Screening',24],['Augenarzt',24],['Tetanus/Diphtherie – Auffrischung',120]];
+
+/* ---------- Klick-Handler ---------- */
+$('#main').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const id=b.dataset.id,act=b.dataset.act;
+  const T=()=>D.termine.find(x=>x.id===id),A=()=>D.aerzte.find(x=>x.id===id),V=()=>D.vorsorge.find(x=>x.id===id);
+  switch(act){
+    case 't-edit':editTermin(T());break;
+    case 't-ics':terminICS([T()]);break;
+    case 'ics-all':terminICS(D.termine.filter(t=>new Date(t.datum)>=Date.now()));break;
+    case 'ics-import':importICS();break;
+    case 'goto-vorsorge':TAB='vorsorge';render();break;
+    case 'a-edit':editArzt(A());break;
+    case 'a-termin':editTermin(null,{arztId:id,titel:A().fach?A().fach+' – Termin':'Termin'});break;
+    case 'v-edit':editVorsorge(V());break;
+    case 'v-done':{const v=V();v.letzte=today();await save();render();toast('Erledigt – nächster Termin neu berechnet.');break}
+    case 'v-termin':{const v=V();editTermin(null,{titel:v.name,arztId:v.arztId||''});break}
+    case 'v-ics':{const v=V(),s=vStatus(v);if(!s.next)break;const st=s.next<new Date()?new Date():s.next;
+      download(`vorsorge-${localD(st)}.ics`,makeICS([{uid:v.id+'-'+localD(st),titel:'Vorsorge fällig: '+v.name,start:st,allDay:true,notiz:'Termin vereinbaren',alarms:['PT9H']}]),'text/calendar');break}
+    case 'v-presets':PRESETS.forEach(([name,intervall])=>D.vorsorge.push({id:uid(),name,intervall,letzte:'',arztId:''}));await save();render();toast('Bitte „Zuletzt gemacht“ bei jedem Eintrag ergänzen.');break;
+    case 'w-typ':WTYP=id;render();break;
+    case 'w-edit':editWert(D.werte.find(x=>x.id===id));break;
+    case 'csv-import':importCSV();break;
+    case 'bk-export':exportBackup();break;
+    case 'bk-import':importBackup();break;
+    case 'pw-change':changePw();break;
+    case 'wipe':wipe();break;
+  }
+});
+document.querySelector('nav').addEventListener('click',e=>{const b=e.target.closest('button');if(b){TAB=b.dataset.tab;render()}});
+$('#fab').onclick=()=>({termine:()=>editTermin(),aerzte:()=>editArzt(),vorsorge:()=>editVorsorge(),werte:()=>editWert()})[TAB]?.();
+
+/* ---------- Start ---------- */
+if(!window.crypto?.subtle){document.body.innerHTML='<p style="padding:24px">Diese App braucht HTTPS und einen aktuellen Browser.</p>'}
+else{showLock();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})}
+</script>
+</body>
+</html>
