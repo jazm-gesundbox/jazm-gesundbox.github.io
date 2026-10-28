@@ -136,7 +136,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <script>
 'use strict';
-const APP_VERSION='1.6.0';
+const APP_VERSION='1.6.1';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -239,10 +239,11 @@ async function boot(){
 }
 let saving=Promise.resolve();
 function save(opt){
+  const d=D,k=KEY,salt=SALT,vid=VID;
   saving=saving.then(async()=>{
-    if(!D||!KEY)return;
-    if(!opt?.clean)D.meta.dirty=(D.meta.dirty||0)+1;
-    const p=await encryptObj(D,KEY,SALT);p.vid=VID;p.saved=Date.now();
+    if(!d||!k)return;
+    if(!opt?.clean)d.meta.dirty=(d.meta.dirty||0)+1;
+    const p=await encryptObj(d,k,salt);p.vid=vid;p.saved=Date.now();
     await writeVaultStr(JSON.stringify(p));bkQueue();
   }).catch(()=>toast('Speichern fehlgeschlagen – Speicher voll?'));
   return saving;
@@ -250,7 +251,7 @@ function save(opt){
 
 /* ---------- Sperrbildschirm ---------- */
 function showLock(auto){
-  KEY=null;D=null;FKEY=null;closeDlg();closeViewer();
+  KEY=null;D=null;FKEY=null;LOCKING=true;closeDlg();LOCKING=false;CUR_FORM=null;closeViewer();
   $('#verLock').textContent='Version '+APP_VERSION;
   $('#app').hidden=true;$('#lock').hidden=false;
   const has=!!vaultJson;
@@ -272,7 +273,7 @@ async function unlockWith(pw){
   $('#lock').hidden=true;$('#app').hidden=false;
   try{navigator.storage?.persist?.()}catch{}
   resetIdle();render();
-  setTimeout(handleShare,300);setTimeout(cleanFiles,5000);
+  setTimeout(()=>{if(!restoreDraft())handleShare()},300);setTimeout(cleanFiles,5000);
 }
 $('#lockForm').onsubmit=async e=>{
   e.preventDefault();
@@ -312,10 +313,10 @@ $('#lgh_go').onclick=async()=>{const m=$('#lgh_msg'),bt=$('#lgh_go');
 $('#lockNow').onclick=()=>showLock(false);
 /* Auto-Sperre: 5 Min. Inaktivität oder 1 Min. im Hintergrund */
 let idleT,hiddenAt=0;
-function resetIdle(){clearTimeout(idleT);if(KEY)idleT=setTimeout(()=>showLock(false),5*60*1000)}
+function resetIdle(){clearTimeout(idleT);if(KEY)idleT=setTimeout(async()=>{await stashDraft();showLock(false)},5*60*1000)}
 ['pointerdown','keydown','scroll','touchstart'].forEach(ev=>addEventListener(ev,resetIdle,{passive:true}));
 document.addEventListener('visibilitychange',()=>{
-  if(document.hidden){hiddenAt=Date.now();return}
+  if(document.hidden){hiddenAt=Date.now();stashDraft();return}
   if(Date.now()<pickingUntil){pickingUntil=0;return} /* Kamera/Dateiauswahl: nicht sperren */
   if(KEY&&hiddenAt&&Date.now()-hiddenAt>60000)showLock(true);
   else if(!KEY&&!$('#lock').hidden)setTimeout(tryBio,300);
@@ -324,6 +325,33 @@ document.addEventListener('visibilitychange',()=>{
 /* ---------- Dialog ---------- */
 const dlg=$('#dlg');
 function closeDlg(){if(dlg.open)dlg.close()}
+/* Formular geschlossen (Abbrechen, Zurück-Taste, gespeichert): Entwurf verwerfen – außer beim Sperren */
+dlg.addEventListener('close',()=>{if(LOCKING)return;CUR_FORM=null;if(D?.meta?.draft){delete D.meta.draft;save({clean:true})}});
+/* Offenes Formular verschlüsselt zwischenspeichern (beim Wechseln der App oder vor dem Sperren) */
+async function stashDraft(){
+  if(!dlg.open||!CUR_FORM?.draft||!D)return;
+  const vals={};for(const [k,v] of new FormData($('#dlgForm')))if(typeof v==='string')vals[k]=v;
+  let pages=null;try{if(CUR_FORM.extra)pages=await CUR_FORM.extra()}catch{}
+  D.meta.draft={...CUR_FORM.draft,vals,...(pages?{pages}:{}),at:Date.now()};
+  return save({clean:true});
+}
+function restoreDraft(){
+  const dr=D?.meta?.draft;if(!dr)return false;
+  if(Date.now()-(dr.at||0)>24*3600e3){delete D.meta.draft;save({clean:true});return false}
+  const by=arr=>dr.id?arr.find(x=>x.id===dr.id):undefined;
+  switch(dr.kind){
+    case 'termin':TAB='termine';render();editTermin(by(D.termine));break;
+    case 'arzt':TAB='aerzte';render();editArzt(by(D.aerzte));break;
+    case 'vorsorge':TAB='vorsorge';render();editVorsorge(by(D.vorsorge));break;
+    case 'wert':TAB='werte';if(TYP[dr.typ])WTYP=dr.typ;render();editWert(by(D.werte));break;
+    case 'dok':TAB='dok';render();editDok(by(D.dokumente),null,null,dr.pages);break;
+    default:delete D.meta.draft;return false;
+  }
+  const f=$('#dlgForm');
+  for(const [k,v] of Object.entries(dr.vals||{})){const el=f.querySelector(`[name="${CSS.escape(k)}"]`);if(el&&el.type!=='file')el.value=v}
+  D.meta.draft=dr;
+  toast('Nicht gespeicherte Eingaben wiederhergestellt.');return true;
+}
 function field(fd,val){
   const v=val??fd.def??'';const id='f_'+fd.k;
   const req=fd.req?' required':'';
@@ -335,14 +363,15 @@ function field(fd,val){
   return `<div${fd.half?' class="half"':''}><label for="${id}">${esc(fd.l)}</label>${inp}</div>`;
 }
 /* fields: [{k,l,t,opts,req,def}] | onSave(vals) | opts.del, opts.okText, opts.html */
+let CUR_FORM=null,LOCKING=false;
 function openForm(title,fields,values,onSave,o={}){
-  const f=$('#dlgForm');
+  const f=$('#dlgForm');CUR_FORM={draft:o.draft||null,extra:o.draftExtra||null};
   f.innerHTML=`<h2>${esc(title)}</h2>${o.html||''}${fields.map(fd=>field(fd,values?.[fd.k])).join('')}
   <div class="row">${o.del?'<button type="button" class="ghost danger left" data-x="del">Löschen</button>':''}
   <button type="button" class="ghost" data-x="cancel">Abbrechen</button><button class="pri">${esc(o.okText||'Speichern')}</button></div>`;
   f.querySelector('[data-x=cancel]').onclick=closeDlg;
   const db=f.querySelector('[data-x=del]');if(db)db.onclick=async()=>{if(confirm('Wirklich löschen?')){await o.del();closeDlg();render()}};
-  f.onsubmit=async e=>{e.preventDefault();const vals=Object.fromEntries(new FormData(f).entries());const r=await onSave(vals,f);if(r!==false){closeDlg();render()}};
+  f.onsubmit=async e=>{e.preventDefault();const vals=Object.fromEntries(new FormData(f).entries());if(D?.meta?.draft)delete D.meta.draft;const r=await onSave(vals,f);if(r!==false){closeDlg();render()}};
   if(o.onOpen)o.onOpen(f);
   if(!dlg.open)dlg.showModal();
 }
@@ -551,7 +580,7 @@ function editTermin(t,preset){
     Object.assign(t,v,{dauer:+v.dauer||30});
     if(isNew)D.termine.push(t);await save();
     if(isNew&&confirm('Termin gespeichert. Gleich in den Kalender übernehmen?'))terminICS([t]);
-  },{del:isNew?null:async()=>{D.termine=D.termine.filter(x=>x.id!==t.id);await save()}});
+  },{draft:{kind:'termin',id:isNew?null:t.id},del:isNew?null:async()=>{D.termine=D.termine.filter(x=>x.id!==t.id);await save()}});
 }
 function terminICS(list){
   const evs=list.map(t=>{const a=arzt(t.arztId);const s=new Date(t.datum);const e=new Date(s.getTime()+(+t.dauer||30)*6e4);
@@ -566,7 +595,7 @@ function editArzt(a){
     {k:'web',l:'Online-Termin-Link',t:'url',ph:'https://…'},{k:'zeiten',l:'Sprechzeiten'},
     {k:'notiz',l:'Notiz',t:'textarea'},
   ],a,async v=>{Object.assign(a,v);if(isNew)D.aerzte.push(a);await save()},
-  {del:isNew?null:async()=>{D.aerzte=D.aerzte.filter(x=>x.id!==a.id);D.termine.forEach(t=>{if(t.arztId===a.id)t.arztId=''});D.vorsorge.forEach(t=>{if(t.arztId===a.id)t.arztId=''});await save()}});
+  {draft:{kind:'arzt',id:isNew?null:a.id},del:isNew?null:async()=>{D.aerzte=D.aerzte.filter(x=>x.id!==a.id);D.termine.forEach(t=>{if(t.arztId===a.id)t.arztId=''});D.vorsorge.forEach(t=>{if(t.arztId===a.id)t.arztId=''});await save()}});
 }
 function editVorsorge(v){
   const isNew=!v;v=v||{id:uid(),intervall:12};
@@ -574,7 +603,7 @@ function editVorsorge(v){
     {k:'name',l:'Untersuchung',req:true},{k:'intervall',l:'Intervall (Monate)',t:'number',req:true},
     {k:'letzte',l:'Zuletzt gemacht',t:'date'},{k:'arztId',l:'Arzt',t:'select',opts:arztOpts()},{k:'notiz',l:'Notiz',t:'textarea'},
   ],v,async x=>{Object.assign(v,x,{intervall:Math.max(1,+x.intervall||12)});if(isNew)D.vorsorge.push(v);await save()},
-  {del:isNew?null:async()=>{D.vorsorge=D.vorsorge.filter(y=>y.id!==v.id);await save()}});
+  {draft:{kind:'vorsorge',id:isNew?null:v.id},del:isNew?null:async()=>{D.vorsorge=D.vorsorge.filter(y=>y.id!==v.id);await save()}});
 }
 function editWert(w){
   const isNew=!w;const typ=w?.typ||WTYP;w=w||{id:uid(),typ,datum:localDT(new Date())};
@@ -587,7 +616,7 @@ function editWert(w){
     if(v1==null||(typ==='bp'&&v2==null)){toast('Bitte gültige Zahlen eingeben.');return false}
     Object.assign(w,{datum:x.datum,v1,v2:typ==='bp'?v2:null,v3:typ==='bp'?v3:null});
     if(isNew)D.werte.push(w);await save();
-  },{del:isNew?null:async()=>{D.werte=D.werte.filter(y=>y.id!==w.id);await save()}});
+  },{draft:{kind:'wert',id:isNew?null:w.id,typ},del:isNew?null:async()=>{D.werte=D.werte.filter(y=>y.id!==w.id);await save()}});
 }
 
 /* ---------- Import ---------- */
@@ -716,7 +745,7 @@ async function watchRun(repo,tok,sha){
 const DOKTYP={ueberweisung:'Überweisung',rezept:'Rezept',brief:'Arztbrief',befund:'Befund',sonstiges:'Sonstiges'};
 let FKEY=null,DTYP='alle';
 const kb=n=>n>=1e6?(n/1e6).toLocaleString('de-DE',{maximumFractionDigits:1})+' MB':Math.max(1,Math.round(n/1e3))+' KB';
-const allFids=()=>D?D.dokumente.flatMap(d=>(d.files||[]).map(f=>f.fid)):[];
+const allFids=()=>D?D.dokumente.flatMap(d=>(d.files||[]).map(f=>f.fid)).concat((D.meta.draft?.pages||[]).map(p=>p.fid).filter(Boolean)):[];
 const dokTitel=d=>d.titel||((DOKTYP[d.typ]||'Dokument')+(arzt(d.arztId)?' – '+arzt(d.arztId).name:''));
 async function fileKey(){
   if(FKEY)return FKEY;
@@ -766,9 +795,9 @@ function rDok(){
       ${dokBadge(d)}${d.notiz?`<div class="note">${esc(d.notiz)}</div>`:''}</div></div>
       <div class="acts"><button data-act="d-view" data-id="${d.id}">👁️ Ansehen</button><button data-act="d-edit" data-id="${d.id}">✏️ Bearbeiten</button></div></div>`}).join('');
 }
-function editDok(d,preset,incoming){
+function editDok(d,preset,incoming,draftPages){
   const isNew=!d;d=d||{id:uid(),titel:'',typ:'sonstiges',datum:today(),gueltig:'',arztId:'',terminId:'',notiz:'',files:[],...preset};
-  let pages=(d.files||[]).map(f=>({...f}));
+  let pages=(draftPages||d.files||[]).map(f=>({...f}));
   const termOpts=[['','– kein Termin –'],...D.termine.slice().sort((a,b)=>b.datum.localeCompare(a.datum)).slice(0,60).map(t=>[t.id,fmtD(t.datum.slice(0,10))+' · '+t.titel])];
   const pgHtml=()=>pages.length?pages.map((p,i)=>`<div class="pg">${p.mime==='application/pdf'?'📄':'🖼️'}<span>${esc(p.name)}</span><small class="meta">${kb(p.size)}</small><button type="button" data-rm="${i}" aria-label="Entfernen">✖</button></div>`).join(''):'<div class="meta">Noch keine Datei – fotografieren oder Datei wählen.</div>';
   const addFiles=async(list,f)=>{
@@ -793,7 +822,9 @@ function editDok(d,preset,incoming){
     for(const old of d.files||[])if(!keep.some(k=>k.fid===old.fid))await idb.del('f:'+old.fid).catch(()=>{});
     Object.assign(d,{typ:v.typ,titel:v.titel.trim(),datum:v.datum,gueltig:v.gueltig,arztId:v.arztId,terminId:v.terminId,notiz:v.notiz,files:keep});
     if(isNew)D.dokumente.push(d);await save();if(isNew&&TAB!=='termine')TAB='dok';toast('Dokument verschlüsselt gespeichert ✓');
-  },{del:isNew?null:async()=>{for(const f of d.files||[])await idb.del('f:'+f.fid).catch(()=>{});D.dokumente=D.dokumente.filter(x=>x.id!==d.id);await save()},
+  },{draft:{kind:'dok',id:isNew?null:d.id},
+    draftExtra:async()=>{for(const p of pages)if(!p.fid&&p.prep){p.fid=await putFile(p.prep.buf);delete p.prep}return pages.map(p=>({fid:p.fid,mime:p.mime,name:p.name,size:p.size}))},
+    del:isNew?null:async()=>{for(const f of d.files||[])await idb.del('f:'+f.fid).catch(()=>{});D.dokumente=D.dokumente.filter(x=>x.id!==d.id);await save()},
     html:`<label>Fotos & Dateien</label><div id="pgList">${pgHtml()}</div>
       <div class="acts" style="margin:6px 0 14px"><label class="btnlike">📷 Foto aufnehmen<input type="file" accept="image/*" capture="environment" hidden id="pgCam"></label><label class="btnlike">📎 Bild / PDF wählen<input type="file" accept="image/*,application/pdf" multiple hidden id="pgFile"></label></div>`,
     onOpen:f=>{
