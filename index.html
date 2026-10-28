@@ -136,7 +136,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <script>
 'use strict';
-const APP_VERSION='1.6.1';
+const APP_VERSION='1.6.2';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -511,7 +511,10 @@ function rAerzte(){
     const tel=a.tel?a.tel.replace(/[^\d+]/g,''):'';const web=safeUrl(a.web);
     return `<div class="card"><h3>${esc(a.name)}</h3><div class="meta">${esc(a.fach||'')}${a.adresse?'<br>📍 '+esc(a.adresse):''}${a.zeiten?'<br>🕒 '+esc(a.zeiten):''}</div>
     ${a.notiz?`<div class="note">${esc(a.notiz)}</div>`:''}
-    <div class="acts">${tel?`<a href="tel:${esc(tel)}">📞 Anrufen</a>`:''}${a.adresse?`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a.adresse)}" target="_blank" rel="noopener noreferrer">🗺️ Route</a>`:''}${web?`<a href="${esc(web)}" target="_blank" rel="noopener noreferrer">🌐 Online-Termin</a>`:''}<button data-act="a-termin" data-id="${a.id}">➕ Termin</button><button data-act="a-edit" data-id="${a.id}">✏️</button></div></div>`}).join('');
+    ${(()=>{const nt=D.termine.filter(t=>t.arztId===a.id&&new Date(t.datum)>=Date.now()-2*3600e3).sort((x,y)=>x.datum.localeCompare(y.datum))[0];return nt?`<div class="note">📅 Nächster Termin: ${esc(fmtDT(nt.datum))} · ${esc(nt.titel)}</div>`:''})()}
+    ${(()=>{const ds=D.dokumente.filter(x=>x.arztId===a.id).sort((x,y)=>(y.datum||'').localeCompare(x.datum||''));if(!ds.length)return'';
+      return '<div>'+ds.slice(0,4).map(x=>`<button class="chipdoc" data-act="d-view" data-id="${x.id}">📎 ${esc(dokTitel(x))}</button>`).join('')+(ds.length>4?`<button class="chipdoc" data-act="a-docs" data-id="${a.id}">+ ${ds.length-4} weitere</button>`:'')+'</div>'})()}
+    <div class="acts">${tel?`<a href="tel:${esc(tel)}">📞 Anrufen</a>`:''}${a.adresse?`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a.adresse)}" target="_blank" rel="noopener noreferrer">🗺️ Route</a>`:''}${web?`<a href="${esc(web)}" target="_blank" rel="noopener noreferrer">🌐 Online-Termin</a>`:''}<button data-act="a-termin" data-id="${a.id}">➕ Termin</button><button data-act="a-dok" data-id="${a.id}">📎 Dokument</button><button data-act="a-edit" data-id="${a.id}">✏️</button></div></div>`}).join('');
 }
 function rVorsorge(){
   if(!D.vorsorge.length)return `<div class="empty">Noch keine Vorsorge-Einträge.<br><br><button class="pri" data-act="v-presets">Vorschläge hinzufügen</button><br><br><span class="meta">Die Intervalle sind nur Startwerte – bitte mit deinem Arzt abstimmen und anpassen.</span></div>`;
@@ -743,7 +746,7 @@ async function watchRun(repo,tok,sha){
    Jede Datei wird mit einem zufälligen Dateischlüssel (liegt im Tresor) verschlüsselt.
    So bleiben Dateien beim Passwortwechsel gültig und müssen nie neu hochgeladen werden. */
 const DOKTYP={ueberweisung:'Überweisung',rezept:'Rezept',brief:'Arztbrief',befund:'Befund',sonstiges:'Sonstiges'};
-let FKEY=null,DTYP='alle';
+let FKEY=null,DTYP='alle',DARZT='';
 const kb=n=>n>=1e6?(n/1e6).toLocaleString('de-DE',{maximumFractionDigits:1})+' MB':Math.max(1,Math.round(n/1e3))+' KB';
 const allFids=()=>D?D.dokumente.flatMap(d=>(d.files||[]).map(f=>f.fid)).concat((D.meta.draft?.pages||[]).map(p=>p.fid).filter(Boolean)):[];
 const dokTitel=d=>d.titel||((DOKTYP[d.typ]||'Dokument')+(arzt(d.arztId)?' – '+arzt(d.arztId).name:''));
@@ -785,9 +788,11 @@ function dokBadge(d){
   return days<0?'<span class="badge b-red">abgelaufen</span>':days<=14?`<span class="badge b-or">noch ${days} Tage gültig</span>`:`<span class="badge b-ok">gültig bis ${esc(fmtD(d.gueltig))}</span>`;
 }
 function rDok(){
-  const cnt=t=>D.dokumente.filter(d=>t==='alle'||d.typ===t).length;
-  let h=`<div class="chips">${[['alle','Alle'],...Object.entries(DOKTYP)].filter(([k])=>k==='alle'||cnt(k)).map(([k,n])=>`<button data-act="d-typ" data-id="${k}" class="${k===DTYP?'on':''}">${n} ${cnt(k)}</button>`).join('')}</div>`;
-  const list=D.dokumente.filter(d=>DTYP==='alle'||d.typ===DTYP).sort((a,b)=>(b.datum||'').localeCompare(a.datum||''));
+  if(DARZT&&!arzt(DARZT))DARZT='';
+  const base=D.dokumente.filter(d=>!DARZT||d.arztId===DARZT);
+  const cnt=t=>base.filter(d=>t==='alle'||d.typ===t).length;
+  let h=`<div class="chips">${[['alle','Alle'],...Object.entries(DOKTYP)].filter(([k])=>k==='alle'||cnt(k)).map(([k,n])=>`<button data-act="d-typ" data-id="${k}" class="${k===DTYP?'on':''}">${n} ${cnt(k)}</button>`).join('')}</div>${DARZT?`<div class="chips"><button class="on" data-act="d-arzt-clear">🩺 ${esc(arzt(DARZT).name)} ✕</button></div>`:''}`;
+  const list=base.filter(d=>DTYP==='alle'||d.typ===DTYP).sort((a,b)=>(b.datum||'').localeCompare(a.datum||''));
   if(!D.dokumente.length)return h+`<div class="empty">Noch keine Dokumente.<br>Tippe auf <b>+</b> und fotografiere z. B. eine Überweisung oder ein Rezept – oder teile ein PDF aus einer anderen App mit der Gesundbox.</div>`;
   return h+list.map(d=>{const a=arzt(d.arztId),t=D.termine.find(x=>x.id===d.terminId),n=(d.files||[]).length,pdf=(d.files||[]).some(f=>f.mime==='application/pdf');
     return `<div class="card"><div style="display:flex;gap:12px;align-items:flex-start"><div class="dicon">${pdf?'📄':'🖼️'}</div><div style="flex:1;min-width:0">
@@ -1062,6 +1067,9 @@ $('#main').addEventListener('click',async e=>{
     case 'd-view':{const d=D.dokumente.find(x=>x.id===id);if(d)viewDok(d);break}
     case 'd-edit':editDok(D.dokumente.find(x=>x.id===id));break;
     case 'd-typ':DTYP=id;render(true);break;
+    case 'd-arzt-clear':DARZT='';render(true);break;
+    case 'a-docs':DARZT=id;DTYP='alle';TAB='dok';render();break;
+    case 'a-dok':editDok(null,{arztId:id});break;
     case 't-ics':terminICS([T()]);break;
     case 'ics-all':terminICS(D.termine.filter(t=>new Date(t.datum)>=Date.now()));break;
     case 'ics-import':importICS();break;
@@ -1099,7 +1107,7 @@ $('#main').addEventListener('click',async e=>{
   }
 });
 document.querySelector('nav').addEventListener('click',e=>{const b=e.target.closest('button');if(b){TAB=b.dataset.tab;render()}});
-$('#fab').onclick=()=>({termine:()=>editTermin(),aerzte:()=>editArzt(),vorsorge:()=>editVorsorge(),werte:()=>editWert(),dok:()=>editDok(null,DTYP!=='alle'?{typ:DTYP}:{})})[TAB]?.();
+$('#fab').onclick=()=>({termine:()=>editTermin(),aerzte:()=>editArzt(),vorsorge:()=>editVorsorge(),werte:()=>editWert(),dok:()=>editDok(null,{...(DTYP!=='alle'?{typ:DTYP}:{}),...(DARZT?{arztId:DARZT}:{})})})[TAB]?.();
 
 /* ---------- Start ---------- */
 if(!window.crypto?.subtle){document.body.innerHTML='<p style="padding:24px">Diese App braucht HTTPS und einen aktuellen Browser.</p>'}
