@@ -66,6 +66,24 @@ svg.chart{width:100%;height:auto;background:var(--card);border:1px solid var(--b
 .linkbtn{display:block;width:100%;background:none;border:0;color:var(--pri);text-decoration:underline;font-size:14px;margin-top:12px;cursor:pointer;padding:4px}
 .ghbox{text-align:left;border-top:1px solid var(--bd);margin-top:14px;padding-top:12px}
 .banner.crit{background:var(--redbg);color:var(--red)}
+.srow{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:8px 0;border-bottom:1px solid var(--bd);font-size:15px}
+.srow .meta{text-align:right}
+.hint{font-size:13px;color:var(--mu);margin-top:10px}
+#viewer{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column}
+.vbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;border-bottom:1px solid var(--bd)}
+.vbar button{background:none;border:0;font-size:22px;cursor:pointer;color:var(--tx)}
+.vbody{flex:1;overflow:auto;padding:12px 16px}
+.vbody img{display:block;width:100%;border-radius:10px;margin:0 0 12px;background:#fff}
+.vacts{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--bd)}
+.vacts button{flex:1}
+.pdfcard{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:10px}
+.pg{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--bd);border-radius:10px;margin:4px 0;font-size:14px}
+.pg span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pg button{background:none;border:0;color:var(--red);font-size:16px;cursor:pointer}
+.btnlike{display:inline-block;font-size:14px;padding:8px 12px;border:1px solid var(--bd);border-radius:10px;cursor:pointer;color:var(--tx);text-align:center}
+.dicon{font-size:26px;line-height:1}
+.chipdoc{display:inline-block;font-size:13px;padding:4px 10px;border-radius:999px;background:var(--pri2);color:var(--pri);border:0;margin:6px 6px 0 0;cursor:pointer}
+nav button{font-size:10px!important}
 .conflict{background:var(--redbg);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:14px}
 details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 </style>
@@ -106,17 +124,19 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
     <button data-tab="aerzte"><span>🩺</span>Ärzte</button>
     <button data-tab="vorsorge"><span>🔁</span>Vorsorge</button>
     <button data-tab="werte"><span>📈</span>Werte</button>
+    <button data-tab="dok"><span>📄</span>Dokumente</button>
     <button data-tab="mehr"><span>⚙️</span>Mehr</button>
   </nav>
 </div>
 
 <dialog id="dlg"><form id="dlgForm" autocomplete="off"></form></dialog>
 <input type="file" id="fileIn" hidden>
+<div id="viewer" hidden></div>
 <div id="toast" hidden></div>
 
 <script>
 'use strict';
-const APP_VERSION='1.4.0';
+const APP_VERSION='1.6.0';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -193,12 +213,12 @@ function askPwThenBio(){
 }
 
 let KEY=null,SALT=null,D=null,TAB='termine',WTYP='bp';
-const empty=()=>({v:1,termine:[],aerzte:[],vorsorge:[],werte:[],meta:{}});
-function normalize(o){const e=empty();for(const k of ['termine','aerzte','vorsorge','werte'])e[k]=Array.isArray(o?.[k])?o[k]:[];if(o?.github?.token)e.github={token:String(o.github.token),repo:String(o.github.repo||defaultRepo())};e.meta=o?.meta&&typeof o.meta==='object'?o.meta:{};const g=o?.backupGh;if(g?.token&&g.owner&&g.repo)e.backupGh={owner:String(g.owner),repo:String(g.repo),token:String(g.token)};return e}
+const empty=()=>({v:1,termine:[],aerzte:[],vorsorge:[],werte:[],dokumente:[],meta:{}});
+function normalize(o){const e=empty();for(const k of ['termine','aerzte','vorsorge','werte','dokumente'])e[k]=Array.isArray(o?.[k])?o[k]:[];if(typeof o?.fk==='string')e.fk=o.fk;if(o?.github?.token)e.github={token:String(o.github.token),repo:String(o.github.repo||defaultRepo())};e.meta=o?.meta&&typeof o.meta==='object'?o.meta:{};const g=o?.backupGh;if(g?.token&&g.owner&&g.repo)e.backupGh={owner:String(g.owner),repo:String(g.repo),token:String(g.token)};return e}
 /* ---------- Speicher: Tresor doppelt (localStorage + IndexedDB) ---------- */
 const idb=(()=>{let p;const open=()=>p||(p=new Promise((res,rej)=>{const r=indexedDB.open('gesundbox',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
   const tx=(mode,fn)=>open().then(db=>new Promise((res,rej)=>{const t=db.transaction('kv',mode);const rq=fn(t.objectStore('kv'));t.oncomplete=()=>res(rq&&rq.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)}));
-  return{get:k=>tx('readonly',st=>st.get(k)),put:(k,v)=>tx('readwrite',st=>st.put(v,k)),del:k=>tx('readwrite',st=>st.delete(k))}})();
+  return{get:k=>tx('readonly',st=>st.get(k)),put:(k,v)=>tx('readwrite',st=>st.put(v,k)),del:k=>tx('readwrite',st=>st.delete(k)),keys:()=>tx('readonly',st=>st.getAllKeys())}})();
 let vaultJson=null,VID=null;
 const vaultOk=j=>{try{const v=JSON.parse(j);return !!(v&&typeof v.salt==='string'&&typeof v.iv==='string'&&typeof v.ct==='string')}catch{return false}};
 const vaultTime=j=>{try{return Number(JSON.parse(j).saved)||0}catch{return 0}};
@@ -209,6 +229,7 @@ async function writeVaultStr(json){
   vaultJson=json;
 }
 async function boot(){
+  try{SHARE_PENDING=!!(await idb.get('share'))}catch{}
   try{
     const raw=lsGet(VKEY);let m=null;try{m=await idb.get('vault')}catch{}
     const ok=!!raw&&vaultOk(raw),mOk=typeof m==='string'&&vaultOk(m);
@@ -229,7 +250,7 @@ function save(opt){
 
 /* ---------- Sperrbildschirm ---------- */
 function showLock(auto){
-  KEY=null;D=null;closeDlg();
+  KEY=null;D=null;FKEY=null;closeDlg();closeViewer();
   $('#verLock').textContent='Version '+APP_VERSION;
   $('#app').hidden=true;$('#lock').hidden=false;
   const has=!!vaultJson;
@@ -239,6 +260,7 @@ function showLock(auto){
   $('#lockHint').textContent=has?'Deine Gesundheitsdaten, verschlüsselt nur auf diesem Gerät.':'Lege ein Passwort fest (mind. 8 Zeichen). Ohne Passwort sind die Daten nicht wiederherstellbar.';
   $('#pw').autocomplete=has?'current-password':'new-password';
   $('#pw').value='';$('#pw2').value='';$('#lockErr').textContent='';
+  if(SHARE_PENDING&&has)$('#lockHint').textContent='Entsperre die Gesundbox, um den geteilten Inhalt zu übernehmen.';
   $('#bioBtn').hidden=!(has&&lsGet(BKEY)&&bioSupported());
   if($('#bioBtn').hidden)setTimeout(()=>$('#pw').focus(),50);
   else if(auto===true)setTimeout(tryBio,300);
@@ -250,6 +272,7 @@ async function unlockWith(pw){
   $('#lock').hidden=true;$('#app').hidden=false;
   try{navigator.storage?.persist?.()}catch{}
   resetIdle();render();
+  setTimeout(handleShare,300);setTimeout(cleanFiles,5000);
 }
 $('#lockForm').onsubmit=async e=>{
   e.preventDefault();
@@ -283,7 +306,7 @@ $('#lgh_go').onclick=async()=>{const m=$('#lgh_msg'),bt=$('#lgh_go');
   const g={owner:$('#lgh_o').value.trim(),repo:$('#lgh_r').value.trim(),token:$('#lgh_t').value.trim()};
   if(!g.owner||!g.repo||!g.token){m.textContent='Bitte alle drei Felder ausfüllen.';return}
   bt.disabled=true;m.style.color='var(--mu)';m.textContent='Lade Tresor …';
-  try{await restoreVaultStr(await bkRestore(g))}
+  try{await restoreVaultStr(await bkRestore(g,(i,n)=>{m.textContent=`Lade Dokumente … ${i} von ${n}`}))}
   catch(x){m.style.color='';m.textContent=x.status?bkErrText(x):x.message}
   finally{bt.disabled=false}};
 $('#lockNow').onclick=()=>showLock(false);
@@ -293,6 +316,7 @@ function resetIdle(){clearTimeout(idleT);if(KEY)idleT=setTimeout(()=>showLock(fa
 ['pointerdown','keydown','scroll','touchstart'].forEach(ev=>addEventListener(ev,resetIdle,{passive:true}));
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){hiddenAt=Date.now();return}
+  if(Date.now()<pickingUntil){pickingUntil=0;return} /* Kamera/Dateiauswahl: nicht sperren */
   if(KEY&&hiddenAt&&Date.now()-hiddenAt>60000)showLock(true);
   else if(!KEY&&!$('#lock').hidden)setTimeout(tryBio,300);
 });
@@ -322,7 +346,8 @@ function openForm(title,fields,values,onSave,o={}){
   if(o.onOpen)o.onOpen(f);
   if(!dlg.open)dlg.showModal();
 }
-function pickFile(accept){return new Promise(res=>{const i=$('#fileIn');i.value='';i.accept=accept;i.onchange=()=>res(i.files[0]||null);i.click()})}
+let pickingUntil=0;
+function pickFile(accept){return new Promise(res=>{const i=$('#fileIn');i.value='';i.accept=accept;i.onchange=()=>res(i.files[0]||null);pickingUntil=Date.now()+5*60e3;i.click()})}
 function download(name,text,type){const blob=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),10000)}
 
 /* ---------- ICS ---------- */
@@ -414,22 +439,25 @@ const TYP={bp:{n:'Blutdruck',u:'mmHg'},gewicht:{n:'Gewicht',u:'kg'},puls:{n:'Pul
 function wertText(w){if(w.typ==='bp')return `${fmtNum(w.v1,0)}/${fmtNum(w.v2,0)} mmHg${w.v3!=null?' · Puls '+fmtNum(w.v3,0):''}`;return `${fmtNum(w.v1)} ${TYP[w.typ]?.u||''}`}
 
 /* ---------- Rendering ---------- */
-const TITLES={termine:'Termine',aerzte:'Ärzte',vorsorge:'Vorsorge',werte:'Werte',mehr:'Mehr'};
+const TITLES={termine:'Termine',aerzte:'Ärzte',vorsorge:'Vorsorge',werte:'Werte',dok:'Dokumente',mehr:'Mehr'};
 function render(keep){
   if(!D)return;const y=window.scrollY;
   $('#title').textContent=TITLES[TAB];
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===TAB));
   $('#fab').hidden=TAB==='mehr';
-  $('#main').innerHTML=({termine:rTermine,aerzte:rAerzte,vorsorge:rVorsorge,werte:rWerte,mehr:rMehr})[TAB]();
+  if(TAB==='mehr')setTimeout(showStorage,0);
+  $('#main').innerHTML=({termine:rTermine,aerzte:rAerzte,vorsorge:rVorsorge,werte:rWerte,dok:rDok,mehr:rMehr})[TAB]();
   window.scrollTo(0,keep?y:0);
 }
 function terminCard(t){
   const a=arzt(t.arztId);
   return `<div class="card"><h3>${esc(t.titel)}</h3>
   <div class="meta">${esc(fmtDT(t.datum))}${a?' · '+esc(a.name):''}${t.ort?'<br>📍 '+esc(t.ort):''}</div>
+  ${t.notiz?`<div class="note">${esc(t.notiz.length>300?t.notiz.slice(0,300)+' …':t.notiz)}</div>`:''}
   ${t.fragen?`<div class="note"><b>Fragen:</b> ${esc(t.fragen)}</div>`:''}
   ${t.nachher?`<div class="note"><b>Ergebnis:</b> ${esc(t.nachher)}</div>`:''}
-  <div class="acts"><button data-act="t-ics" data-id="${t.id}">📅 In Kalender</button>${a?.tel?`<a href="tel:${esc(a.tel.replace(/[^\d+]/g,''))}">📞 Anrufen</a>`:''}<button data-act="t-edit" data-id="${t.id}">✏️ Bearbeiten</button></div></div>`;
+  ${(()=>{const ds=D.dokumente.filter(x=>x.terminId===t.id);return ds.length?'<div>'+ds.map(x=>`<button class="chipdoc" data-act="d-view" data-id="${x.id}">📎 ${esc(dokTitel(x))}</button>`).join('')+'</div>':''})()}
+  <div class="acts"><button data-act="t-ics" data-id="${t.id}">📅 In Kalender</button><button data-act="t-dok" data-id="${t.id}">📎 Dokument</button>${a?.tel?`<a href="tel:${esc(a.tel.replace(/[^\d+]/g,''))}">📞 Anrufen</a>`:''}<button data-act="t-edit" data-id="${t.id}">✏️ Bearbeiten</button></div></div>`;
 }
 function rTermine(){
   const now=Date.now()-2*3600e3;
@@ -489,19 +517,21 @@ function rWerte(){
 }
 function avg(list,k){const v=list.slice(-30).map(x=>x[k]).filter(x=>x!=null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null}
 function rMehr(){
-  const g=bkCfg();
+  const g=bkCfg(),lb=D.meta.lastBackup;
   return `<div class="sec">Sicherung</div>
-  <div class="card"><h3>Automatisch in GitHub</h3>${g?`<div class="meta">Nach jeder Änderung landet der verschlüsselte Tresor in <b>${esc(g.owner)}/${esc(g.repo)}</b>.</div>
-    <div class="note" id="bkStatus">${bkText()}</div>
-    ${bkStat.conflict?`<div class="conflict">Im Repo liegt ein anderer Tresor (z. B. von einem früheren Gerät). Er bleibt in der Versionsgeschichte von GitHub erhalten, wenn du ihn ersetzt.<div class="acts"><button data-act="bk-pull">⬇️ GitHub-Stand laden</button><button data-act="bk-force" class="danger">⬆️ Durch diesen Tresor ersetzen</button></div></div>`:''}
-    <div class="acts"><button data-act="bk-now">☁️ Jetzt sichern</button><button data-act="bk-off">✖ Trennen</button></div>`
-  :`<div class="meta">Sichert den verschlüsselten Tresor nach jeder Änderung in ein privates GitHub-Repo – auch wenn Browserdaten gelöscht werden, bleibt alles erhalten.</div><div class="acts"><button data-act="bk-setup">🔗 GitHub-Sicherung einrichten</button></div>`}</div>
-  <div class="card"><h3>Sicherungsdatei</h3><div class="meta">Zusätzlich oder statt GitHub: eine Datei, die du selbst ablegst, verschlüsselt mit deinem aktuellen Passwort. ${D.meta.lastBackup?'Letzte Sicherung: '+fmtD(D.meta.lastBackup)+'.':'Bisher keine Sicherung.'}</div>
-    <div class="acts"><button data-act="bk-export">💾 Sicherung erstellen</button><button data-act="bk-import">📂 Sicherung laden</button></div></div>
-  <div class="sec">Update</div><div class="card">${D.github?`<div class="meta">Verbunden mit ${esc(D.github.repo)}</div><div class="acts"><button data-act="gh-upload">📦 Update-Zip hochladen</button><button data-act="gh-setup">🔧 Verbindung ändern</button><button data-act="gh-off">✖ Trennen</button></div>`:`<div class="meta">Neue Versionen als Zip direkt aus der App ins GitHub-Repo laden.</div><div class="acts"><button data-act="gh-setup">🔗 GitHub verbinden</button></div>`}<div id="updStatus" class="note" style="margin-top:8px">${UPD}</div></div>
-  <div class="sec">Import</div><div class="card"><div class="acts"><button data-act="ics-import">📅 Termine aus .ics</button><button data-act="csv-import">📈 Werte aus CSV</button></div></div>
-  <div class="sec">Sicherheit</div><div class="card"><div class="meta">Alle Daten liegen verschlüsselt (AES-256) nur auf diesem Gerät. Automatische Sperre nach 5 Minuten Inaktivität oder 1 Minute im Hintergrund.</div><div class="acts">${bioSupported()?(lsGet(BKEY)?'<button data-act="bio-off">👆 Fingerabdruck deaktivieren</button>':'<button data-act="bio-on">👆 Fingerabdruck einrichten</button>'):''}<button data-act="pw-change">🔑 Passwort ändern</button><button data-act="wipe" class="danger">🗑️ Alle Daten löschen</button></div></div>
-  <div class="sec">Übersicht</div><div class="card meta">${D.termine.length} Termine · ${D.aerzte.length} Ärzte · ${D.vorsorge.length} Vorsorge · ${D.werte.length} Messwerte</div>
+  <div class="card">
+    <div class="srow"><span>☁️ GitHub</span><span class="meta" id="bkStatus">${g?bkText():'nicht eingerichtet'}</span></div>
+    <div class="srow" style="border:0"><span>💾 Sicherungsdatei</span><span class="meta">${lb?'zuletzt '+esc(fmtD(lb)):'noch keine'}</span></div>
+    ${g&&bkStat.conflict?`<div class="conflict">Im Repo liegt ein anderer Tresor (z. B. von einem früheren Gerät). Er bleibt in der Versionsgeschichte von GitHub erhalten, wenn du ihn ersetzt.<div class="acts"><button data-act="bk-pull">⬇️ GitHub-Stand laden</button><button data-act="bk-force" class="danger">⬆️ Durch diesen Tresor ersetzen</button></div></div>`:''}
+    <div class="acts">${g?'<button data-act="bk-now">☁️ Jetzt sichern</button>':'<button data-act="bk-setup">☁️ GitHub einrichten</button>'}<button data-act="bk-export">💾 Datei erstellen</button><button data-act="bk-restore">📂 Wiederherstellen</button></div>
+    <div class="hint">${g?`GitHub sichert automatisch nach jeder Änderung in <b>${esc(g.owner)}/${esc(g.repo)}</b>.`:'Mit GitHub wird nach jeder Änderung automatisch gesichert.'} Die Datei ist eine zusätzliche Kopie, die du selbst ablegst. Beides ist mit deinem Passwort verschlüsselt.</div>
+    ${g?'<details><summary>GitHub-Sicherung trennen</summary><div class="acts"><button data-act="bk-off">✖ Trennen</button></div></details>':''}
+  </div>
+  <div class="sec">Sicherheit</div><div class="card"><div class="meta">Alle Daten liegen verschlüsselt (AES-256) auf diesem Gerät. Automatische Sperre nach 5 Minuten Inaktivität oder 1 Minute im Hintergrund.</div><div class="acts">${bioSupported()?(lsGet(BKEY)?'<button data-act="bio-off">👆 Fingerabdruck deaktivieren</button>':'<button data-act="bio-on">👆 Fingerabdruck einrichten</button>'):''}<button data-act="pw-change">🔑 Passwort ändern</button><button data-act="wipe" class="danger">🗑️ Alle Daten löschen</button></div></div>
+  <div class="sec">Importieren</div><div class="card"><div class="acts"><button data-act="ics-import">📅 Termine aus .ics</button><button data-act="csv-import">📈 Werte aus CSV</button></div>
+    <div class="hint">Tipp: In anderen Apps auf <b>Teilen → Gesundbox</b> tippen. So kommen Terminbestätigungen (.ics oder Text), CSV-Messwerte sowie Fotos und PDFs (z. B. Arztbriefe) direkt hierher.</div></div>
+  <div class="sec">App-Update</div><div class="card">${D.github?`<div class="meta">Verbunden mit ${esc(D.github.repo)}</div><div class="acts"><button data-act="gh-upload">📦 Update-Zip hochladen</button><button data-act="gh-setup">🔧 Verbindung ändern</button><button data-act="gh-off">✖ Trennen</button></div>`:`<div class="meta">Neue Versionen als Zip direkt aus der App ins GitHub-Repo laden.</div><div class="acts"><button data-act="gh-setup">🔗 GitHub verbinden</button></div>`}<div id="updStatus" class="note" style="margin-top:8px">${UPD}</div></div>
+  <div class="sec">Übersicht</div><div class="card meta">${D.termine.length} Termine · ${D.aerzte.length} Ärzte · ${D.vorsorge.length} Vorsorge · ${D.werte.length} Messwerte · ${D.dokumente.length} Dokumente<br><span id="stor"></span></div>
   <p class="meta" style="text-align:center">Gesundbox · Version ${APP_VERSION}<br>Kein Ersatz für ärztlichen Rat.</p>`;
 }
 
@@ -514,6 +544,7 @@ function editTermin(t,preset){
     {k:'dauer',l:'Dauer (Minuten)',t:'number'},
     {k:'arztId',l:'Arzt',t:'select',opts:arztOpts()},
     {k:'ort',l:'Ort (leer = Adresse des Arztes)'},
+    {k:'notiz',l:'Notiz',t:'textarea'},
     {k:'fragen',l:'Fragen für den Termin',t:'textarea'},
     {k:'nachher',l:'Ergebnis / Notiz nach dem Termin',t:'textarea'},
   ],t,async v=>{
@@ -562,8 +593,12 @@ function editWert(w){
 /* ---------- Import ---------- */
 async function importICS(){
   const file=await pickFile('.ics,text/calendar');if(!file)return;
+  let text;try{text=await file.text()}catch{toast('Datei konnte nicht gelesen werden.');return}
+  await importICSText(text);
+}
+async function importICSText(text){
   try{
-    const evs=parseICS(await file.text());let n=0,dup=0;
+    const evs=parseICS(text);let n=0,dup=0;
     for(const e of evs){
       const st=icsToDate(e.DTSTART);if(!st)continue;
       const en=icsToDate(e.DTEND);
@@ -582,7 +617,11 @@ const GUESS={datum:/^(datum|date|day|tag|zeitstempel|timestamp|messzeit|measurem
   sys:/(sys|systol)/i,dia:/(dia(?!g)|diastol)/i,puls:/(puls|pulse|heart|herz|hr\b|bpm)/i,gewicht:/(gewicht|weight|kg)/i};
 async function importCSV(){
   const file=await pickFile('.csv,.txt,text/csv');if(!file)return;
-  let rows;try{rows=parseCSV(await file.text())}catch{toast('Datei konnte nicht gelesen werden.');return}
+  let text;try{text=await file.text()}catch{toast('Datei konnte nicht gelesen werden.');return}
+  importCSVText(file.name,text);
+}
+function importCSVText(fname,text){
+  let rows;try{rows=parseCSV(text)}catch{toast('Datei konnte nicht gelesen werden.');return}
   if(rows.length<2){toast('Keine Daten in der Datei gefunden.');return}
   const head=rows[0],data=rows.slice(1);
   const cols=[['','– keine –'],...head.map((h,i)=>[String(i),h||('Spalte '+(i+1))])];
@@ -596,7 +635,7 @@ async function importCSV(){
   };
   const autoCols=typ=>typ==='bp'?{c1:g(GUESS.sys),c2:g(GUESS.dia),c3:g(GUESS.puls)}:{c1:g(GUESS[typ]),c2:'',c3:''};
   const show=vals=>{
-    const preview=`<div class="meta" style="margin-bottom:10px">${data.length} Zeilen gefunden in „${esc(file.name)}“. Ordne die Spalten zu:</div>`;
+    const preview=`<div class="meta" style="margin-bottom:10px">${data.length} Zeilen gefunden in „${esc(fname)}“. Ordne die Spalten zu:</div>`;
     openForm('CSV importieren',fieldsFor(vals.typ),vals,async v=>{
       const typ=v.typ;let n=0,skip=0,dup=0;
       for(const r of data){
@@ -671,6 +710,166 @@ async function watchRun(repo,tok,sha){
   setUpd('✅ Paket übernommen. Die Seite ist noch nicht aktualisiert (gleiche Version oder GitHub braucht länger) – später neu laden.'+link);
 }
 
+/* ---------- Dokumente: Fotos & PDFs, verschlüsselt in IndexedDB ----------
+   Jede Datei wird mit einem zufälligen Dateischlüssel (liegt im Tresor) verschlüsselt.
+   So bleiben Dateien beim Passwortwechsel gültig und müssen nie neu hochgeladen werden. */
+const DOKTYP={ueberweisung:'Überweisung',rezept:'Rezept',brief:'Arztbrief',befund:'Befund',sonstiges:'Sonstiges'};
+let FKEY=null,DTYP='alle';
+const kb=n=>n>=1e6?(n/1e6).toLocaleString('de-DE',{maximumFractionDigits:1})+' MB':Math.max(1,Math.round(n/1e3))+' KB';
+const allFids=()=>D?D.dokumente.flatMap(d=>(d.files||[]).map(f=>f.fid)):[];
+const dokTitel=d=>d.titel||((DOKTYP[d.typ]||'Dokument')+(arzt(d.arztId)?' – '+arzt(d.arztId).name:''));
+async function fileKey(){
+  if(FKEY)return FKEY;
+  if(!D.fk){D.fk=b64(rnd(32));await save({clean:true})}
+  FKEY=await crypto.subtle.importKey('raw',unb64(D.fk),'AES-GCM',false,['encrypt','decrypt']);return FKEY;
+}
+async function putFile(buf){
+  const k=await fileKey(),iv=rnd(12);const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},k,buf);
+  const fid=(crypto.randomUUID?crypto.randomUUID():uid()).replace(/[^a-z0-9]/gi,'').toLowerCase();
+  await idb.put('f:'+fid,{iv:iv.buffer,ct});return fid;
+}
+async function getFile(fid){
+  const r=await idb.get('f:'+fid);if(!r)throw new Error('Eine Datei fehlt auf diesem Gerät. Ist sie in der Sicherung?');
+  return crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(r.iv)},await fileKey(),r.ct);
+}
+async function cleanFiles(){
+  if(!D)return;const used=new Set(allFids());
+  try{for(const k of await idb.keys())if(String(k).startsWith('f:')&&!used.has(String(k).slice(2)))await idb.del(k)}catch{}
+}
+async function showStorage(){try{const e=await navigator.storage?.estimate?.();const el=document.getElementById('stor');if(e&&el)el.textContent='Speicher belegt: '+kb(e.usage||0)}catch{}}
+/* Fotos verkleinern (max. 2200 px, JPEG), PDFs unverändert */
+async function prepFile(file){
+  const mime=file.type||'';
+  if(/^image\//.test(mime)&&!/gif|svg/.test(mime)){
+    try{const bmp=await createImageBitmap(file);const sc=Math.min(1,2200/Math.max(bmp.width,bmp.height));
+      const c=document.createElement('canvas');c.width=Math.round(bmp.width*sc);c.height=Math.round(bmp.height*sc);
+      c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);bmp.close?.();
+      const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',0.85));
+      if(blob&&blob.size<file.size)return{buf:await blob.arrayBuffer(),mime:'image/jpeg',name:(file.name||'foto').replace(/\.\w+$/,'')+'.jpg'};
+    }catch{}
+  }
+  return{buf:await file.arrayBuffer(),mime:mime||'application/octet-stream',name:file.name||'datei'};
+}
+const guessTyp=n=>/rezept/i.test(n)?'rezept':/(über|ueber)weis/i.test(n)?'ueberweisung':/befund|labor|röntgen|mrt/i.test(n)?'befund':/brief|bericht/i.test(n)?'brief':'sonstiges';
+function dokBadge(d){
+  if(!d.gueltig)return'';const days=Math.round((new Date(d.gueltig+'T00:00')-new Date(today()+'T00:00'))/864e5);
+  return days<0?'<span class="badge b-red">abgelaufen</span>':days<=14?`<span class="badge b-or">noch ${days} Tage gültig</span>`:`<span class="badge b-ok">gültig bis ${esc(fmtD(d.gueltig))}</span>`;
+}
+function rDok(){
+  const cnt=t=>D.dokumente.filter(d=>t==='alle'||d.typ===t).length;
+  let h=`<div class="chips">${[['alle','Alle'],...Object.entries(DOKTYP)].filter(([k])=>k==='alle'||cnt(k)).map(([k,n])=>`<button data-act="d-typ" data-id="${k}" class="${k===DTYP?'on':''}">${n} ${cnt(k)}</button>`).join('')}</div>`;
+  const list=D.dokumente.filter(d=>DTYP==='alle'||d.typ===DTYP).sort((a,b)=>(b.datum||'').localeCompare(a.datum||''));
+  if(!D.dokumente.length)return h+`<div class="empty">Noch keine Dokumente.<br>Tippe auf <b>+</b> und fotografiere z. B. eine Überweisung oder ein Rezept – oder teile ein PDF aus einer anderen App mit der Gesundbox.</div>`;
+  return h+list.map(d=>{const a=arzt(d.arztId),t=D.termine.find(x=>x.id===d.terminId),n=(d.files||[]).length,pdf=(d.files||[]).some(f=>f.mime==='application/pdf');
+    return `<div class="card"><div style="display:flex;gap:12px;align-items:flex-start"><div class="dicon">${pdf?'📄':'🖼️'}</div><div style="flex:1;min-width:0">
+      <h3>${esc(dokTitel(d))}</h3><div class="meta">${esc(DOKTYP[d.typ]||'')} · ${esc(fmtD(d.datum))}${a?' · '+esc(a.name):''} · ${n} ${n===1?'Datei':'Dateien'}${t?'<br>📅 '+esc(t.titel)+', '+esc(fmtD(t.datum.slice(0,10))):''}</div>
+      ${dokBadge(d)}${d.notiz?`<div class="note">${esc(d.notiz)}</div>`:''}</div></div>
+      <div class="acts"><button data-act="d-view" data-id="${d.id}">👁️ Ansehen</button><button data-act="d-edit" data-id="${d.id}">✏️ Bearbeiten</button></div></div>`}).join('');
+}
+function editDok(d,preset,incoming){
+  const isNew=!d;d=d||{id:uid(),titel:'',typ:'sonstiges',datum:today(),gueltig:'',arztId:'',terminId:'',notiz:'',files:[],...preset};
+  let pages=(d.files||[]).map(f=>({...f}));
+  const termOpts=[['','– kein Termin –'],...D.termine.slice().sort((a,b)=>b.datum.localeCompare(a.datum)).slice(0,60).map(t=>[t.id,fmtD(t.datum.slice(0,10))+' · '+t.titel])];
+  const pgHtml=()=>pages.length?pages.map((p,i)=>`<div class="pg">${p.mime==='application/pdf'?'📄':'🖼️'}<span>${esc(p.name)}</span><small class="meta">${kb(p.size)}</small><button type="button" data-rm="${i}" aria-label="Entfernen">✖</button></div>`).join(''):'<div class="meta">Noch keine Datei – fotografieren oder Datei wählen.</div>';
+  const addFiles=async(list,f)=>{
+    for(const file of list){const p=await prepFile(file);if(p.buf.byteLength>25e6){toast(`„${file.name}“ ist zu groß (max. 25 MB).`);continue}
+      pages.push({prep:p,mime:p.mime,name:p.name,size:p.buf.byteLength});
+      const tf=f.querySelector('[name=titel]');if(isNew&&!tf.value&&pages.length===1){const g=guessTyp(file.name||'');if(g!=='sonstiges')f.querySelector('[name=typ]').value=g}}
+    f.querySelector('#pgList').innerHTML=pgHtml();
+  };
+  openForm(isNew?'Neues Dokument':'Dokument bearbeiten',[
+    {k:'typ',l:'Art',t:'select',opts:Object.entries(DOKTYP)},
+    {k:'titel',l:'Titel (optional)',ph:'z. B. Überweisung Orthopädie'},
+    {k:'datum',l:'Datum',t:'date',req:true},
+    {k:'gueltig',l:'Gültig bis (optional, z. B. bei Überweisungen)',t:'date'},
+    {k:'arztId',l:'Arzt',t:'select',opts:arztOpts()},
+    {k:'terminId',l:'Zu Termin',t:'select',opts:termOpts},
+    {k:'notiz',l:'Notiz',t:'textarea'},
+  ],d,async v=>{
+    if(!pages.length){toast('Bitte mindestens ein Foto oder eine Datei hinzufügen.');return false}
+    const keep=[];
+    for(const p of pages){if(p.fid){keep.push({fid:p.fid,mime:p.mime,name:p.name,size:p.size});continue}
+      try{keep.push({fid:await putFile(p.prep.buf),mime:p.mime,name:p.name,size:p.size})}catch{toast('Speichern fehlgeschlagen – Speicher voll?');return false}}
+    for(const old of d.files||[])if(!keep.some(k=>k.fid===old.fid))await idb.del('f:'+old.fid).catch(()=>{});
+    Object.assign(d,{typ:v.typ,titel:v.titel.trim(),datum:v.datum,gueltig:v.gueltig,arztId:v.arztId,terminId:v.terminId,notiz:v.notiz,files:keep});
+    if(isNew)D.dokumente.push(d);await save();if(isNew&&TAB!=='termine')TAB='dok';toast('Dokument verschlüsselt gespeichert ✓');
+  },{del:isNew?null:async()=>{for(const f of d.files||[])await idb.del('f:'+f.fid).catch(()=>{});D.dokumente=D.dokumente.filter(x=>x.id!==d.id);await save()},
+    html:`<label>Fotos & Dateien</label><div id="pgList">${pgHtml()}</div>
+      <div class="acts" style="margin:6px 0 14px"><label class="btnlike">📷 Foto aufnehmen<input type="file" accept="image/*" capture="environment" hidden id="pgCam"></label><label class="btnlike">📎 Bild / PDF wählen<input type="file" accept="image/*,application/pdf" multiple hidden id="pgFile"></label></div>`,
+    onOpen:f=>{
+      for(const id of ['pgCam','pgFile']){const inp=f.querySelector('#'+id);inp.onclick=()=>{pickingUntil=Date.now()+5*60e3};
+        inp.onchange=async()=>{const l=[...inp.files];inp.value='';await addFiles(l,f)}}
+      f.querySelector('#pgList').onclick=e=>{const b=e.target.closest('[data-rm]');if(b){pages.splice(+b.dataset.rm,1);f.querySelector('#pgList').innerHTML=pgHtml()}};
+      if(incoming?.length)addFiles(incoming,f);
+    }});
+}
+let viewUrls=[];
+function closeViewer(){const v=document.getElementById('viewer');if(!v)return;viewUrls.forEach(u=>URL.revokeObjectURL(u));viewUrls=[];v.hidden=true;v.innerHTML=''}
+async function viewDok(d){
+  const v=$('#viewer');closeViewer();v.hidden=false;
+  v.innerHTML=`<div class="vbar"><b>${esc(dokTitel(d))}</b><button id="vClose" aria-label="Schließen">✕</button></div><div class="vbody" id="vBody"><div class="meta">Wird entschlüsselt …</div></div>
+    <div class="vacts"><button class="ghost" id="vShare">📤 Teilen</button><button class="ghost" id="vDl">⬇️ Speichern</button></div>`;
+  $('#vClose').onclick=closeViewer;
+  const files=[];let html='';
+  try{
+    for(const [i,p] of (d.files||[]).entries()){
+      const blob=new Blob([await getFile(p.fid)],{type:p.mime});const u=URL.createObjectURL(blob);viewUrls.push(u);files.push(new File([blob],p.name,{type:p.mime}));
+      html+=p.mime.startsWith('image/')?`<img src="${u}" alt="${esc(p.name)}">`:`<div class="pdfcard"><span>📄 ${esc(p.name)}<br><small class="meta">${kb(p.size)}</small></span><button class="pri" data-open="${i}">Öffnen</button></div>`;
+    }
+  }catch(e){html+=`<div class="err">${esc(e.message)}</div>`}
+  if(v.hidden)return;
+  $('#vBody').innerHTML=html||'<div class="meta">Keine Dateien.</div>';
+  $('#vBody').onclick=async e=>{const b=e.target.closest('[data-open]');if(!b)return;const f=files[+b.dataset.open];
+    if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:f.name});return}catch(x){if(x.name==='AbortError')return}}
+    window.open(viewUrls[+b.dataset.open],'_blank','noopener')};
+  $('#vShare').onclick=async()=>{if(navigator.canShare&&navigator.canShare({files})){try{await navigator.share({files,title:dokTitel(d)})}catch{}}else toast('Teilen wird hier nicht unterstützt – nutze „Speichern“.')};
+  $('#vDl').onclick=()=>files.forEach((f,i)=>{const a=document.createElement('a');a.href=viewUrls[i];a.download=f.name;document.body.appendChild(a);a.click();a.remove()});
+}
+
+/* ---------- Teilen aus anderen Apps (Web Share Target, über sw.js) ---------- */
+let SHARE_PENDING=false;
+const MON={jan:1,feb:2,'mär':3,mar:3,apr:4,mai:5,jun:6,jul:7,aug:8,sep:9,okt:10,oct:10,nov:11,dez:12,dec:12};
+function guessDate(t){
+  let d=null,mo=null,y=null;
+  for(const m of t.matchAll(/(?<![\d.])(\d{1,2})\.(\d{1,2})\.(\d{4}|\d{2})?(?![\d])/g)){const dd=+m[1],mm=+m[2];if(dd>=1&&dd<=31&&mm>=1&&mm<=12){d=dd;mo=mm;y=m[3]?+(m[3].length===2?'20'+m[3]:m[3]):null;break}}
+  if(d==null){const m=t.match(/(\d{1,2})\.?\s+(jan|feb|mär|mar|apr|mai|jun|jul|aug|sep|okt|oct|nov|dez|dec)[a-zä]*\.?(?:\s+(\d{4}))?/i);
+    if(m){d=+m[1];mo=MON[m[2].toLowerCase()];y=m[3]?+m[3]:null}}
+  if(d==null)return null;
+  if(!y){const now=new Date();y=now.getFullYear();if(new Date(y,mo-1,d)<new Date(now.getFullYear(),now.getMonth(),now.getDate()))y++}
+  let h=9,mi=0;const tm=t.match(/(?<![\d.])(\d{1,2}):(\d{2})/)||t.match(/(?<![\d.])(\d{1,2})\.(\d{2})\s*Uhr/i)||t.match(/(?<![\d.])(\d{1,2})\s*Uhr/i);
+  if(tm&&+tm[1]<24&&(!tm[2]||+tm[2]<60)){h=+tm[1];mi=tm[2]?+tm[2]:0}
+  const x=new Date(y,mo-1,d,h,mi);return isNaN(x)?null:localDT(x);
+}
+async function handleShare(){
+  let sh=null;try{sh=await idb.get('share')}catch{}
+  SHARE_PENDING=false;if(/teilen/.test(location.search))history.replaceState(null,'',location.pathname);
+  if(!sh||!D)return;
+  await idb.del('share').catch(()=>{});
+  if(Date.now()-(sh.at||0)>24*3600e3)return; /* alte, liegengebliebene Teilungen verwerfen */
+  const files=(sh.files||[]).map(f=>({...f,text:f.text??(f.buf&&!/^(image\/|application\/pdf)/.test(f.type||'')?td.decode(f.buf):'')}));
+  const docs=files.filter(f=>/^(image\/|application\/pdf)/.test(f.type||'')||/\.(pdf|jpe?g|png|heic|webp)$/i.test(f.name||''));
+  if(docs.length){TAB='dok';render();
+    editDok(null,{typ:guessTyp(docs.map(f=>f.name).join(' ')+' '+(sh.title||'')),titel:String(sh.title||'').slice(0,60)},docs.map(f=>new File([f.buf],f.name||'datei',{type:f.type||''})));
+    toast('Geteilte Datei – Art und Arzt wählen, dann speichern.');return}
+  if(files.length){
+    for(const f of files){
+      const n=(f.name||'').toLowerCase(),t=f.text||'';
+      if(n.endsWith('.ics')||/calendar/i.test(f.type)||t.trimStart().startsWith('BEGIN:VCALENDAR')){await importICSText(t)}
+      else if(n.endsWith('.gesundbox')||(/json/i.test(f.type)&&t.includes('"gesundbox"'))){
+        let j;try{j=await readBackupFile(new File([t],n))}catch(e){toast(e.message);continue}
+        if(confirm('Geteilte Sicherung laden? Die Daten auf diesem Gerät werden ersetzt.'))restoreVaultStr(j);return}
+      else if(n.endsWith('.csv')||/csv|comma/i.test(f.type)||n.endsWith('.txt')){TAB='werte';render();importCSVText(f.name||'Geteilte Datei',t);return}
+      else toast(`„${f.name||'Datei'}“ wird noch nicht unterstützt (nur Fotos, PDFs, .ics, .csv und Sicherungen).`);
+    }
+    return;
+  }
+  const text=[sh.title,sh.text,sh.url].map(x=>String(x||'').trim()).filter(Boolean).filter((x,i,a)=>a.indexOf(x)===i).join('\n');
+  if(!text)return;
+  const datum=guessDate(text);TAB='termine';render();
+  editTermin(null,{titel:(sh.title||text.split('\n')[0]).slice(0,60),notiz:text,...(datum?{datum}:{})});
+  toast(datum?'Termin aus geteiltem Text – bitte prüfen und speichern.':'Kein Datum erkannt – bitte ergänzen und speichern.');
+}
+
 /* ---------- Backup & Sicherheit ---------- */
 /* Sicherungsdatei: enthält den bereits verschlüsselten Tresor (Passwort beim Sichern) */
 async function deliverFile(name,text,type){
@@ -681,21 +880,29 @@ async function deliverFile(name,text,type){
 async function exportBackup(){
   D.meta.lastBackup=today();D.meta.dirty=0;await save({clean:true});
   if(!vaultJson){toast('Es gibt noch nichts zu sichern.');return}
-  const payload=JSON.stringify({app:'gesundbox',format:2,exported:new Date().toISOString(),version:APP_VERSION,vault:JSON.parse(vaultJson)});
+  const files={};let miss=0;
+  for(const fid of allFids()){const r=await idb.get('f:'+fid).catch(()=>null);if(r)files[fid]={iv:b64(r.iv),ct:b64(r.ct)};else miss++}
+  if(miss)toast(miss+' Datei(en) fehlen auf diesem Gerät und sind nicht in der Sicherung.');
+  const payload=JSON.stringify({app:'gesundbox',format:3,exported:new Date().toISOString(),version:APP_VERSION,vault:JSON.parse(vaultJson),files});
   if(await deliverFile(`gesundbox-sicherung-${today()}.gesundbox`,payload,'application/json')){toast('Sicherung erstellt. Leg die Datei an einem zweiten Ort ab, z. B. in deiner Cloud.');render()}
 }
 async function readBackupFile(file){
-  if(file.size>50e6)throw new Error('Die Datei ist zu groß für eine Gesundbox-Sicherung.');
+  if(file.size>500e6)throw new Error('Die Datei ist zu groß für eine Gesundbox-Sicherung.');
   let o;try{o=JSON.parse(await file.text())}catch{throw new Error('Das ist keine gültige Gesundbox-Sicherung.')}
   const v=o&&o.app==='gesundbox'?(o.vault||(o.ct?o:null)):null; /* auch alte Backups (V1) */
   if(!v||!vaultOk(JSON.stringify(v)))throw new Error('Das ist keine gültige Gesundbox-Sicherung.');
-  return JSON.stringify(v);
+  return{vault:JSON.stringify(v),files:o.files&&typeof o.files==='object'?o.files:{}};
 }
-async function restoreVaultStr(json){
+async function restoreVaultStr(x){
   await saving;
+  const json=typeof x==='string'?x:x.vault,files=typeof x==='object'&&x.files?x.files:null;
+  const buf=y=>typeof y==='string'?unb64(y).buffer:y;let fileErr=false;
+  if(files){try{for(const k of await idb.keys())if(String(k).startsWith('f:'))await idb.del(k);
+    for(const [fid,f] of Object.entries(files))await idb.put('f:'+fid,{iv:buf(f.iv),ct:buf(f.ct)})}catch{fileErr=true}}
   try{await writeVaultStr(json)}catch{toast('Die Sicherung passt nicht in den Speicher des Handys.');return}
+  FKEY=null;
   lsDel(BKEY);clearTimeout(bkTimer);bkPending=null;setBk({err:'',conflict:false});
-  showLock(false);toast('Sicherung geladen. Entsperre sie mit dem Passwort, das beim Sichern galt.');
+  showLock(false);toast(fileErr?'Sicherung geladen, aber nicht alle Dokumente passten in den Speicher. Entsperre mit dem Passwort, das beim Sichern galt.':'Sicherung geladen. Entsperre sie mit dem Passwort, das beim Sichern galt.');
 }
 async function importBackup(){
   const file=await pickFile('.gesundbox,.json,application/json');if(!file)return;
@@ -719,7 +926,7 @@ async function bkFetch(g,method,path,body,raw){
     body:body?JSON.stringify(body):undefined});
   if(r.status===404&&method==='GET')return null;
   if(!r.ok){const e=new Error('GitHub '+r.status);e.status=r.status;throw e}
-  return raw?r.text():r.status===204?null:r.json();
+  return raw?r.arrayBuffer():r.status===204?null:r.json();
 }
 const bkErrText=e=>e&&e.conflict?'Im Repo liegt ein anderer Tresor. Unter „Mehr“ entscheiden.'
   :e&&e.status===401?'Der GitHub-Zugangsschlüssel ist ungültig oder abgelaufen.'
@@ -735,10 +942,10 @@ function bkText(){
 async function bkRemote(g){
   const cur=await bkFetch(g,'GET','/contents/vault.json');if(!cur)return{cur:null,json:null};
   let json=null;
-  try{json=cur.content&&cur.encoding==='base64'?td.decode(unb64(cur.content.replace(/\s/g,''))):await bkFetch(g,'GET','/contents/vault.json',null,true)}catch{}
+  try{json=cur.content&&cur.encoding==='base64'?td.decode(unb64(cur.content.replace(/\s/g,''))):td.decode(await bkFetch(g,'GET','/contents/vault.json',null,true))}catch{}
   return{cur,json};
 }
-function bkQueue(delay){const g=bkCfg();if(!g)return;bkPending=g;clearTimeout(bkTimer);bkTimer=setTimeout(()=>bkSync(),delay==null?4000:delay)}
+function bkQueue(delay){const g=bkCfg();if(!g)return;bkPending={...g,fids:allFids()};clearTimeout(bkTimer);bkTimer=setTimeout(()=>bkSync(),delay==null?4000:delay)}
 async function bkSync(force){
   const g=bkPending||bkCfg();if(!g)return;
   if(bkBusy){bkAgain={force};return}
@@ -747,6 +954,15 @@ async function bkSync(force){
   try{
     const local=vaultJson;if(!local||!vaultOk(local))throw new Error('local');
     const lv=JSON.parse(local);
+    /* 1) Dokumente, die im Repo noch fehlen (Dateien ändern sich nie, der Name reicht) */
+    const fids=g.fids||allFids();
+    if(fids.length){
+      const list=await bkFetch(g,'GET','/contents/files');const have=new Set((list||[]).map(x=>String(x.name).replace(/\.bin$/,'')));
+      for(const fid of fids){if(have.has(fid))continue;const r=await idb.get('f:'+fid).catch(()=>null);if(!r)continue;
+        const u=new Uint8Array(12+r.ct.byteLength);u.set(new Uint8Array(r.iv),0);u.set(new Uint8Array(r.ct),12);
+        await bkFetch(g,'PUT',`/contents/files/${fid}.bin`,{message:'Gesundbox: Dokument',content:b64(u)})}
+    }
+    /* 2) Tresor – nie einen fremden überschreiben */
     for(let attempt=0;attempt<2;attempt++){
       const{cur,json}=await bkRemote(g);
       if(json===local)break;
@@ -767,9 +983,13 @@ async function bkSync(force){
 }
 /* Beim Wegwechseln aus der App ausstehende Sicherung sofort starten */
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&bkTimer&&bkPending)bkSync()});
-async function bkRestore(g){
+async function bkRestore(g,onStep){
   const{json}=await bkRemote(g);if(!json||!vaultOk(json))throw new Error('Im Repo wurde keine Gesundbox-Sicherung gefunden.');
-  return json;
+  const files={},list=(await bkFetch(g,'GET','/contents/files')||[]).filter(it=>/\.bin$/.test(it.name));let n=0;
+  for(const it of list){onStep&&onStep(++n,list.length);
+    const b=new Uint8Array(await bkFetch(g,'GET','/contents/files/'+encodeURIComponent(it.name),null,true));
+    files[it.name.replace(/\.bin$/,'')]={iv:b.slice(0,12).buffer,ct:b.slice(12).buffer}}
+  return{vault:json,files};
 }
 function bkSetup(){
   openForm('GitHub-Sicherung einrichten',[{k:'owner',l:'Konto / Organisation',req:true},{k:'repo',l:'Privates Repo',req:true},{k:'token',l:'Zugangsschlüssel (github_pat_…)',t:'password',req:true}],
@@ -796,7 +1016,7 @@ function changePw(){
 async function wipe(){
   if(!confirm('Wirklich ALLE Daten auf diesem Gerät löschen? Das kann nicht rückgängig gemacht werden.'))return;
   if(!confirm('Letzte Warnung: Hast du eine Sicherung?'))return;
-  lsDel(VKEY);lsDel(BKEY);lsDel(GHS);await idb.del('vault').catch(()=>{});vaultJson=null;clearTimeout(bkTimer);showLock(false);
+  lsDel(VKEY);lsDel(BKEY);lsDel(GHS);await idb.del('vault').catch(()=>{});try{for(const k of await idb.keys())if(String(k).startsWith('f:'))await idb.del(k)}catch{}vaultJson=null;clearTimeout(bkTimer);showLock(false);
 }
 const PRESETS=[['Zahnarzt – Kontrolle',6],['Professionelle Zahnreinigung',12],['Hausarzt – Check-up',36],['Hautkrebs-Screening',24],['Augenarzt',24],['Tetanus/Diphtherie – Auffrischung',120]];
 
@@ -807,6 +1027,10 @@ $('#main').addEventListener('click',async e=>{
   const T=()=>D.termine.find(x=>x.id===id),A=()=>D.aerzte.find(x=>x.id===id),V=()=>D.vorsorge.find(x=>x.id===id);
   switch(act){
     case 't-edit':editTermin(T());break;
+    case 't-dok':{const t=T();editDok(null,{terminId:t.id,arztId:t.arztId||'',datum:t.datum.slice(0,10)});break}
+    case 'd-view':{const d=D.dokumente.find(x=>x.id===id);if(d)viewDok(d);break}
+    case 'd-edit':editDok(D.dokumente.find(x=>x.id===id));break;
+    case 'd-typ':DTYP=id;render(true);break;
     case 't-ics':terminICS([T()]);break;
     case 'ics-all':terminICS(D.termine.filter(t=>new Date(t.datum)>=Date.now()));break;
     case 'ics-import':importICS();break;
@@ -825,6 +1049,10 @@ $('#main').addEventListener('click',async e=>{
     case 'bk-export':exportBackup();break;
     case 'bk-import':importBackup();break;
     case 'bk-setup':bkSetup();break;
+    case 'bk-restore':{const g=bkCfg();if(!g){importBackup();break}
+      openForm('Sicherung wiederherstellen',[{k:'q',l:'Woher?',t:'select',opts:[['datei','Aus einer Sicherungsdatei'],['github','Aus GitHub ('+g.owner+'/'+g.repo+')']]}],{},v=>{
+        setTimeout(async()=>{if(v.q==='datei')importBackup();else if(confirm('Die Daten auf diesem Gerät durch den GitHub-Stand ersetzen?')){try{restoreVaultStr(await bkRestore(g))}catch(e){toast(e.status?bkErrText(e):e.message)}}},50);
+      },{okText:'Weiter',html:'<div class="meta" style="margin-bottom:10px">Die Daten auf diesem Gerät werden durch die Sicherung ersetzt. Danach mit dem Passwort entsperren, das beim Sichern galt.</div>'});break}
     case 'bk-now':await bkSync();if(!bkStat.err)toast('Auf GitHub gesichert ✓');break;
     case 'bk-force':if(confirm('Den Tresor im Repo durch diesen ersetzen? Der alte bleibt in der GitHub-Versionsgeschichte.')){await bkSync(true);render()}break;
     case 'bk-pull':if(confirm('Die Daten auf diesem Gerät durch den GitHub-Stand ersetzen?')){try{restoreVaultStr(await bkRestore(bkCfg()))}catch(e){toast(e.status?bkErrText(e):e.message)}}break;
@@ -840,7 +1068,7 @@ $('#main').addEventListener('click',async e=>{
   }
 });
 document.querySelector('nav').addEventListener('click',e=>{const b=e.target.closest('button');if(b){TAB=b.dataset.tab;render()}});
-$('#fab').onclick=()=>({termine:()=>editTermin(),aerzte:()=>editArzt(),vorsorge:()=>editVorsorge(),werte:()=>editWert()})[TAB]?.();
+$('#fab').onclick=()=>({termine:()=>editTermin(),aerzte:()=>editArzt(),vorsorge:()=>editVorsorge(),werte:()=>editWert(),dok:()=>editDok(null,DTYP!=='alle'?{typ:DTYP}:{})})[TAB]?.();
 
 /* ---------- Start ---------- */
 if(!window.crypto?.subtle){document.body.innerHTML='<p style="padding:24px">Diese App braucht HTTPS und einen aktuellen Browser.</p>'}
