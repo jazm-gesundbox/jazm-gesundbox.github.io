@@ -1,7 +1,7 @@
 {
-  "name": "Gesundbox",
-  "short_name": "Gesundbox",
-  "description": "Arzttermine, Vorsorge und Gesundheitswerte – verschlüsselt auf deinem Gerät.",
+  "name": "MyGesundBox",
+  "short_name": "MyGesundBox",
+  "description": "MyGesundBox – Arzttermine, Vorsorge, Werte und Dokumente, verschlüsselt auf deinem Gerät.",
   "lang": "de",
   "start_url": "./",
   "scope": "./",

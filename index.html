@@ -6,7 +6,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://api.github.com; frame-ancestors 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#8c2f45">
-<title>Gesundbox</title>
+<title>MyGesundBox</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -32,7 +32,7 @@ label{display:block;font-size:13px;color:var(--mu);text-align:left}
 header{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;background:var(--bg);border-bottom:1px solid var(--bd)}
 header h1{font-size:20px;margin:0}
 header button{background:none;border:0;font-size:20px;cursor:pointer}
-main{padding:12px 16px 120px;max-width:720px;margin:0 auto}
+main{padding:12px 16px 120px;max-width:720px;margin:0 auto;min-height:calc(100vh - 56px)}
 nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom);z-index:5}
 nav button{flex:1;background:none;border:0;padding:8px 0 10px;font-size:11px;color:var(--mu);cursor:pointer}
 nav button span{display:block;font-size:20px}
@@ -83,7 +83,36 @@ svg.chart{width:100%;height:auto;background:var(--card);border:1px solid var(--b
 .btnlike{display:inline-block;font-size:14px;padding:8px 12px;border:1px solid var(--bd);border-radius:10px;cursor:pointer;color:var(--tx);text-align:center}
 .dicon{font-size:26px;line-height:1}
 .chipdoc{display:inline-block;font-size:13px;padding:4px 10px;border-radius:999px;background:var(--pri2);color:var(--pri);border:0;margin:6px 6px 0 0;cursor:pointer}
-nav button{font-size:10px!important}
+nav button{font-size:11px!important}
+.hello{font-size:22px;font-weight:700;margin:6px 0 2px}
+.status{font-size:13px;color:var(--mu);margin-bottom:6px;background:none;border:0;padding:0;text-align:left;cursor:pointer}
+.status.bad{color:var(--red)}
+.next{background:var(--pri);color:#fff;border:0}
+.next .meta,.next .note{color:rgba(255,255,255,.85)}
+.next h3{font-size:19px}
+.next .big{font-size:15px;font-weight:600;margin:2px 0}
+.next .acts a,.next .acts button{color:#fff;border-color:rgba(255,255,255,.45)}
+@media (prefers-color-scheme:dark){.next{color:#2a0b13}.next .meta,.next .note{color:rgba(42,11,19,.8)}.next .acts a,.next .acts button{color:#2a0b13;border-color:rgba(42,11,19,.35)}}
+.todo{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin:6px 0;cursor:pointer;font-size:14px;color:var(--tx)}
+.todo .ti{font-size:18px}.todo span:nth-child(2){flex:1}.todo .chev{color:var(--mu)}
+.todo.warn{border-color:var(--or);background:var(--orbg)}.todo.crit{border-color:var(--red);background:var(--redbg)}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0}
+.tile{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:10px;text-align:left;cursor:pointer;color:var(--tx);min-width:0}
+.tile .tl{font-size:12px;color:var(--mu)}.tile .tv{font-size:18px;font-weight:700;margin:2px 0;white-space:nowrap}
+.tile .tv small{font-size:11px;font-weight:500;color:var(--mu)}.tile .ts{font-size:11px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile svg{display:block;width:100%;height:26px;margin-top:4px}
+.quick{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:6px 0}
+.quick button,.quick a{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 8px;border-radius:14px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:14px;font-weight:600;text-decoration:none;cursor:pointer}
+.seg{display:flex;background:var(--bd);border-radius:12px;padding:3px;margin:4px 0 10px}
+.seg button{flex:1;border:0;background:none;padding:8px 4px;border-radius:9px;font-size:14px;color:var(--mu);cursor:pointer}
+.seg button.on{background:var(--card);color:var(--tx);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.ptr{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:25;width:40px;height:40px;margin-left:-20px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;background:var(--card);color:var(--pri);border:1px solid var(--bd);box-shadow:0 3px 10px rgba(0,0,0,.18);
+  opacity:0;transform:translateY(-52px);pointer-events:none}
+.ptr svg{width:22px;height:22px}.ptr.armed{background:var(--pri);color:var(--on-pri);border-color:var(--pri)}
+.ptr.spin svg{animation:spin .75s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+#app.pulling{will-change:transform}
+dialog.drag{transition:none}
 .conflict{background:var(--redbg);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:14px}
 details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 </style>
@@ -93,7 +122,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 <div id="lock" class="screen">
   <form class="lockbox" id="lockForm" autocomplete="off">
     <img src="icon-192.png" alt="">
-    <h1>Gesundbox</h1>
+    <h1>MyGesundBox</h1>
     <p id="lockHint">Deine Gesundheitsdaten, verschlüsselt nur auf diesem Gerät.</p>
     <input type="password" id="pw" placeholder="Passwort" autocomplete="current-password" required>
     <input type="password" id="pw2" placeholder="Passwort wiederholen" autocomplete="new-password" hidden>
@@ -120,9 +149,8 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
   <main id="main"></main>
   <button id="fab" aria-label="Neu">+</button>
   <nav>
-    <button data-tab="termine" class="on"><span>📅</span>Termine</button>
-    <button data-tab="aerzte"><span>🩺</span>Ärzte</button>
-    <button data-tab="vorsorge"><span>🔁</span>Vorsorge</button>
+    <button data-tab="start" class="on"><span>🏠</span>Start</button>
+    <button data-tab="termine"><span>📅</span>Termine</button>
     <button data-tab="werte"><span>📈</span>Werte</button>
     <button data-tab="dok"><span>📄</span>Dokumente</button>
     <button data-tab="mehr"><span>⚙️</span>Mehr</button>
@@ -131,12 +159,13 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <dialog id="dlg"><form id="dlgForm" autocomplete="off"></form></dialog>
 <input type="file" id="fileIn" hidden>
+<div class="ptr" id="ptr" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4.5h-4.5"/></svg></div>
 <div id="viewer" hidden></div>
 <div id="toast" hidden></div>
 
 <script>
 'use strict';
-const APP_VERSION='1.9.0';
+const APP_VERSION='2.1.0';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -181,8 +210,8 @@ async function keyFromPrf(r,prfSalt){
 async function enableBio(pw){
   try{
     const prfSalt=rnd(32);
-    const cred=await navigator.credentials.create({publicKey:{challenge:rnd(32),rp:{name:'Gesundbox',id:location.hostname},
-      user:{id:rnd(16),name:'Gesundbox',displayName:'Gesundbox'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+    const cred=await navigator.credentials.create({publicKey:{challenge:rnd(32),rp:{name:'MyGesundBox',id:location.hostname},
+      user:{id:rnd(16),name:'MyGesundBox',displayName:'MyGesundBox'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
       authenticatorSelection:{residentKey:'required',requireResidentKey:true,userVerification:'required'},timeout:60000,
       extensions:{prf:{eval:{first:prfSalt}}}}});
     const credId=new Uint8Array(cred.rawId);
@@ -190,7 +219,7 @@ async function enableBio(pw){
     if(ext&&ext.enabled===false)throw new Error('noprf');
     let k;
     if(ext?.results?.first)k=await keyFromPrf(ext.results.first,prfSalt); /* Google liefert das Geheimnis direkt beim Anlegen */
-    else{toast('Jetzt zur Bestätigung den Passkey „Gesundbox“ wählen …');k=await prfKey(credId,prfSalt)}
+    else{toast('Jetzt zur Bestätigung den Passkey „MyGesundBox“ wählen …');k=await prfKey(credId,prfSalt)}
     const iv=rnd(12),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},k,te.encode(pw));
     lsSet(BKEY,JSON.stringify({cred:b64(credId),salt:b64(prfSalt),iv:b64(iv),ct:b64(ct)}));
     toast('Fingerabdruck eingerichtet ✓');render();
@@ -212,7 +241,7 @@ function askPwThenBio(){
   },{okText:'Weiter',html:'<div class="meta" style="margin-bottom:10px">Danach fragt dein Handy nach dem Fingerabdruck. Als Speicherort unbedingt den Google Passwortmanager wählen.</div>'});
 }
 
-let KEY=null,SALT=null,D=null,TAB='termine',WTYP='bp';
+let KEY=null,SALT=null,D=null,TAB='start',WTYP='bp';
 const empty=()=>({v:1,termine:[],aerzte:[],vorsorge:[],werte:[],dokumente:[],meta:{}});
 function normalize(o){const e=empty();for(const k of ['termine','aerzte','vorsorge','werte','dokumente'])e[k]=Array.isArray(o?.[k])?o[k]:[];if(typeof o?.fk==='string')e.fk=o.fk;if(o?.github?.token)e.github={token:String(o.github.token),repo:String(o.github.repo||defaultRepo())};e.meta=o?.meta&&typeof o.meta==='object'?o.meta:{};const g=o?.backupGh;if(g?.token&&g.owner&&g.repo)e.backupGh={owner:String(g.owner),repo:String(g.repo),token:String(g.token)};return e}
 /* ---------- Speicher: Tresor doppelt (localStorage + IndexedDB) ---------- */
@@ -257,11 +286,11 @@ function showLock(auto){
   const has=!!vaultJson;
   $('#restoreBox').hidden=has;$('#lgh').hidden=true;$('#lgh_msg').textContent='';
   $('#pw2').hidden=has;$('#pw2').required=!has;
-  $('#lockBtnGo').textContent=has?'Entsperren':'Gesundbox anlegen';
+  $('#lockBtnGo').textContent=has?'Entsperren':'MyGesundBox anlegen';
   $('#lockHint').textContent=has?'Deine Gesundheitsdaten, verschlüsselt nur auf diesem Gerät.':'Lege ein Passwort fest (mind. 8 Zeichen). Ohne Passwort sind die Daten nicht wiederherstellbar.';
   $('#pw').autocomplete=has?'current-password':'new-password';
   $('#pw').value='';$('#pw2').value='';$('#lockErr').textContent='';
-  if(SHARE_PENDING&&has)$('#lockHint').textContent='Entsperre die Gesundbox, um den geteilten Inhalt zu übernehmen.';
+  if(SHARE_PENDING&&has)$('#lockHint').textContent='Entsperre die MyGesundBox, um den geteilten Inhalt zu übernehmen.';
   $('#bioBtn').hidden=!(has&&lsGet(BKEY)&&bioSupported());
   if($('#bioBtn').hidden)setTimeout(()=>$('#pw').focus(),50);
   else if(auto===true)setTimeout(tryBio,300);
@@ -272,7 +301,7 @@ async function unlockWith(pw){
   setTimeout(()=>bkQueue(0),3000);
   $('#lock').hidden=true;$('#app').hidden=false;
   try{navigator.storage?.persist?.()}catch{}
-  resetIdle();render();
+  resetIdle();TAB='start';render();
   setTimeout(()=>{if(!restoreDraft())handleShare()},300);setTimeout(cleanFiles,5000);
 }
 $('#lockForm').onsubmit=async e=>{
@@ -289,7 +318,7 @@ $('#lockForm').onsubmit=async e=>{
     await unlockWith(pw);
     if(!stored&&bioSupported())setTimeout(()=>{if(confirm('Möchtest du künftig per Fingerabdruck entsperren?'))enableBio(pw)},400);
   }catch(err){KEY=null;$('#lockErr').textContent=stored?'Falsches Passwort.':'Fehler: '+err.message}
-  finally{btn.disabled=false;btn.textContent=vaultJson?'Entsperren':'Gesundbox anlegen'}
+  finally{btn.disabled=false;btn.textContent=vaultJson?'Entsperren':'MyGesundBox anlegen'}
 };
 let bioBusy=false;
 async function tryBio(){
@@ -373,6 +402,7 @@ function openForm(title,fields,values,onSave,o={}){
   const db=f.querySelector('[data-x=del]');if(db)db.onclick=async()=>{if(confirm('Wirklich löschen?')){await o.del();closeDlg();render()}};
   f.onsubmit=async e=>{e.preventDefault();const vals=Object.fromEntries(new FormData(f).entries());if(D?.meta?.draft)delete D.meta.draft;const r=await onSave(vals,f);if(r!==false){closeDlg();render()}};
   if(o.onOpen)o.onOpen(f);
+  f._dirty=false;f.oninput=f.onchange=()=>{f._dirty=true};
   if(!dlg.open)dlg.showModal();
 }
 let pickingUntil=0;
@@ -385,7 +415,7 @@ function icsDT(d){return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDat
 function icsD(d){return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`}
 function makeICS(events){
   const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
-  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Gesundbox//DE','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
+  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//MyGesundBox//DE','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
   for(const ev of events){
     L.push('BEGIN:VEVENT',`UID:${ev.uid}@gesundbox`,`DTSTAMP:${stamp}`);
     if(ev.allDay){const e2=new Date(ev.start);e2.setDate(e2.getDate()+1);L.push(`DTSTART;VALUE=DATE:${icsD(ev.start)}`,`DTEND;VALUE=DATE:${icsD(e2)}`)}
@@ -469,15 +499,95 @@ const wDate=w=>w.cnt?fmtD(w.datum.slice(0,10))+' · Tageswert aus '+w.cnt+' Mess
 function wertText(w){if(w.typ==='puls'&&w.min!=null)return `Ø ${fmtNum(w.v1,0)} bpm · ${fmtNum(w.min,0)}–${fmtNum(w.max,0)}`;if(w.typ==='bp')return `${fmtNum(w.v1,0)}/${fmtNum(w.v2,0)} mmHg${w.v3!=null?' · Puls '+fmtNum(w.v3,0):''}`;return `${fmtNum(w.v1)} ${TYP[w.typ]?.u||''}`}
 
 /* ---------- Rendering ---------- */
-const TITLES={termine:'Termine',aerzte:'Ärzte',vorsorge:'Vorsorge',werte:'Werte',dok:'Dokumente',mehr:'Mehr'};
+const TITLES={start:'MyGesundBox',termine:'Termine',aerzte:'Ärzte',vorsorge:'Vorsorge',werte:'Werte',dok:'Dokumente',mehr:'Mehr'};
 function render(keep){
   if(!D)return;const y=window.scrollY;
   $('#title').textContent=TITLES[TAB];
-  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===TAB));
-  $('#fab').hidden=TAB==='mehr';
+  const navTab=['aerzte','vorsorge'].includes(TAB)?'termine':TAB;
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===navTab));
+  $('#fab').hidden=TAB==='mehr'||TAB==='start';
   if(TAB==='mehr')setTimeout(showStorage,0);
-  $('#main').innerHTML=({termine:rTermine,aerzte:rAerzte,vorsorge:rVorsorge,werte:rWerte,dok:rDok,mehr:rMehr})[TAB]();
+  $('#main').innerHTML=(['termine','aerzte','vorsorge'].includes(TAB)?segBar():'')+({start:rStart,termine:rTermine,aerzte:rAerzte,vorsorge:rVorsorge,werte:rWerte,dok:rDok,mehr:rMehr})[TAB]();
   window.scrollTo(0,keep?y:0);
+}
+function segBar(){
+  const it=[['termine','📅 Termine'],['aerzte','🩺 Ärzte'],['vorsorge','🔁 Vorsorge']];
+  const due=D.vorsorge.filter(v=>vStatus(v).rank<=2).length;
+  return `<div class="seg">${it.map(([k,n])=>`<button data-act="go" data-id="${k}" class="${k===TAB?'on':''}">${n}${k==='vorsorge'&&due?` <span class="badge b-or">${due}</span>`:''}</button>`).join('')}</div>`;
+}
+const daysUntil=ds=>Math.round((new Date(ds.slice(0,10)+'T00:00')-new Date(today()+'T00:00'))/864e5);
+const relDay=n=>n===0?'heute':n===1?'morgen':n===2?'übermorgen':n>0?'in '+n+' Tagen':n===-1?'gestern':'vor '+(-n)+' Tagen';
+function spark(vals){
+  if(vals.length<2)return'';const mn=Math.min(...vals),mx=Math.max(...vals),r=mx-mn||1;
+  const pts=vals.map((v,i)=>`${(i*100/(vals.length-1)).toFixed(1)},${(24-(v-mn)/r*20).toFixed(1)}`).join(' ');
+  return `<svg viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="var(--pri)" stroke-width="2.2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`;
+}
+function trendArrow(vals){
+  if(vals.length<4)return'';const a=vals.slice(-3),b=vals.slice(-6,-3);if(!b.length)return'';
+  const d=a.reduce((x,y)=>x+y,0)/a.length-b.reduce((x,y)=>x+y,0)/b.length;
+  return d>=3?' ↗':d<=-3?' ↘':' →';
+}
+function dashTodos(){
+  const T=[];
+  /* Sicherung */
+  const g=bkCfg(),ghOk=g&&!bkStat.err&&bkStat.at,lb=D.meta.lastBackup,dirty=D.meta.dirty||0;
+  const own=D.termine.length+D.aerzte.length+D.vorsorge.length+D.werte.length+D.dokumente.length>0;
+  if(g&&bkStat.err)T.push(['crit','⚠️','GitHub-Sicherung: '+bkStat.err,'goto-mehr','']);
+  if(own&&!ghOk){const ago=lb?Math.round((new Date(today())-new Date(lb))/864e5):null;
+    if(!lb||ago>14||dirty>=5)T.push(['warn','💾',!lb?'Noch keine Sicherung – jetzt sichern':dirty>=5?dirty+' Änderungen seit der letzten Sicherung':'Letzte Sicherung vor '+ago+' Tagen','bk-export',''])}
+  /* Vorsorge */
+  for(const v of D.vorsorge){const st=vStatus(v);if(st.rank<=2)T.push([st.rank<=1?'crit':'warn','🔁',v.name+' – '+st.txt,'go','vorsorge'])}
+  /* Überweisungen & Co. mit Ablaufdatum */
+  for(const d of D.dokumente){if(!d.gueltig)continue;const n=daysUntil(d.gueltig);
+    if(n<=14&&n>=-7)T.push([n<0?'crit':'warn','📄',dokTitel(d)+(n<0?' ist abgelaufen':' läuft '+relDay(n)+' ab'),'d-view',d.id])}
+  /* Medikationsplan */
+  const mp=D.dokumente.filter(x=>x.typ==='medikationsplan').sort((a,b)=>(b.datum||'').localeCompare(a.datum||''))[0];
+  if(mp&&-daysUntil(mp.datum)>90)T.push(['warn','💊','Medikationsplan ist '+(-daysUntil(mp.datum))+' Tage alt – noch aktuell?','d-view',mp.id]);
+  /* Blutdruck: Uhr muss alle 28 Tage kalibriert werden */
+  const bp=D.werte.filter(w=>w.typ==='bp').sort((a,b)=>a.datum.localeCompare(b.datum));
+  if(bp.length){const last=bp[bp.length-1],ago=-daysUntil(last.datum);
+    if(ago>28)T.push(['warn','🩸','Letzte Blutdruckmessung '+relDay(-ago)+(/samsung/i.test(last.quelle||'')?' – Uhr neu kalibrieren?':''),'w-go','bp'])}
+  return T;
+}
+function rStart(){
+  const hr=new Date().getHours(),hello=hr<5?'Gute Nacht':hr<11?'Guten Morgen':hr<18?'Hallo':'Guten Abend';
+  const g=bkCfg();let stat,bad=false;
+  if(g&&bkStat.err){stat='⚠️ Sicherung: Problem';bad=true}
+  else if(g&&bkStat.at){const m=Math.round((Date.now()-bkStat.at)/60000);stat='✓ Gesichert '+(m<1?'gerade eben':m<60?'vor '+m+' Min.':m<1440?'vor '+Math.round(m/60)+' Std.':'am '+new Date(bkStat.at).toLocaleDateString('de-DE'))}
+  else if(D.meta.lastBackup)stat='💾 Letzte Sicherung '+relDay(daysUntil(D.meta.lastBackup));
+  else{stat='💾 Noch keine Sicherung';bad=true}
+  let h=`<div class="hello">${hello}</div><button class="status${bad?' bad':''}" data-act="goto-mehr">${esc(stat)}</button>`;
+  /* Als Nächstes */
+  const nt=D.termine.filter(t=>new Date(t.datum)>=Date.now()-2*3600e3).sort((a,b)=>a.datum.localeCompare(b.datum))[0];
+  if(nt){const a=arzt(nt.arztId),n=daysUntil(nt.datum),tel=a?.tel?a.tel.replace(/[^\d+]/g,''):'',ort=nt.ort||a?.adresse||'';
+    h+=`<div class="sec">Als Nächstes</div><div class="card next"><div class="big">${esc(relDay(n).replace(/^./,c=>c.toUpperCase()))} · ${esc(new Date(nt.datum).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}))} Uhr</div>
+      <h3 data-act="t-edit" data-id="${nt.id}" style="cursor:pointer">${esc(nt.titel)} <span style="font-size:14px;opacity:.7">✏️</span></h3><div class="meta">${esc(fmtDT(nt.datum))}${a?' · '+esc(a.name):''}${ort?'<br>📍 '+esc(ort):''}</div>
+      ${nt.fragen?`<div class="note">❓ ${esc(nt.fragen)}</div>`:''}
+      <div class="acts">${tel?`<a href="tel:${esc(tel)}">📞 Anrufen</a>`:''}${ort?`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ort)}" target="_blank" rel="noopener noreferrer">🗺️ Route</a>`:''}<button data-act="t-ics" data-id="${nt.id}">📅 Kalender</button></div></div>`;
+  }else h+=`<div class="sec">Als Nächstes</div><div class="card"><div class="meta">Kein Termin geplant.</div><div class="acts"><button data-act="q-termin">➕ Termin eintragen</button></div></div>`;
+  /* Zu erledigen */
+  const T=dashTodos();
+  if(T.length)h+=`<div class="sec">Zu erledigen</div>`+T.slice(0,6).map(([lv,ic,txt,act,id])=>`<button class="todo ${lv}" data-act="${act}" data-id="${esc(id)}"><span class="ti">${ic}</span><span>${esc(txt)}</span><span class="chev">›</span></button>`).join('')+(T.length>6?`<div class="meta">… und ${T.length-6} weitere</div>`:'');
+  /* Werte */
+  const by=t=>D.werte.filter(w=>w.typ===t).sort((a,b)=>a.datum.localeCompare(b.datum));
+  const bp=by('bp'),gw=by('gewicht');
+  const pu=by('puls').concat(bp.filter(w=>w.v3!=null).map(w=>({...w,typ:'puls',v1:w.v3}))).sort((a,b)=>a.datum.localeCompare(b.datum));
+  const tile=(t,label,val,sub,vals)=>`<button class="tile" data-act="w-go" data-id="${t}"><div class="tl">${label}</div><div class="tv">${val}</div><div class="ts">${esc(sub)}</div>${spark(vals)}</button>`;
+  const lbp=bp[bp.length-1],lpu=pu[pu.length-1],lgw=gw[gw.length-1];
+  let gwSub='';if(lgw){const ref=gw.filter(w=>daysUntil(w.datum)<=-30).pop();if(ref){const d=lgw.v1-ref.v1;gwSub=(d>0?'+':'')+fmtNum(d)+' kg / 30 T.'}else gwSub=relDay(daysUntil(lgw.datum))}
+  h+=`<div class="sec">Werte</div><div class="tiles">
+    ${tile('bp','Blutdruck',lbp?`${fmtNum(lbp.v1,0)}/${fmtNum(lbp.v2,0)}${trendArrow(bp.map(w=>w.v1))}`:'–',lbp?relDay(daysUntil(lbp.datum)):'keine Werte',bp.slice(-12).map(w=>w.v1))}
+    ${tile('puls','Puls',lpu?`${fmtNum(lpu.v1,0)} <small>bpm</small>`:'–',lpu?(lpu.cnt?'Tages-Ø ':'')+relDay(daysUntil(lpu.datum)):'keine Werte',pu.slice(-14).map(w=>w.v1))}
+    ${tile('gewicht','Gewicht',lgw?`${fmtNum(lgw.v1)} <small>kg</small>`:'–',lgw?gwSub:'keine Werte',gw.slice(-12).map(w=>w.v1))}
+  </div>`;
+  /* Zuletzt hinzugefügt */
+  const docs=D.dokumente.slice(-3).reverse();
+  if(docs.length)h+=`<div class="sec">Zuletzt hinzugefügt</div><div>${docs.map(x=>`<button class="chipdoc" data-act="d-view" data-id="${x.id}">📎 ${esc(dokTitel(x))}</button>`).join('')}</div>`;
+  /* Schnellaktionen */
+  h+=`<div class="sec">Schnell erfassen</div><div class="quick">
+    <button data-act="q-termin">➕ Termin</button><button data-act="q-dok">📷 Dokument</button>
+    <button data-act="q-wert">🩸 Messung</button><a href="${MYTHERAPY}">💊 MyTherapy</a></div>`;
+  return h;
 }
 function terminCard(t){
   const a=arzt(t.arztId);
@@ -493,14 +603,7 @@ function rTermine(){
   const now=Date.now()-2*3600e3;
   const up=D.termine.filter(t=>new Date(t.datum)>=now).sort((a,b)=>a.datum.localeCompare(b.datum));
   const past=D.termine.filter(t=>new Date(t.datum)<now).sort((a,b)=>b.datum.localeCompare(a.datum));
-  const due=D.vorsorge.filter(v=>vStatus(v).rank<=2).length;
   let h=`<div class="toolbar"><button class="ghost" data-act="ics-import">📥 .ics importieren</button>${up.length>1?'<button class="ghost" data-act="ics-all">📅 Alle in Kalender</button>':''}</div>`;
-  const own=D.termine.length+D.aerzte.length+D.vorsorge.length+D.werte.length>0;
-  const g=bkCfg(),ghOk=g&&!bkStat.err&&bkStat.at,lb=D.meta.lastBackup,dirty=D.meta.dirty||0;
-  if(g&&bkStat.err)h+=`<button class="banner crit" data-act="goto-mehr">⚠️ GitHub-Sicherung: ${esc(bkStat.err)}</button>`;
-  if(own&&!ghOk){const ago=lb?Math.round((new Date(today())-new Date(lb))/864e5):null;
-    if(!lb||ago>14||dirty>=5)h+=`<button class="banner" data-act="bk-export">💾 ${!lb?'Du hast noch keine Sicherung.':dirty>=5?dirty+' Änderungen seit der letzten Sicherung.':'Letzte Sicherung vor '+ago+' Tagen.'} Jetzt sichern →</button>`}
-  if(due)h+=`<button class="banner" data-act="goto-vorsorge">🔔 ${due} Vorsorge-${due===1?'Untersuchung':'Untersuchungen'} fällig →</button>`;
   if(!D.termine.length)return h+`<div class="empty">Noch keine Termine.<br>Tippe auf <b>+</b> oder importiere eine .ics-Datei aus einer Terminbestätigung.</div>`;
   h+=`<div class="sec">Anstehend</div>`+(up.length?up.map(terminCard).join(''):'<div class="meta">Keine anstehenden Termine.</div>');
   if(past.length)h+=`<details><summary>Vergangene Termine (${past.length})</summary>${past.map(terminCard).join('')}</details>`;
@@ -565,11 +668,11 @@ function rMehr(){
   </div>
   <div class="sec">Sicherheit</div><div class="card"><div class="meta">Alle Daten liegen verschlüsselt (AES-256) auf diesem Gerät. Automatische Sperre nach 5 Minuten Inaktivität oder 1 Minute im Hintergrund.</div><div class="acts">${bioSupported()?(lsGet(BKEY)?'<button data-act="bio-off">👆 Fingerabdruck deaktivieren</button>':'<button data-act="bio-on">👆 Fingerabdruck einrichten</button>'):''}<button data-act="pw-change">🔑 Passwort ändern</button><button data-act="wipe" class="danger">🗑️ Alle Daten löschen</button></div></div>
   <div class="sec">Importieren</div><div class="card"><div class="acts"><button data-act="ics-import">📅 Termine aus .ics</button><button data-act="csv-import">📈 Werte aus CSV / Samsung Health</button></div>
-    <div class="hint">Samsung Health: Im Export-Ordner einfach <b>alle Dateien</b> auswählen – die Gesundbox nimmt sich Blutdruck, Puls (als Tageswert) und Gewicht selbst heraus.</div>
-    <div class="hint">Tipp: In anderen Apps auf <b>Teilen → Gesundbox</b> tippen. So kommen Terminbestätigungen (.ics oder Text), CSV-Messwerte, Samsung-Health-Exporte (CSV oder ZIP) sowie Fotos und PDFs (z. B. Arztbriefe) direkt hierher.</div></div>
+    <div class="hint">Samsung Health: Im Export-Ordner einfach <b>alle Dateien</b> auswählen – die MyGesundBox nimmt sich Blutdruck, Puls (als Tageswert) und Gewicht selbst heraus.</div>
+    <div class="hint">Tipp: In anderen Apps auf <b>Teilen → MyGesundBox</b> tippen. So kommen Terminbestätigungen (.ics oder Text), CSV-Messwerte, Samsung-Health-Exporte (CSV oder ZIP) sowie Fotos und PDFs (z. B. Arztbriefe) direkt hierher.</div></div>
   <div class="sec">App-Update</div><div class="card">${D.github?`<div class="meta">Verbunden mit ${esc(D.github.repo)}</div><div class="acts"><button data-act="gh-upload">📦 Update-Zip hochladen</button><button data-act="gh-setup">🔧 Verbindung ändern</button><button data-act="gh-off">✖ Trennen</button></div>`:`<div class="meta">Neue Versionen als Zip direkt aus der App ins GitHub-Repo laden.</div><div class="acts"><button data-act="gh-setup">🔗 GitHub verbinden</button></div>`}<div id="updStatus" class="note" style="margin-top:8px">${UPD}</div></div>
   <div class="sec">Übersicht</div><div class="card meta">${D.termine.length} Termine · ${D.aerzte.length} Ärzte · ${D.vorsorge.length} Vorsorge · ${D.werte.length} Messwerte · ${D.dokumente.length} Dokumente<br><span id="stor"></span></div>
-  <p class="meta" style="text-align:center">Gesundbox · Version ${APP_VERSION}<br>Kein Ersatz für ärztlichen Rat.</p>`;
+  <p class="meta" style="text-align:center">MyGesundBox · Version ${APP_VERSION}<br>Kein Ersatz für ärztlichen Rat.</p>`;
 }
 
 /* ---------- Formulare ---------- */
@@ -814,7 +917,7 @@ function ghSetup(){
     try{const j=await gh('/repos/'+repo,{},token);if(j.permissions&&!j.permissions.push){toast('Token hat keine Schreibrechte für das Repo.');return false}}
     catch(e){toast(e.message);return false}
     D.github={token,repo};await save();toast('GitHub verbunden ✓');
-  },{okText:'Prüfen & speichern',html:'<div class="meta" style="margin-bottom:10px">Der Token wird verschlüsselt in der Gesundbox gespeichert und nur für Updates genutzt. Rechte: <b>Contents: Read and write</b> und <b>Actions: Read</b>, nur für dieses eine Repo.</div>'});
+  },{okText:'Prüfen & speichern',html:'<div class="meta" style="margin-bottom:10px">Der Token wird verschlüsselt in der MyGesundBox gespeichert und nur für Updates genutzt. Rechte: <b>Contents: Read and write</b> und <b>Actions: Read</b>, nur für dieses eine Repo.</div>'});
 }
 async function ghUpload(){
   const file=await pickFile('.zip,application/zip');if(!file)return;
@@ -824,7 +927,7 @@ async function ghUpload(){
   setUpd('⏳ Lade Zip hoch …');
   try{
     const old=await gh(`/repos/${repo}/contents/${encodeURIComponent(name)}`,{allow404:true},tok);
-    const res=await gh(`/repos/${repo}/contents/${encodeURIComponent(name)}`,{method:'PUT',body:JSON.stringify({message:'Paket '+name+' (aus der Gesundbox)',content:b64(await file.arrayBuffer()),branch:'main',...(old?.sha?{sha:old.sha}:{})})},tok);
+    const res=await gh(`/repos/${repo}/contents/${encodeURIComponent(name)}`,{method:'PUT',body:JSON.stringify({message:'Paket '+name+' (aus der MyGesundBox)',content:b64(await file.arrayBuffer()),branch:'main',...(old?.sha?{sha:old.sha}:{})})},tok);
     setUpd('⚙️ Hochgeladen – GitHub entpackt und prüft das Paket …');
     watchRun(repo,tok,res.commit.sha);
   }catch(e){setUpd('❌ '+esc(e.message))}
@@ -842,7 +945,7 @@ async function watchRun(repo,tok,sha){
   if(run.conclusion!=='success'){
     let msg='';try{const jobs=await gh(`/repos/${repo}/actions/runs/${run.id}/jobs`,{},tok);const id=jobs.jobs?.[0]?.id;
       if(id){const ann=await gh(`/repos/${repo}/check-runs/${id}/annotations`,{},tok);msg=(ann.find(a=>a.annotation_level==='failure')||ann[0])?.message||''}}catch(e){}
-    setUpd('❌ Paket abgelehnt'+(msg?': '+esc(msg.replace(/^Gesundbox:?/,'')):'.')+link);return;
+    setUpd('❌ Paket abgelehnt'+(msg?': '+esc(msg.replace(/^MyGesundBox:?/,'')):'.')+link);return;
   }
   setUpd('✅ Paket übernommen – warte auf die Veröffentlichung …'+link);
   const t1=Date.now();
@@ -912,9 +1015,9 @@ function rDok(){
   if(DARZT&&!arzt(DARZT))DARZT='';
   const base=D.dokumente.filter(d=>!DARZT||d.arztId===DARZT);
   const cnt=t=>base.filter(d=>t==='alle'||d.typ===t).length;
-  let h=`<div class="chips">${[['alle','Alle'],...Object.entries(DOKTYP)].filter(([k])=>k==='alle'||cnt(k)).map(([k,n])=>`<button data-act="d-typ" data-id="${k}" class="${k===DTYP?'on':''}">${n} ${cnt(k)}</button>`).join('')}</div>${DARZT?`<div class="chips"><button class="on" data-act="d-arzt-clear">🩺 ${esc(arzt(DARZT).name)} ✕</button></div>`:''}${DTYP==='medikationsplan'?`<div class="card"><div class="meta">Deine Medikamente pflegst du in MyTherapy. Den Plan dort als PDF teilen → <b>Gesundbox</b>, dann liegt er hier verschlüsselt und ist in der Sicherung.</div><div class="acts">${mtBtn()}</div></div>`:''}`;
+  let h=`<div class="chips">${[['alle','Alle'],...Object.entries(DOKTYP)].filter(([k])=>k==='alle'||cnt(k)).map(([k,n])=>`<button data-act="d-typ" data-id="${k}" class="${k===DTYP?'on':''}">${n} ${cnt(k)}</button>`).join('')}</div>${DARZT?`<div class="chips"><button class="on" data-act="d-arzt-clear">🩺 ${esc(arzt(DARZT).name)} ✕</button></div>`:''}${DTYP==='medikationsplan'?`<div class="card"><div class="meta">Deine Medikamente pflegst du in MyTherapy. Den Plan dort als PDF teilen → <b>MyGesundBox</b>, dann liegt er hier verschlüsselt und ist in der Sicherung.</div><div class="acts">${mtBtn()}</div></div>`:''}`;
   const list=base.filter(d=>DTYP==='alle'||d.typ===DTYP).sort((a,b)=>(b.datum||'').localeCompare(a.datum||''));
-  if(!D.dokumente.length)return h+`<div class="empty">Noch keine Dokumente.<br>Tippe auf <b>+</b> und fotografiere z. B. eine Überweisung oder ein Rezept – oder teile ein PDF aus einer anderen App mit der Gesundbox, etwa deinen Medikationsplan aus MyTherapy.<br><br>${mtBtn()}</div>`;
+  if(!D.dokumente.length)return h+`<div class="empty">Noch keine Dokumente.<br>Tippe auf <b>+</b> und fotografiere z. B. eine Überweisung oder ein Rezept – oder teile ein PDF aus einer anderen App mit der MyGesundBox, etwa deinen Medikationsplan aus MyTherapy.<br><br>${mtBtn()}</div>`;
   return h+list.map(d=>{const a=arzt(d.arztId),t=D.termine.find(x=>x.id===d.terminId),n=(d.files||[]).length,pdf=(d.files||[]).some(f=>f.mime==='application/pdf');
     return `<div class="card"><div style="display:flex;gap:12px;align-items:flex-start"><div class="dicon">${pdf?'📄':'🖼️'}</div><div style="flex:1;min-width:0">
       <h3>${esc(dokTitel(d))}</h3><div class="meta">${esc(DOKTYP[d.typ]||'')} · ${esc(fmtD(d.datum))}${a?' · '+esc(a.name):''} · ${n} ${n===1?'Datei':'Dateien'}${t?'<br>📅 '+esc(t.titel)+', '+esc(fmtD(t.datum.slice(0,10))):''}</div>
@@ -947,7 +1050,7 @@ function editDok(d,preset,incoming,draftPages){
       try{keep.push({fid:await putFile(p.prep.buf),mime:p.mime,name:p.name,size:p.size})}catch{toast('Speichern fehlgeschlagen – Speicher voll?');return false}}
     for(const old of d.files||[])if(!keep.some(k=>k.fid===old.fid))await idb.del('f:'+old.fid).catch(()=>{});
     Object.assign(d,{typ:v.typ,titel:v.titel.trim(),datum:v.datum,gueltig:v.gueltig,arztId:v.arztId,terminId:v.terminId,notiz:v.notiz,files:keep});
-    if(isNew)D.dokumente.push(d);await save();if(isNew&&TAB!=='termine')TAB='dok';toast('Dokument verschlüsselt gespeichert ✓');
+    if(isNew)D.dokumente.push(d);await save();if(isNew&&TAB!=='termine'&&TAB!=='start')TAB='dok';toast('Dokument verschlüsselt gespeichert ✓');
   },{draft:{kind:'dok',id:isNew?null:d.id},
     draftExtra:async()=>{for(const p of pages)if(!p.fid&&p.prep){p.fid=await putFile(p.prep.buf);delete p.prep}return pages.map(p=>({fid:p.fid,mime:p.mime,name:p.name,size:p.size}))},
     del:isNew?null:async()=>{for(const f of d.files||[])await idb.del('f:'+f.fid).catch(()=>{});D.dokumente=D.dokumente.filter(x=>x.id!==d.id);await save()},
@@ -1043,13 +1146,13 @@ async function exportBackup(){
   for(const fid of allFids()){const r=await idb.get('f:'+fid).catch(()=>null);if(r)files[fid]={iv:b64(r.iv),ct:b64(r.ct)};else miss++}
   if(miss)toast(miss+' Datei(en) fehlen auf diesem Gerät und sind nicht in der Sicherung.');
   const payload=JSON.stringify({app:'gesundbox',format:3,exported:new Date().toISOString(),version:APP_VERSION,vault:JSON.parse(vaultJson),files});
-  if(await deliverFile(`gesundbox-sicherung-${today()}.gesundbox`,payload,'application/json')){toast('Sicherung erstellt. Leg die Datei an einem zweiten Ort ab, z. B. in deiner Cloud.');render()}
+  if(await deliverFile(`mygesundbox-sicherung-${today()}.gesundbox`,payload,'application/json')){toast('Sicherung erstellt. Leg die Datei an einem zweiten Ort ab, z. B. in deiner Cloud.');render()}
 }
 async function readBackupFile(file){
-  if(file.size>500e6)throw new Error('Die Datei ist zu groß für eine Gesundbox-Sicherung.');
-  let o;try{o=JSON.parse(await file.text())}catch{throw new Error('Das ist keine gültige Gesundbox-Sicherung.')}
+  if(file.size>500e6)throw new Error('Die Datei ist zu groß für eine MyGesundBox-Sicherung.');
+  let o;try{o=JSON.parse(await file.text())}catch{throw new Error('Das ist keine gültige MyGesundBox-Sicherung.')}
   const v=o&&o.app==='gesundbox'?(o.vault||(o.ct?o:null)):null; /* auch alte Backups (V1) */
-  if(!v||!vaultOk(JSON.stringify(v)))throw new Error('Das ist keine gültige Gesundbox-Sicherung.');
+  if(!v||!vaultOk(JSON.stringify(v)))throw new Error('Das ist keine gültige MyGesundBox-Sicherung.');
   return{vault:JSON.stringify(v),files:o.files&&typeof o.files==='object'?o.files:{}};
 }
 async function restoreVaultStr(x){
@@ -1119,7 +1222,7 @@ async function bkSync(force){
       const list=await bkFetch(g,'GET','/contents/files');const have=new Set((list||[]).map(x=>String(x.name).replace(/\.bin$/,'')));
       for(const fid of fids){if(have.has(fid))continue;const r=await idb.get('f:'+fid).catch(()=>null);if(!r)continue;
         const u=new Uint8Array(12+r.ct.byteLength);u.set(new Uint8Array(r.iv),0);u.set(new Uint8Array(r.ct),12);
-        await bkFetch(g,'PUT',`/contents/files/${fid}.bin`,{message:'Gesundbox: Dokument',content:b64(u)})}
+        await bkFetch(g,'PUT',`/contents/files/${fid}.bin`,{message:'MyGesundBox: Dokument',content:b64(u)})}
     }
     /* 2) Tresor – nie einen fremden überschreiben */
     for(let attempt=0;attempt<2;attempt++){
@@ -1127,7 +1230,7 @@ async function bkSync(force){
       if(json===local)break;
       if(cur&&!force){let rv=null;try{rv=JSON.parse(json)}catch{}
         if(!rv||rv.vid!==lv.vid){const e=new Error('conflict');e.conflict=true;throw e}}
-      try{await bkFetch(g,'PUT','/contents/vault.json',{message:'Gesundbox-Sicherung '+new Date().toLocaleString('de-DE'),content:b64(te.encode(local)),...(cur?{sha:cur.sha}:{})});break}
+      try{await bkFetch(g,'PUT','/contents/vault.json',{message:'MyGesundBox-Sicherung '+new Date().toLocaleString('de-DE'),content:b64(te.encode(local)),...(cur?{sha:cur.sha}:{})});break}
       catch(e){if(e.status!==409||attempt)throw e}
     }
     bkBusy=false;setBk({at:Date.now(),err:'',conflict:false});
@@ -1143,7 +1246,7 @@ async function bkSync(force){
 /* Beim Wegwechseln aus der App ausstehende Sicherung sofort starten */
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&bkTimer&&bkPending)bkSync()});
 async function bkRestore(g,onStep){
-  const{json}=await bkRemote(g);if(!json||!vaultOk(json))throw new Error('Im Repo wurde keine Gesundbox-Sicherung gefunden.');
+  const{json}=await bkRemote(g);if(!json||!vaultOk(json))throw new Error('Im Repo wurde keine MyGesundBox-Sicherung gefunden.');
   const files={},list=(await bkFetch(g,'GET','/contents/files')||[]).filter(it=>/\.bin$/.test(it.name));let n=0;
   for(const it of list){onStep&&onStep(++n,list.length);
     const b=new Uint8Array(await bkFetch(g,'GET','/contents/files/'+encodeURIComponent(it.name),null,true));
@@ -1220,6 +1323,11 @@ $('#main').addEventListener('click',async e=>{
     case 'bk-pull':if(confirm('Die Daten auf diesem Gerät durch den GitHub-Stand ersetzen?')){try{restoreVaultStr(await bkRestore(bkCfg()))}catch(e){toast(e.status?bkErrText(e):e.message)}}break;
     case 'bk-off':if(confirm('GitHub-Sicherung trennen? Im Repo bleibt alles liegen.')){delete D.backupGh;setBk({err:'',at:0,conflict:false});await save({clean:true});render();toast('GitHub-Sicherung getrennt.')}break;
     case 'goto-mehr':TAB='mehr';render();break;
+    case 'go':goTab(id);break;
+    case 'w-go':WTYP=id;TAB='werte';render();break;
+    case 'q-termin':editTermin();break;
+    case 'q-dok':DTYP='alle';DARZT='';editDok(null,{});{const c=document.getElementById('pgCam');if(c)c.click()}break;
+    case 'q-wert':WTYP='bp';editWert();break;
     case 'pw-change':changePw();break;
     case 'wipe':wipe();break;
     case 'bio-on':askPwThenBio();break;
@@ -1229,12 +1337,115 @@ $('#main').addEventListener('click',async e=>{
     case 'bio-off':if(confirm('Fingerabdruck-Entsperrung deaktivieren?')){lsDel(BKEY);render();toast('Fingerabdruck deaktiviert. Den Passkey kannst du im Google Passwortmanager löschen.')}break;
   }
 });
-document.querySelector('nav').addEventListener('click',e=>{const b=e.target.closest('button');if(b){TAB=b.dataset.tab;render()}});
+document.querySelector('nav').addEventListener('click',e=>{const b=e.target.closest('button');if(b)goTab(b.dataset.tab)});
 $('#fab').onclick=()=>({termine:()=>editTermin(),aerzte:()=>editArzt(),vorsorge:()=>editVorsorge(),werte:()=>editWert(),dok:()=>editDok(null,{...(DTYP!=='alle'?{typ:DTYP}:{}),...(DARZT?{arztId:DARZT}:{})})})[TAB]?.();
+
+/* ---------- Gesten: Wischen zwischen Bereichen, Ziehen zum Aktualisieren, Wischen zum Schließen ---------- */
+const TABS=['start','termine','aerzte','vorsorge','werte','dok','mehr'];
+const motion=()=>!matchMedia('(prefers-reduced-motion: reduce)').matches;
+const buzz=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch{}};
+let tabBusy=false,swReg=null,refreshing=false;
+function goTab(t,fromX){
+  if(!D)return;
+  const main=$('#main'),a=TABS.indexOf(TAB),b=TABS.indexOf(t);
+  /* Schnelles Antippen während einer laufenden Animation: sofort umschalten */
+  if(tabBusy){main.getAnimations().forEach(x=>x.cancel());main.style.transform='';main.style.opacity='';tabBusy=false;if(t!==TAB){TAB=t;render()}return}
+  if(t===TAB){window.scrollTo({top:0,behavior:motion()?'smooth':'auto'});main.style.transform='';main.style.opacity='';return}
+  const dir=b>a?1:-1;TAB=t;buzz(6);
+  if(!motion()){main.style.transform='';main.style.opacity='';render();return}
+  tabBusy=true;setTimeout(()=>{tabBusy=false},700);
+  const W=main.clientWidth||innerWidth,x0=fromX||0,op=main.style.opacity||'1';
+  main.style.transform='';main.style.opacity='';
+  const out=main.animate([{transform:`translateX(${x0}px)`,opacity:op},{transform:`translateX(${-dir*W*.45}px)`,opacity:0}],{duration:fromX?150:110,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'});
+  out.onfinish=()=>{render();out.cancel();
+    main.animate([{transform:`translateX(${dir*W*.3}px)`,opacity:0},{transform:'none',opacity:1}],{duration:320,easing:'cubic-bezier(.2,.85,.25,1)'}).onfinish=()=>{tabBusy=false}};
+}
+const ptr=$('#ptr'),appEl=$('#app');
+let G=null;
+document.addEventListener('touchstart',e=>{G=null;
+  if(e.touches.length!==1||!KEY||!D||tabBusy||dlg.open||!$('#viewer').hidden)return;
+  const t=e.target;if(!(appEl.contains(t)||t===document.body||t===document.documentElement)||(t.closest&&t.closest('nav,header,input,select,textarea,#fab')))return;
+  const ch=t.closest('.chips,.seg'),p=e.touches[0];
+  G={x:p.clientX,y:p.clientY,mode:null,chips:!!(ch&&ch.scrollWidth>ch.clientWidth+2),dx:0,dy:0,v:0,lx:p.clientX,lt:performance.now(),W:appEl.clientWidth||innerWidth,idx:TABS.indexOf(TAB),hit:false,edge:false};
+},{passive:true});
+document.addEventListener('touchmove',e=>{
+  if(!G)return;const p=e.touches[0],dx=p.clientX-G.x,dy=p.clientY-G.y,main=$('#main');
+  if(!G.mode){
+    if(Math.abs(dx)<10&&Math.abs(dy)<10)return;
+    if(Math.abs(dx)>Math.abs(dy)*1.3&&!G.chips)G.mode='h';
+    else if(dy>0&&window.scrollY<=0&&!refreshing&&Math.abs(dy)>Math.abs(dx))G.mode='v';
+    else{G=null;return}
+  }
+  if(e.cancelable)e.preventDefault();
+  const now=performance.now(),dt=Math.max(1,now-G.lt);
+  if(G.mode==='h'){
+    G.v=.7*((p.clientX-G.lx)/dt)+.3*G.v;G.lx=p.clientX;G.lt=now;
+    G.edge=(G.idx===0&&dx>0)||(G.idx===TABS.length-1&&dx<0);
+    const x=G.edge?dx*.2:dx;G.dx=x;
+    main.style.transform=`translateX(${x}px)`;main.style.opacity=String(1-Math.min(.35,Math.abs(x)/G.W*.5));
+    const over=!G.edge&&Math.abs(x)>G.W*.28;if(over!==G.hit){G.hit=over;if(over)buzz(5)}
+  }else{
+    const pull=Math.min(120,dy*.5);G.dy=pull;appEl.classList.add('pulling');
+    appEl.style.transform=`translateY(${pull}px)`;
+    ptr.style.opacity=String(Math.min(1,pull/28));ptr.style.transform=`translateY(${pull-52}px) rotate(${Math.min(1,pull/72)*300}deg)`;
+    const over=pull>=72;if(over!==G.hit){G.hit=over;ptr.classList.toggle('armed',over);if(over)buzz(8)}
+  }
+},{passive:false});
+function gEnd(e){
+  if(!G||!G.mode){G=null;return}const g=G;G=null;const ok=e.type==='touchend',main=$('#main');
+  if(g.mode==='h'){
+    const go=ok&&!g.edge&&(Math.abs(g.dx)>g.W*.28||(Math.abs(g.v)>.45&&Math.sign(g.v)===Math.sign(g.dx)&&Math.abs(g.dx)>30));
+    if(go){goTab(TABS[g.idx-Math.sign(g.dx)],g.dx);return}
+    const from=main.style.transform,op=main.style.opacity;main.style.transform='';main.style.opacity='';
+    if(motion()&&from)main.animate([{transform:from,opacity:op||'1'},{transform:'none',opacity:1}],{duration:340,easing:'cubic-bezier(.2,.9,.3,1.15)'});
+  }else{
+    const from=appEl.style.transform;appEl.style.transform='';appEl.classList.remove('pulling');
+    if(motion()&&from)appEl.animate([{transform:from},{transform:'none'}],{duration:380,easing:'cubic-bezier(.2,.9,.3,1.1)'});
+    if(ok&&g.hit)refresh();else hidePtr();
+  }
+}
+document.addEventListener('touchend',gEnd);document.addEventListener('touchcancel',gEnd);
+function hidePtr(){
+  const from=ptr.style.transform;ptr.style.transform='';ptr.style.opacity='';ptr.classList.remove('armed','spin');
+  if(motion()&&from)ptr.animate([{transform:from,opacity:1},{transform:'translateY(-70px) scale(.5)',opacity:0}],{duration:250,easing:'ease-in'});
+}
+async function refresh(){
+  refreshing=true;ptr.classList.add('armed','spin');ptr.style.transform='translateY(16px)';ptr.style.opacity='1';buzz(10);
+  const t0=Date.now();let upd=false;
+  try{if(swReg){await swReg.update();upd=!!(swReg.waiting||swReg.installing)}}catch{}
+  if(bkCfg())bkQueue(0);
+  await new Promise(r=>setTimeout(r,Math.max(0,750-(Date.now()-t0))));
+  refreshing=false;hidePtr();if(!D)return;
+  render(true);
+  if(upd){if(confirm('Eine neue Version der MyGesundBox ist da. Jetzt neu laden?')){await stashDraft();location.reload()}}
+  else toast(bkCfg()?'Alles aktuell – Sicherung wird abgeglichen.':'Alles aktuell.');
+}
+/* Nach unten wischen: Formular bzw. Dokumentansicht schließen */
+function swipeClose(box,scroller,canClose,doClose){
+  let y0=0,x0=0,dy=0,mode=null,v=0,ly=0,lt=0;
+  box.addEventListener('touchstart',e=>{if(e.touches.length!==1){mode='x';return}const t=e.touches[0];y0=ly=t.clientY;x0=t.clientX;lt=performance.now();dy=0;v=0;mode=null},{passive:true});
+  box.addEventListener('touchmove',e=>{if(mode==='x'||mode==='scroll')return;
+    const t=e.touches[0],d=t.clientY-y0,dx=t.clientX-x0;
+    if(!mode){if(Math.abs(d)<8&&Math.abs(dx)<8)return;
+      const sc=scroller();
+      if(d>0&&(!sc||sc.scrollTop<=0)&&Math.abs(d)>Math.abs(dx)*1.2&&!e.target.closest('textarea,select,input[type=range]'))mode='drag';else{mode='scroll';return}}
+    if(e.cancelable)e.preventDefault();
+    dy=Math.max(0,t.clientY-y0);const now=performance.now();v=.7*((t.clientY-ly)/Math.max(1,now-lt))+.3*v;ly=t.clientY;lt=now;
+    box.style.transform=`translateY(${dy}px)`;box.style.opacity=String(1-Math.min(.5,dy/600));
+  },{passive:false});
+  const end=async()=>{if(mode!=='drag'){mode=null;return}mode=null;
+    const go=dy>140||(v>.6&&dy>40);
+    const from=box.style.transform;box.style.transform='';box.style.opacity='';
+    if(go&&await canClose()){buzz(6);doClose();return}
+    if(motion()&&from)box.animate([{transform:from},{transform:'none'}],{duration:340,easing:'cubic-bezier(.2,.9,.3,1.15)'})};
+  box.addEventListener('touchend',end);box.addEventListener('touchcancel',end);
+}
+swipeClose(dlg,()=>dlg,async()=>!$('#dlgForm')._dirty||confirm('Eingaben verwerfen?'),()=>closeDlg());
+swipeClose($('#viewer'),()=>$('#vBody'),async()=>true,()=>closeViewer());
 
 /* ---------- Start ---------- */
 if(!window.crypto?.subtle){document.body.innerHTML='<p style="padding:24px">Diese App braucht HTTPS und einen aktuellen Browser.</p>'}
-else{boot().then(()=>showLock(true));if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})}
+else{boot().then(()=>showLock(true));if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').then(r=>{swReg=r}).catch(()=>{})}
 </script>
 </body>
 </html>
