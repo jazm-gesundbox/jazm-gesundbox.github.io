@@ -62,6 +62,11 @@ dialog h2{margin:0 0 14px;font-size:19px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
 svg.chart{width:100%;height:auto;background:var(--card);border:1px solid var(--bd);border-radius:16px}
 #toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:50;max-width:90vw}
+
+.linkbtn{display:block;width:100%;background:none;border:0;color:var(--pri);text-decoration:underline;font-size:14px;margin-top:12px;cursor:pointer;padding:4px}
+.ghbox{text-align:left;border-top:1px solid var(--bd);margin-top:14px;padding-top:12px}
+.banner.crit{background:var(--redbg);color:var(--red)}
+.conflict{background:var(--redbg);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:14px}
 details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 </style>
 </head>
@@ -77,6 +82,17 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
     <div class="err" id="lockErr"></div>
     <button class="pri" style="width:100%" id="lockBtnGo">Entsperren</button>
     <button type="button" class="ghost" style="width:100%;margin-top:10px" id="bioBtn" hidden>👆 Mit Fingerabdruck entsperren</button>
+    <div id="restoreBox" hidden>
+      <label class="linkbtn">Neues Handy? Sicherung wiederherstellen<input type="file" id="lrestore" accept=".gesundbox,.json,application/json" hidden></label>
+      <button type="button" class="linkbtn" id="lghOpen">Aus GitHub wiederherstellen</button>
+      <div class="ghbox" id="lgh" hidden>
+        <label for="lgh_o">Konto / Organisation</label><input id="lgh_o" value="jazm-gesundbox" autocomplete="off" autocapitalize="off">
+        <label for="lgh_r">Repo</label><input id="lgh_r" value="gesundbox-daten" autocomplete="off" autocapitalize="off">
+        <label for="lgh_t">Zugangsschlüssel (github_pat_…)</label><input id="lgh_t" type="password" autocomplete="off">
+        <div class="err" id="lgh_msg"></div>
+        <button type="button" class="pri" style="width:100%" id="lgh_go">Sicherung von GitHub laden</button>
+      </div>
+    </div>
     <div class="meta" id="verLock" style="margin-top:16px;font-size:12px"></div>
   </form>
 </div>
@@ -100,7 +116,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <script>
 'use strict';
-const APP_VERSION='1.3.0';
+const APP_VERSION='1.4.0';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -171,22 +187,53 @@ async function bioGetPassword(){
 }
 function askPwThenBio(){
   openForm('Fingerabdruck einrichten',[{k:'pw',l:'Zur Bestätigung dein Passwort',t:'password',req:true}],{},async v=>{
-    try{const p=JSON.parse(lsGet(VKEY));await decryptObj(p,await derive(v.pw,unb64(p.salt)))}catch{toast('Passwort falsch.');return false}
+    try{const p=JSON.parse(vaultJson);await decryptObj(p,await derive(v.pw,unb64(p.salt)))}catch{toast('Passwort falsch.');return false}
     setTimeout(()=>enableBio(v.pw),50);
   },{okText:'Weiter',html:'<div class="meta" style="margin-bottom:10px">Danach fragt dein Handy nach dem Fingerabdruck. Als Speicherort unbedingt den Google Passwortmanager wählen.</div>'});
 }
 
 let KEY=null,SALT=null,D=null,TAB='termine',WTYP='bp';
-const empty=()=>({v:1,termine:[],aerzte:[],vorsorge:[],werte:[]});
-function normalize(o){const e=empty();for(const k of ['termine','aerzte','vorsorge','werte'])e[k]=Array.isArray(o?.[k])?o[k]:[];if(o?.github?.token)e.github={token:String(o.github.token),repo:String(o.github.repo||defaultRepo())};return e}
-async function save(){const p=await encryptObj(D,KEY,SALT);if(!lsSet(VKEY,JSON.stringify(p)))toast('Speichern fehlgeschlagen – Speicher voll?')}
+const empty=()=>({v:1,termine:[],aerzte:[],vorsorge:[],werte:[],meta:{}});
+function normalize(o){const e=empty();for(const k of ['termine','aerzte','vorsorge','werte'])e[k]=Array.isArray(o?.[k])?o[k]:[];if(o?.github?.token)e.github={token:String(o.github.token),repo:String(o.github.repo||defaultRepo())};e.meta=o?.meta&&typeof o.meta==='object'?o.meta:{};const g=o?.backupGh;if(g?.token&&g.owner&&g.repo)e.backupGh={owner:String(g.owner),repo:String(g.repo),token:String(g.token)};return e}
+/* ---------- Speicher: Tresor doppelt (localStorage + IndexedDB) ---------- */
+const idb=(()=>{let p;const open=()=>p||(p=new Promise((res,rej)=>{const r=indexedDB.open('gesundbox',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
+  const tx=(mode,fn)=>open().then(db=>new Promise((res,rej)=>{const t=db.transaction('kv',mode);const rq=fn(t.objectStore('kv'));t.oncomplete=()=>res(rq&&rq.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)}));
+  return{get:k=>tx('readonly',st=>st.get(k)),put:(k,v)=>tx('readwrite',st=>st.put(v,k)),del:k=>tx('readwrite',st=>st.delete(k))}})();
+let vaultJson=null,VID=null;
+const vaultOk=j=>{try{const v=JSON.parse(j);return !!(v&&typeof v.salt==='string'&&typeof v.iv==='string'&&typeof v.ct==='string')}catch{return false}};
+const vaultTime=j=>{try{return Number(JSON.parse(j).saved)||0}catch{return 0}};
+async function writeVaultStr(json){
+  let a=false;try{await idb.put('vault',json);a=true}catch{}
+  const b=lsSet(VKEY,json);if(!b)lsDel(VKEY);
+  if(!a&&!b)throw new Error('store');
+  vaultJson=json;
+}
+async function boot(){
+  try{
+    const raw=lsGet(VKEY);let m=null;try{m=await idb.get('vault')}catch{}
+    const ok=!!raw&&vaultOk(raw),mOk=typeof m==='string'&&vaultOk(m);
+    if(mOk&&(!ok||vaultTime(m)>=vaultTime(raw))){vaultJson=m;if(raw!==m)lsSet(VKEY,m)}
+    else if(ok){vaultJson=raw;idb.put('vault',raw).catch(()=>{});if(mOk)setTimeout(()=>toast('Der Tresor wurde aus der Zweitkopie wiederhergestellt.'),800)}
+  }catch{}
+}
+let saving=Promise.resolve();
+function save(opt){
+  saving=saving.then(async()=>{
+    if(!D||!KEY)return;
+    if(!opt?.clean)D.meta.dirty=(D.meta.dirty||0)+1;
+    const p=await encryptObj(D,KEY,SALT);p.vid=VID;p.saved=Date.now();
+    await writeVaultStr(JSON.stringify(p));bkQueue();
+  }).catch(()=>toast('Speichern fehlgeschlagen – Speicher voll?'));
+  return saving;
+}
 
 /* ---------- Sperrbildschirm ---------- */
 function showLock(auto){
   KEY=null;D=null;closeDlg();
   $('#verLock').textContent='Version '+APP_VERSION;
   $('#app').hidden=true;$('#lock').hidden=false;
-  const has=!!lsGet(VKEY);
+  const has=!!vaultJson;
+  $('#restoreBox').hidden=has;$('#lgh').hidden=true;$('#lgh_msg').textContent='';
   $('#pw2').hidden=has;$('#pw2').required=!has;
   $('#lockBtnGo').textContent=has?'Entsperren':'Gesundbox anlegen';
   $('#lockHint').textContent=has?'Deine Gesundheitsdaten, verschlüsselt nur auf diesem Gerät.':'Lege ein Passwort fest (mind. 8 Zeichen). Ohne Passwort sind die Daten nicht wiederherstellbar.';
@@ -197,7 +244,9 @@ function showLock(auto){
   else if(auto===true)setTimeout(tryBio,300);
 }
 async function unlockWith(pw){
-  const p=JSON.parse(lsGet(VKEY));SALT=unb64(p.salt);KEY=await derive(pw,SALT);D=normalize(await decryptObj(p,KEY));
+  const p=JSON.parse(vaultJson);const k=await derive(pw,unb64(p.salt));const data=normalize(await decryptObj(p,k));
+  SALT=unb64(p.salt);KEY=k;D=data;VID=p.vid||b64(rnd(12));if(!p.vid)save({clean:true});
+  setTimeout(()=>bkQueue(0),3000);
   $('#lock').hidden=true;$('#app').hidden=false;
   try{navigator.storage?.persist?.()}catch{}
   resetIdle();render();
@@ -205,18 +254,18 @@ async function unlockWith(pw){
 $('#lockForm').onsubmit=async e=>{
   e.preventDefault();
   const pw=$('#pw').value,btn=$('#lockBtnGo');$('#lockErr').textContent='';
-  const stored=lsGet(VKEY);
+  const stored=vaultJson;
   if(!stored){
     if(pw.length<8){$('#lockErr').textContent='Mindestens 8 Zeichen.';return}
     if(pw!==$('#pw2').value){$('#lockErr').textContent='Passwörter stimmen nicht überein.';return}
   }
   btn.disabled=true;btn.textContent='Bitte warten …';
   try{
-    if(!stored){SALT=crypto.getRandomValues(new Uint8Array(16));KEY=await derive(pw,SALT);D=empty();await save()}
+    if(!stored){SALT=crypto.getRandomValues(new Uint8Array(16));KEY=await derive(pw,SALT);D=empty();VID=b64(rnd(12));await save({clean:true})}
     await unlockWith(pw);
     if(!stored&&bioSupported())setTimeout(()=>{if(confirm('Möchtest du künftig per Fingerabdruck entsperren?'))enableBio(pw)},400);
   }catch(err){KEY=null;$('#lockErr').textContent=stored?'Falsches Passwort.':'Fehler: '+err.message}
-  finally{btn.disabled=false;btn.textContent=lsGet(VKEY)?'Entsperren':'Gesundbox anlegen'}
+  finally{btn.disabled=false;btn.textContent=vaultJson?'Entsperren':'Gesundbox anlegen'}
 };
 let bioBusy=false;
 async function tryBio(){
@@ -227,6 +276,16 @@ async function tryBio(){
   finally{btn.disabled=false;bioBusy=false}
 }
 $('#bioBtn').onclick=tryBio;
+$('#lrestore').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{restoreVaultStr(await readBackupFile(f))}catch(x){$('#lockErr').textContent=x.message}});
+$('#lghOpen').onclick=()=>{const b=$('#lgh');b.hidden=!b.hidden;if(!b.hidden)$('#lgh_t').focus()};
+$('#lgh_go').onclick=async()=>{const m=$('#lgh_msg'),bt=$('#lgh_go');
+  const g={owner:$('#lgh_o').value.trim(),repo:$('#lgh_r').value.trim(),token:$('#lgh_t').value.trim()};
+  if(!g.owner||!g.repo||!g.token){m.textContent='Bitte alle drei Felder ausfüllen.';return}
+  bt.disabled=true;m.style.color='var(--mu)';m.textContent='Lade Tresor …';
+  try{await restoreVaultStr(await bkRestore(g))}
+  catch(x){m.style.color='';m.textContent=x.status?bkErrText(x):x.message}
+  finally{bt.disabled=false}};
 $('#lockNow').onclick=()=>showLock(false);
 /* Auto-Sperre: 5 Min. Inaktivität oder 1 Min. im Hintergrund */
 let idleT,hiddenAt=0;
@@ -356,13 +415,13 @@ function wertText(w){if(w.typ==='bp')return `${fmtNum(w.v1,0)}/${fmtNum(w.v2,0)}
 
 /* ---------- Rendering ---------- */
 const TITLES={termine:'Termine',aerzte:'Ärzte',vorsorge:'Vorsorge',werte:'Werte',mehr:'Mehr'};
-function render(){
-  if(!D)return;
+function render(keep){
+  if(!D)return;const y=window.scrollY;
   $('#title').textContent=TITLES[TAB];
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===TAB));
   $('#fab').hidden=TAB==='mehr';
   $('#main').innerHTML=({termine:rTermine,aerzte:rAerzte,vorsorge:rVorsorge,werte:rWerte,mehr:rMehr})[TAB]();
-  window.scrollTo(0,0);
+  window.scrollTo(0,keep?y:0);
 }
 function terminCard(t){
   const a=arzt(t.arztId);
@@ -378,6 +437,11 @@ function rTermine(){
   const past=D.termine.filter(t=>new Date(t.datum)<now).sort((a,b)=>b.datum.localeCompare(a.datum));
   const due=D.vorsorge.filter(v=>vStatus(v).rank<=2).length;
   let h=`<div class="toolbar"><button class="ghost" data-act="ics-import">📥 .ics importieren</button>${up.length>1?'<button class="ghost" data-act="ics-all">📅 Alle in Kalender</button>':''}</div>`;
+  const own=D.termine.length+D.aerzte.length+D.vorsorge.length+D.werte.length>0;
+  const g=bkCfg(),ghOk=g&&!bkStat.err&&bkStat.at,lb=D.meta.lastBackup,dirty=D.meta.dirty||0;
+  if(g&&bkStat.err)h+=`<button class="banner crit" data-act="goto-mehr">⚠️ GitHub-Sicherung: ${esc(bkStat.err)}</button>`;
+  if(own&&!ghOk){const ago=lb?Math.round((new Date(today())-new Date(lb))/864e5):null;
+    if(!lb||ago>14||dirty>=5)h+=`<button class="banner" data-act="bk-export">💾 ${!lb?'Du hast noch keine Sicherung.':dirty>=5?dirty+' Änderungen seit der letzten Sicherung.':'Letzte Sicherung vor '+ago+' Tagen.'} Jetzt sichern →</button>`}
   if(due)h+=`<button class="banner" data-act="goto-vorsorge">🔔 ${due} Vorsorge-${due===1?'Untersuchung':'Untersuchungen'} fällig →</button>`;
   if(!D.termine.length)return h+`<div class="empty">Noch keine Termine.<br>Tippe auf <b>+</b> oder importiere eine .ics-Datei aus einer Terminbestätigung.</div>`;
   h+=`<div class="sec">Anstehend</div>`+(up.length?up.map(terminCard).join(''):'<div class="meta">Keine anstehenden Termine.</div>');
@@ -425,7 +489,15 @@ function rWerte(){
 }
 function avg(list,k){const v=list.slice(-30).map(x=>x[k]).filter(x=>x!=null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null}
 function rMehr(){
-  return `<div class="sec">Backup</div><div class="card"><div class="meta">Das Backup ist mit deinem aktuellen Passwort verschlüsselt. Speichere es z. B. in deiner Cloud.</div><div class="acts"><button data-act="bk-export">💾 Backup exportieren</button><button data-act="bk-import">📂 Backup wiederherstellen</button></div></div>
+  const g=bkCfg();
+  return `<div class="sec">Sicherung</div>
+  <div class="card"><h3>Automatisch in GitHub</h3>${g?`<div class="meta">Nach jeder Änderung landet der verschlüsselte Tresor in <b>${esc(g.owner)}/${esc(g.repo)}</b>.</div>
+    <div class="note" id="bkStatus">${bkText()}</div>
+    ${bkStat.conflict?`<div class="conflict">Im Repo liegt ein anderer Tresor (z. B. von einem früheren Gerät). Er bleibt in der Versionsgeschichte von GitHub erhalten, wenn du ihn ersetzt.<div class="acts"><button data-act="bk-pull">⬇️ GitHub-Stand laden</button><button data-act="bk-force" class="danger">⬆️ Durch diesen Tresor ersetzen</button></div></div>`:''}
+    <div class="acts"><button data-act="bk-now">☁️ Jetzt sichern</button><button data-act="bk-off">✖ Trennen</button></div>`
+  :`<div class="meta">Sichert den verschlüsselten Tresor nach jeder Änderung in ein privates GitHub-Repo – auch wenn Browserdaten gelöscht werden, bleibt alles erhalten.</div><div class="acts"><button data-act="bk-setup">🔗 GitHub-Sicherung einrichten</button></div>`}</div>
+  <div class="card"><h3>Sicherungsdatei</h3><div class="meta">Zusätzlich oder statt GitHub: eine Datei, die du selbst ablegst, verschlüsselt mit deinem aktuellen Passwort. ${D.meta.lastBackup?'Letzte Sicherung: '+fmtD(D.meta.lastBackup)+'.':'Bisher keine Sicherung.'}</div>
+    <div class="acts"><button data-act="bk-export">💾 Sicherung erstellen</button><button data-act="bk-import">📂 Sicherung laden</button></div></div>
   <div class="sec">Update</div><div class="card">${D.github?`<div class="meta">Verbunden mit ${esc(D.github.repo)}</div><div class="acts"><button data-act="gh-upload">📦 Update-Zip hochladen</button><button data-act="gh-setup">🔧 Verbindung ändern</button><button data-act="gh-off">✖ Trennen</button></div>`:`<div class="meta">Neue Versionen als Zip direkt aus der App ins GitHub-Repo laden.</div><div class="acts"><button data-act="gh-setup">🔗 GitHub verbinden</button></div>`}<div id="updStatus" class="note" style="margin-top:8px">${UPD}</div></div>
   <div class="sec">Import</div><div class="card"><div class="acts"><button data-act="ics-import">📅 Termine aus .ics</button><button data-act="csv-import">📈 Werte aus CSV</button></div></div>
   <div class="sec">Sicherheit</div><div class="card"><div class="meta">Alle Daten liegen verschlüsselt (AES-256) nur auf diesem Gerät. Automatische Sperre nach 5 Minuten Inaktivität oder 1 Minute im Hintergrund.</div><div class="acts">${bioSupported()?(lsGet(BKEY)?'<button data-act="bio-off">👆 Fingerabdruck deaktivieren</button>':'<button data-act="bio-on">👆 Fingerabdruck einrichten</button>'):''}<button data-act="pw-change">🔑 Passwort ändern</button><button data-act="wipe" class="danger">🗑️ Alle Daten löschen</button></div></div>
@@ -600,34 +672,131 @@ async function watchRun(repo,tok,sha){
 }
 
 /* ---------- Backup & Sicherheit ---------- */
+/* Sicherungsdatei: enthält den bereits verschlüsselten Tresor (Passwort beim Sichern) */
+async function deliverFile(name,text,type){
+  const file=new File([text],name,{type});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:name});return true}catch(e){if(e.name==='AbortError')return false}}
+  download(name,text,type);return true;
+}
 async function exportBackup(){
-  const {github,...rest}=D;const p=await encryptObj(rest,KEY,SALT);
-  download(`gesundbox-backup-${today()}.json`,JSON.stringify(p),'application/json');
-  toast('Backup erstellt (verschlüsselt).');
+  D.meta.lastBackup=today();D.meta.dirty=0;await save({clean:true});
+  if(!vaultJson){toast('Es gibt noch nichts zu sichern.');return}
+  const payload=JSON.stringify({app:'gesundbox',format:2,exported:new Date().toISOString(),version:APP_VERSION,vault:JSON.parse(vaultJson)});
+  if(await deliverFile(`gesundbox-sicherung-${today()}.gesundbox`,payload,'application/json')){toast('Sicherung erstellt. Leg die Datei an einem zweiten Ort ab, z. B. in deiner Cloud.');render()}
+}
+async function readBackupFile(file){
+  if(file.size>50e6)throw new Error('Die Datei ist zu groß für eine Gesundbox-Sicherung.');
+  let o;try{o=JSON.parse(await file.text())}catch{throw new Error('Das ist keine gültige Gesundbox-Sicherung.')}
+  const v=o&&o.app==='gesundbox'?(o.vault||(o.ct?o:null)):null; /* auch alte Backups (V1) */
+  if(!v||!vaultOk(JSON.stringify(v)))throw new Error('Das ist keine gültige Gesundbox-Sicherung.');
+  return JSON.stringify(v);
+}
+async function restoreVaultStr(json){
+  await saving;
+  try{await writeVaultStr(json)}catch{toast('Die Sicherung passt nicht in den Speicher des Handys.');return}
+  lsDel(BKEY);clearTimeout(bkTimer);bkPending=null;setBk({err:'',conflict:false});
+  showLock(false);toast('Sicherung geladen. Entsperre sie mit dem Passwort, das beim Sichern galt.');
 }
 async function importBackup(){
-  const file=await pickFile('.json,application/json');if(!file)return;
-  let p;try{p=JSON.parse(await file.text());if(p.app!=='gesundbox'||!p.ct)throw 0}catch{toast('Keine gültige Gesundbox-Sicherung.');return}
-  openForm('Backup wiederherstellen',[{k:'pw',l:'Passwort des Backups',t:'password',req:true}],{},async v=>{
-    try{const k=await derive(v.pw,unb64(p.salt));const data=normalize(await decryptObj(p,k));
-      if(!confirm(`Backup enthält ${data.termine.length} Termine, ${data.aerzte.length} Ärzte, ${data.vorsorge.length} Vorsorge, ${data.werte.length} Werte.\nAktuelle Daten werden ersetzt. Fortfahren?`))return;
-      if(D.github&&!data.github)data.github=D.github;D=data;await save();toast('Backup wiederhergestellt.');
-    }catch{toast('Falsches Passwort.');return false}
-  },{okText:'Wiederherstellen',html:'<div class="meta" style="margin-bottom:10px">Die Daten werden danach mit deinem aktuellen Passwort gespeichert.</div>'});
+  const file=await pickFile('.gesundbox,.json,application/json');if(!file)return;
+  let json;try{json=await readBackupFile(file)}catch(e){toast(e.message);return}
+  if(confirm('Die Daten auf diesem Gerät werden durch die Sicherung ersetzt. Fortfahren?'))restoreVaultStr(json);
+}
+
+/* ---------- Automatische Sicherung in ein privates GitHub-Repo ----------
+   Hochgeladen wird nur der bereits verschlüsselte Tresor (vault.json). Im Repo wird nie etwas gelöscht;
+   ein fremder Tresor (andere Tresor-ID) wird nie automatisch überschrieben. */
+const GHS='gesundbox-gh-status';
+let bkTimer=0,bkBusy=false,bkAgain=null,bkPending=null;
+let bkStat=(()=>{try{return JSON.parse(lsGet(GHS))||{}}catch{return{}}})();
+function setBk(o){const prev=bkStat.err||'';bkStat={...bkStat,...o};lsSet(GHS,JSON.stringify(bkStat));
+  const el=document.getElementById('bkStatus');if(el)el.innerHTML=bkText();
+  if(D&&o.err!==undefined&&(o.err||'')!==prev&&dlg.open===false&&(TAB==='termine'||TAB==='mehr'))render(true)}
+function bkCfg(){const g=D?.backupGh;return g?{...g}:null}
+async function bkFetch(g,method,path,body,raw){
+  const r=await fetch(`https://api.github.com/repos/${encodeURIComponent(g.owner)}/${encodeURIComponent(g.repo)}${path}`,{method,cache:'no-store',
+    headers:{'Authorization':'Bearer '+g.token,'Accept':raw?'application/vnd.github.raw+json':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28',...(body?{'Content-Type':'application/json'}:{})},
+    body:body?JSON.stringify(body):undefined});
+  if(r.status===404&&method==='GET')return null;
+  if(!r.ok){const e=new Error('GitHub '+r.status);e.status=r.status;throw e}
+  return raw?r.text():r.status===204?null:r.json();
+}
+const bkErrText=e=>e&&e.conflict?'Im Repo liegt ein anderer Tresor. Unter „Mehr“ entscheiden.'
+  :e&&e.status===401?'Der GitHub-Zugangsschlüssel ist ungültig oder abgelaufen.'
+  :e&&(e.status===403||e.status===404)?'Kein Zugriff auf das Repo. Name und Rechte des Schlüssels prüfen (Contents: Read and write).'
+  :e&&e.status===422?'GitHub hat die Datei abgelehnt.'
+  :'Keine Verbindung zu GitHub. Es wird später erneut versucht.';
+function bkText(){
+  if(bkBusy)return '⏳ Wird gesichert …';
+  if(bkStat.err)return `<span style="color:var(--red)">${esc(bkStat.err)}</span>`;
+  if(bkStat.at){const m=Math.round((Date.now()-bkStat.at)/60000);return '✓ Zuletzt gesichert '+(m<1?'gerade eben':m<60?'vor '+m+' Min.':m<1440?'vor '+Math.round(m/60)+' Std.':'am '+new Date(bkStat.at).toLocaleDateString('de-DE'))+'.'}
+  return 'Noch nicht gesichert.';
+}
+async function bkRemote(g){
+  const cur=await bkFetch(g,'GET','/contents/vault.json');if(!cur)return{cur:null,json:null};
+  let json=null;
+  try{json=cur.content&&cur.encoding==='base64'?td.decode(unb64(cur.content.replace(/\s/g,''))):await bkFetch(g,'GET','/contents/vault.json',null,true)}catch{}
+  return{cur,json};
+}
+function bkQueue(delay){const g=bkCfg();if(!g)return;bkPending=g;clearTimeout(bkTimer);bkTimer=setTimeout(()=>bkSync(),delay==null?4000:delay)}
+async function bkSync(force){
+  const g=bkPending||bkCfg();if(!g)return;
+  if(bkBusy){bkAgain={force};return}
+  bkBusy=true;clearTimeout(bkTimer);bkTimer=0;bkPending=null;
+  const el=document.getElementById('bkStatus');if(el)el.innerHTML=bkText();
+  try{
+    const local=vaultJson;if(!local||!vaultOk(local))throw new Error('local');
+    const lv=JSON.parse(local);
+    for(let attempt=0;attempt<2;attempt++){
+      const{cur,json}=await bkRemote(g);
+      if(json===local)break;
+      if(cur&&!force){let rv=null;try{rv=JSON.parse(json)}catch{}
+        if(!rv||rv.vid!==lv.vid){const e=new Error('conflict');e.conflict=true;throw e}}
+      try{await bkFetch(g,'PUT','/contents/vault.json',{message:'Gesundbox-Sicherung '+new Date().toLocaleString('de-DE'),content:b64(te.encode(local)),...(cur?{sha:cur.sha}:{})});break}
+      catch(e){if(e.status!==409||attempt)throw e}
+    }
+    bkBusy=false;setBk({at:Date.now(),err:'',conflict:false});
+  }catch(e){
+    bkBusy=false;
+    if(e.message!=='local'){setBk({err:bkErrText(e),conflict:!!e.conflict});
+      if(!e.conflict&&!(e.status>=400&&e.status<500))setTimeout(()=>bkQueue(0),5*60e3)}
+  }finally{
+    const el2=document.getElementById('bkStatus');if(el2)el2.innerHTML=bkText();
+    if(bkAgain){const a=bkAgain;bkAgain=null;bkSync(a.force)}
+  }
+}
+/* Beim Wegwechseln aus der App ausstehende Sicherung sofort starten */
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&bkTimer&&bkPending)bkSync()});
+async function bkRestore(g){
+  const{json}=await bkRemote(g);if(!json||!vaultOk(json))throw new Error('Im Repo wurde keine Gesundbox-Sicherung gefunden.');
+  return json;
+}
+function bkSetup(){
+  openForm('GitHub-Sicherung einrichten',[{k:'owner',l:'Konto / Organisation',req:true},{k:'repo',l:'Privates Repo',req:true},{k:'token',l:'Zugangsschlüssel (github_pat_…)',t:'password',req:true}],
+    {owner:'jazm-gesundbox',repo:'gesundbox-daten'},async v=>{
+    const g={owner:v.owner.trim(),repo:v.repo.trim(),token:v.token.trim()};
+    try{const info=await bkFetch(g,'GET','');
+      if(!info){toast(bkErrText({status:404}));return false}
+      if(!info.private){toast('Dieses Repo ist öffentlich. Gesichert wird nur in private Repos.');return false}
+      if(info.permissions&&info.permissions.push===false){toast('Der Schlüssel darf nicht in dieses Repo schreiben (Contents: Read and write).');return false}
+    }catch(e){toast(bkErrText(e));return false}
+    D.backupGh=g;setBk({err:'',at:0,conflict:false});await save({clean:true});
+    setTimeout(async()=>{await bkSync();if(!bkStat.err)toast('Automatische Sicherung ist aktiv ✓')},50);
+  },{okText:'Verbinden & sichern',html:'<div class="meta" style="margin-bottom:10px">Sichert den verschlüsselten Tresor nach jeder Änderung in ein <b>privates</b> GitHub-Repo. GitHub sieht nur verschlüsselte Daten. Schlüssel: nur dieses Repo, <b>Contents: Read and write</b>.</div>'});
 }
 function changePw(){
   openForm('Passwort ändern',[{k:'old',l:'Aktuelles Passwort',t:'password',req:true},{k:'n1',l:'Neues Passwort (mind. 8 Zeichen)',t:'password',req:true},{k:'n2',l:'Neues Passwort wiederholen',t:'password',req:true}],{},async v=>{
-    try{const p=JSON.parse(lsGet(VKEY));await decryptObj(p,await derive(v.old,unb64(p.salt)))}catch{toast('Aktuelles Passwort falsch.');return false}
+    try{const p=JSON.parse(vaultJson);await decryptObj(p,await derive(v.old,unb64(p.salt)))}catch{toast('Aktuelles Passwort falsch.');return false}
     if(v.n1.length<8){toast('Mindestens 8 Zeichen.');return false}
     if(v.n1!==v.n2){toast('Neue Passwörter stimmen nicht überein.');return false}
     SALT=crypto.getRandomValues(new Uint8Array(16));KEY=await derive(v.n1,SALT);await save();
-    if(lsGet(BKEY)){lsDel(BKEY);setTimeout(()=>{if(confirm('Passwort geändert. Fingerabdruck jetzt neu einrichten?'))enableBio(v.n1)},300)}else toast('Passwort geändert. Alte Backups brauchen weiter das alte Passwort.');
+    if(lsGet(BKEY)){lsDel(BKEY);setTimeout(()=>{if(confirm('Passwort geändert. Fingerabdruck jetzt neu einrichten?'))enableBio(v.n1)},300)}else toast('Passwort geändert. Ältere Sicherungsdateien brauchen weiter das alte Passwort.');
   },{okText:'Ändern'});
 }
 async function wipe(){
   if(!confirm('Wirklich ALLE Daten auf diesem Gerät löschen? Das kann nicht rückgängig gemacht werden.'))return;
-  if(!confirm('Letzte Warnung: Hast du ein Backup?'))return;
-  lsDel(VKEY);lsDel(BKEY);showLock(false);
+  if(!confirm('Letzte Warnung: Hast du eine Sicherung?'))return;
+  lsDel(VKEY);lsDel(BKEY);lsDel(GHS);await idb.del('vault').catch(()=>{});vaultJson=null;clearTimeout(bkTimer);showLock(false);
 }
 const PRESETS=[['Zahnarzt – Kontrolle',6],['Professionelle Zahnreinigung',12],['Hausarzt – Check-up',36],['Hautkrebs-Screening',24],['Augenarzt',24],['Tetanus/Diphtherie – Auffrischung',120]];
 
@@ -655,6 +824,12 @@ $('#main').addEventListener('click',async e=>{
     case 'csv-import':importCSV();break;
     case 'bk-export':exportBackup();break;
     case 'bk-import':importBackup();break;
+    case 'bk-setup':bkSetup();break;
+    case 'bk-now':await bkSync();if(!bkStat.err)toast('Auf GitHub gesichert ✓');break;
+    case 'bk-force':if(confirm('Den Tresor im Repo durch diesen ersetzen? Der alte bleibt in der GitHub-Versionsgeschichte.')){await bkSync(true);render()}break;
+    case 'bk-pull':if(confirm('Die Daten auf diesem Gerät durch den GitHub-Stand ersetzen?')){try{restoreVaultStr(await bkRestore(bkCfg()))}catch(e){toast(e.status?bkErrText(e):e.message)}}break;
+    case 'bk-off':if(confirm('GitHub-Sicherung trennen? Im Repo bleibt alles liegen.')){delete D.backupGh;setBk({err:'',at:0,conflict:false});await save({clean:true});render();toast('GitHub-Sicherung getrennt.')}break;
+    case 'goto-mehr':TAB='mehr';render();break;
     case 'pw-change':changePw();break;
     case 'wipe':wipe();break;
     case 'bio-on':askPwThenBio();break;
@@ -669,7 +844,7 @@ $('#fab').onclick=()=>({termine:()=>editTermin(),aerzte:()=>editArzt(),vorsorge:
 
 /* ---------- Start ---------- */
 if(!window.crypto?.subtle){document.body.innerHTML='<p style="padding:24px">Diese App braucht HTTPS und einen aktuellen Browser.</p>'}
-else{showLock(true);if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})}
+else{boot().then(()=>showLock(true));if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})}
 </script>
 </body>
 </html>
