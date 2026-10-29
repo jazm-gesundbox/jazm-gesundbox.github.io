@@ -143,7 +143,8 @@ svg.chart{width:100%;height:auto;background:var(--card);border:1px solid var(--b
 .seh tr:last-child td,.seh tr:last-child th{border-bottom:0}
 .sehgrid{display:grid;gap:6px;align-items:center;margin:4px 0 12px}
 .sehgrid b{font-size:12px;color:var(--mu);text-align:center}
-.sehgrid input{margin:0;padding:10px 4px;text-align:center;min-width:0}
+.sehgrid input,.sehgrid select{margin:0;padding:10px 2px;text-align:center;text-align-last:center;min-width:0;font-variant-numeric:tabular-nums}
+.sehgrid select{-webkit-appearance:none;appearance:none;background-image:none;padding:10px 0;font-size:15px;letter-spacing:-.01em}
 .linkish{background:none;border:0;padding:0;color:var(--pri);text-decoration:underline;font:inherit;cursor:pointer}
 .card.flash{animation:flash 1.6s ease-out}
 @keyframes flash{0%,40%{box-shadow:0 0 0 3px var(--pri)}100%{box-shadow:0 0 0 0 transparent}}
@@ -238,7 +239,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <script>
 'use strict';
-const APP_VERSION='2.4.0';
+const APP_VERSION='2.4.1';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -607,7 +608,7 @@ const BELEG_URL='https://jazm-belegbox.github.io/',GESUND_URL='https://jazm-gesu
 const SEHART={brille:'Brille',kontaktlinse:'Kontaktlinsen'};
 const SEHCOLS={brille:[['sph','Sph'],['cyl','Zyl'],['ach','Achse'],['add','Add']],kontaktlinse:[['sph','Sph'],['cyl','Zyl'],['ach','Achse'],['bc','BC'],['dia','Ø']]};
 const BRTYP={einstaerken:'Einstärkenbrille',gleitsicht:'Gleitsichtbrille',lese:'Lesebrille',arbeitsplatz:'Arbeitsplatzbrille',sonne:'Sonnenbrille mit Stärke',sport:'Sportbrille',sonstige:'Brille'};
-const KLDAUER={1:'Tageslinsen',14:'2-Wochen-Linsen',30:'Monatslinsen',90:'3-Monats-Linsen',365:'Jahreslinsen'};
+const KLDAUER={1:'Tageslinsen',14:'2-Wochen-Linsen',30:'Monatslinsen',90:'3-Monats-Linsen',180:'Halbjahreslinsen',365:'Jahreslinsen'};
 const HSTATUS={aktiv:'In Gebrauch',ersatz:'Ersatz',alt:'Ausgemustert'};
 const dnum=v=>{if(v==null||v==='')return null;const x=num(String(v).replace(/[−–]/g,'-').replace(/^\+/,''));return x};
 const dpt=v=>v==null?'–':(v>0?'+':v<0?'−':'±')+Math.abs(v).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -669,11 +670,19 @@ function rAugen(){
   h+=`<div class="sec">Kontaktlinsen</div>`+(kl.length?kl.map(hilfeCard).join(''):`<div class="card meta">Noch keine Kontaktlinsen eingetragen.</div>`);
   h+=`<p class="meta" style="margin-top:14px">Kaufbeleg und Garantie einer Brille oder ein Kontaktlinsen-Abo verwaltest du in der MyBelegBox. Die Sehstärke bleibt nur hier.</p>`;
   return h}
+/* Dioptrien als Auswahl in 0,25er-Schritten: so gehen Minuswerte auch auf Tastaturen ohne Minus-Taste */
+const DPT_RANGE={sph:[-20,12],cyl:[-8,8],add:[0.25,4]};
+function dptOpts(k,cur){const [a,b]=DPT_RANGE[k],c=dnum(cur),empty=`<option value=""${c==null?' selected':''}>–</option>`;let o=a>0?empty:'',hit=c==null;
+  /* „–“ steht direkt über ±0,00, damit die Liste dort aufgeht und Minuswerte gleich darunter liegen */
+  for(let i=Math.round(b*4);i>=Math.round(a*4);i--){const v=i/4;if(i===0&&a<=0)o+=empty;const sel=c!=null&&Math.abs(c-v)<1e-6;if(sel)hit=true;o+=`<option value="${v}"${sel?' selected':''}>${dpt(v)}</option>`}
+  if(!hit)o+=`<option value="${c}" selected>${dpt(c)}</option>`;return o}
 function sehGrid(art,vals){const c=SEHCOLS[art];
-  return `<div class="sehgrid" style="grid-template-columns:24px repeat(${c.length},minmax(0,1fr))"><span></span>${c.map(([,n])=>`<b>${n}</b>`).join('')}${['r','l'].map(e=>`<b>${e.toUpperCase()}</b>${c.map(([k])=>`<input name="${e}_${k}" inputmode="decimal" autocomplete="off" aria-label="${e==='r'?'Rechts':'Links'} ${k}" value="${esc(vals[e+'_'+k]??'')}">`).join('')}`).join('')}</div>`}
+  const cell=(e,k)=>{const nm=`name="${e}_${k}" aria-label="${e==='r'?'Rechts':'Links'} ${k}"`,v=vals[e+'_'+k]??'';
+    return DPT_RANGE[k]?`<select ${nm}>${dptOpts(k,v)}</select>`:`<input ${nm} inputmode="${k==='ach'?'numeric':'decimal'}" autocomplete="off" value="${esc(v)}">`};
+  return `<div class="sehgrid" style="grid-template-columns:24px repeat(${c.length},minmax(0,1fr))"><span></span>${c.map(([,n])=>`<b>${n}</b>`).join('')}${['r','l'].map(e=>`<b>${e.toUpperCase()}</b>${c.map(([k])=>cell(e,k)).join('')}`).join('')}</div>`}
 function editSeh(w,preset){
   const isNew=!w;w=w||{id:uid(),datum:today(),art:'brille',quelle:'optiker',arztId:'',wo:'',r:{},l:{},pd:'',notiz:'',...preset};
-  const vals={};for(const e of ['r','l'])for(const [k] of SEHCOLS.kontaktlinse.concat([['add']]))if(w[e]?.[k]!=null)vals[e+'_'+k]=String(w[e][k]).replace('.',',');
+  const vals={};for(const e of ['r','l'])for(const [k] of SEHCOLS.kontaktlinse.concat([['add']]))if(w[e]?.[k]!=null)vals[e+'_'+k]=DPT_RANGE[k]?String(w[e][k]):String(w[e][k]).replace('.',',');
   openForm(isNew?'Sehstärke eintragen':'Sehstärke bearbeiten',[
     {k:'datum',l:'Gemessen am',t:'date',req:true},
     {k:'quelle',l:'Gemessen von',t:'select',opts:[['optiker','Augenoptiker'],['augenarzt','Augenarzt'],['sonst','Sonstige']]},
@@ -690,9 +699,9 @@ function editSeh(w,preset){
     Object.assign(w,{datum:v.datum,art,quelle:v.quelle,arztId:v.arztId,wo:v.wo.trim(),pd:v.pd.trim(),notiz:v.notiz,r:eye.r,l:eye.l});
     if(isNew)D.sehwerte.push(w);await save();
   },{html:`<label for="sehArt">Für</label><select id="sehArt" name="art"><option value="brille"${w.art==='brille'?' selected':''}>Brille</option><option value="kontaktlinse"${w.art==='kontaktlinse'?' selected':''}>Kontaktlinsen</option></select>
-     <div class="meta" style="margin:-4px 0 6px">Werte aus dem Pass übernehmen. Minus = kurzsichtig, Plus = weitsichtig. Leere Felder bleiben leer.</div><div id="sehGridBox">${sehGrid(w.art,vals)}</div>`,
+     <div class="meta" style="margin:-4px 0 6px">Werte aus dem Pass übernehmen: Sph, Zyl und Add zum Antippen auswählen (Minus = kurzsichtig, Plus = weitsichtig). Leere Felder bleiben leer.</div><div id="sehGridBox">${sehGrid(w.art,vals)}</div>`,
    draft:{kind:'seh',id:isNew?null:w.id},
-   onOpen:f=>{const sel=f.querySelector('#sehArt');sel.onchange=()=>{const cur={};f.querySelectorAll('#sehGridBox input').forEach(i=>{if(i.value)cur[i.name]=i.value});f.querySelector('#sehGridBox').innerHTML=sehGrid(sel.value,cur)}},
+   onOpen:f=>{const sel=f.querySelector('#sehArt');sel.onchange=()=>{const cur={};f.querySelectorAll('#sehGridBox input,#sehGridBox select').forEach(i=>{if(i.value)cur[i.name]=i.value});f.querySelector('#sehGridBox').innerHTML=sehGrid(sel.value,cur)}},
    del:isNew?null:async()=>{D.sehwerte=D.sehwerte.filter(y=>y.id!==w.id);D.sehhilfen.forEach(y=>{if(y.sehId===w.id)y.sehId=''});await save()}});
 }
 function editHilfe(x,art){
