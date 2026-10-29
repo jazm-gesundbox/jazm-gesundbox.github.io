@@ -239,7 +239,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <script>
 'use strict';
-const APP_VERSION='2.4.1';
+const APP_VERSION='2.4.2';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -650,7 +650,7 @@ function hilfeCard(x){
     const k=klInfo(x);
     const wech=k.dauer>1?(x.eingesetzt?(k.wechsel<0?`<span class="badge b-red">Wechsel seit ${-k.wechsel} Tagen fällig</span>`:k.wechsel<=1?`<span class="badge b-or">Wechsel ${relDay(k.wechsel)}</span>`:`<span class="badge b-ok">Wechsel ${relDay(k.wechsel)}</span>`)+` <span class="meta">aktuelles Paar seit ${esc(fmtD(x.eingesetzt))}</span>`:'<span class="meta">Noch nicht eingetragen, wann das aktuelle Paar eingesetzt wurde.</span>'):'';
     const vor=k.vorrat!=null?`<div class="meta">Vorrat: ${k.vorrat} ${k.vorrat===1?'Paar':'Paare'} · reicht ca. ${k.reicht} Tage${k.reicht<=21&&!+x.abo?' – <b>nachbestellen</b>':''}</div>`:'';
-    body=`<div class="meta">${esc(KLDAUER[x.dauer]||'')}${+x.abo?` · Abo alle ${+x.abo} ${+x.abo===1?'Monat':'Monate'}`:''}</div><div style="margin:4px 0">${wech}</div>${vor}${kauf?`<div class="meta">Zuletzt gekauft ${kauf}</div>`:''}`;
+    body=`<div class="meta">${esc(KLDAUER[x.dauer]||'')}${+x.abo?` · Abo ${dnum(x.aboBetrag)!=null?esc(eur(dnum(x.aboBetrag)))+' ':''}${{1:'monatlich',3:'vierteljährlich',6:'halbjährlich',12:'jährlich'}[+x.abo]||''}${dnum(x.aboBetrag)!=null&&+x.abo>1?' ('+esc(eur(dnum(x.aboBetrag)/+x.abo))+' im Monat)':''}`:''}</div><div style="margin:4px 0">${wech}</div>${vor}${kauf?`<div class="meta">Zuletzt gekauft ${kauf}</div>`:''}`;
     acts=(k.dauer>1?`<button data-act="kl-wechsel" data-id="${x.id}">✅ Neues Paar eingesetzt</button>`:'')+(+x.abo?`<button data-act="beleg" data-id="${x.id}">🧾 ${x.beleg?'Abo in MyBelegBox öffnen':'Abo in MyBelegBox übernehmen'}</button>`:'');
   }
   return `<div class="card" id="h-${x.id}"><h3>${esc(hilfeTitel(x))} ${st}</h3>${body}
@@ -718,8 +718,9 @@ function editHilfe(x,art){
     {k:'vorrat',l:'Paare auf Vorrat (ohne das aktuelle)',t:'decimal'},
     {k:'haendler',l:'Gekauft bei',ph:'z. B. Optiker, Lensbest, dm'},
     {k:'gekauft',l:'Zuletzt gekauft am',t:'date'},
-    {k:'preis',l:'Preis der Bestellung (€)',t:'decimal'},
-    {k:'abo',l:'Abo / Sparabo',t:'select',opts:[['0','kein Abo'],['1','monatlich'],['3','alle 3 Monate'],['6','alle 6 Monate'],['12','jährlich']]},
+    {k:'abo',l:'Abo / Sparabo – Zahlweise',t:'select',opts:[['0','kein Abo'],['1','monatlich'],['3','vierteljährlich'],['6','halbjährlich'],['12','jährlich']]},
+    {k:'aboBetrag',l:'Abo-Betrag pro Zahlung (€)',t:'decimal',ph:'z. B. 24,90 bei monatlich'},
+    {k:'preis',l:'Preis bei Einzelkauf (€, ohne Abo)',t:'decimal'},
     {k:'notiz',l:'Notiz',t:'textarea',ph:'z. B. Pflegemittel, Tragezeiten'},
   ]:[
     {k:'name',l:'Bezeichnung',ph:'z. B. Alltagsbrille, Lesebrille Büro'},
@@ -735,7 +736,7 @@ function editHilfe(x,art){
     {k:'notiz',l:'Notiz',t:'textarea'},
   ];
   openForm(isNew?(kl?'Kontaktlinsen eintragen':'Brille eintragen'):(kl?'Kontaktlinsen bearbeiten':'Brille bearbeiten'),fields,x,async v=>{
-    for(const k of ['preis','kasse','vorrat'])if(v[k]!=null&&v[k].trim()&&dnum(v[k])==null){toast(`„${v[k]}“ ist keine Zahl.`);return false}
+    for(const k of ['preis','kasse','vorrat','aboBetrag'])if(v[k]!=null&&v[k].trim()&&dnum(v[k])==null){toast(`„${v[k]}“ ist keine Zahl.`);return false}
     if(kl&&String(v.vorrat??'')!==String(x.vorrat??''))v.stand=today();
     Object.assign(x,v);if(isNew)D.sehhilfen.push(x);await save();
   },{draft:{kind:'hilfe',id:isNew?null:x.id},del:isNew?null:async()=>{D.sehhilfen=D.sehhilfen.filter(y=>y.id!==x.id);D.dokumente.forEach(d=>{if(d.sehId===x.id)d.sehId=''});await save()},
@@ -745,7 +746,7 @@ function editHilfe(x,art){
 const b64url=t=>b64(te.encode(t)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 function belegLink(x){
   const ref='mygesundbox:'+x.id,url=GESUND_URL+'?seh='+encodeURIComponent(x.id),p=dnum(x.preis);let o;
-  if(x.art==='kontaktlinsen')o={v:1,k:'c',ref,url,what:'Kontaktlinsen: Wechsel, Vorrat und Sehstärke',anbieter:x.haendler||hilfeTitel(x),kosten:p||0,intervall:+x.abo||1,modus:'offen',frist:0,
+  if(x.art==='kontaktlinsen')o={v:1,k:'c',ref,url,what:'Kontaktlinsen: Wechsel, Vorrat und Sehstärke',anbieter:x.haendler||hilfeTitel(x),kosten:dnum(x.aboBetrag)??p??0,intervall:+x.abo||1,modus:'offen',frist:0,
     notiz:[hilfeTitel(x),KLDAUER[x.dauer]||''].filter(Boolean).join(' · ')};
   else o={v:1,k:'d',ref,url,what:'Sehstärke, Gläser und Garantie',name:hilfeTitel(x),hersteller:x.fassung||'',modell:BRTYP[x.typ]||'',kauf:x.gekauft||'',preis:p||0,haendler:x.haendler||'',garantieMonate:+x.garantie||0,
     notiz:[x.glaeser?'Gläser: '+x.glaeser:'',dnum(x.kasse)?'Zuschuss Krankenkasse/Versicherung: '+eur(dnum(x.kasse)):''].filter(Boolean).join('\n')};
