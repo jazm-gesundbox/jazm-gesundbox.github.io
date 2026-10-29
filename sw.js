@@ -1,5 +1,5 @@
 // MyGesundBox Service Worker – Netzwerk zuerst, offline aus dem Cache
-const CACHE = 'gesundbox-2.5.0';
+const CACHE = 'gesundbox-2.5.1';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './ds.js', './boxen/smartbox.png', './boxen/gesundbox.png', './boxen/belegbox.png'];
 
 self.addEventListener('install', e => {
