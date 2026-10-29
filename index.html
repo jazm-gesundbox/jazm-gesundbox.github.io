@@ -249,6 +249,59 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 .ds-qrow .ds-qt b{font-size:16px;font-weight:700;overflow-wrap:anywhere}
 .ds-qrow .ds-qt small{font-size:13px;color:var(--ds-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ds-srch .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* Darstellung: Umschalter Automatisch / Hell / Dunkel */
+.ds-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:12px;background:var(--ds-sunk)}
+.ds-seg button{all:unset;box-sizing:border-box;text-align:center;padding:9px 6px;border-radius:9px;font-family:inherit;font-size:14px;font-weight:600;color:var(--ds-muted);cursor:pointer}
+.ds-seg button[aria-checked="true"]{background:var(--ds-surface);color:var(--ds-ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.ds-seg button:focus-visible{outline:2px solid var(--ds-accent)}
+/* Feier-Effekt mit Konfetti */
+.ds-yay{position:fixed;inset:0;z-index:140;display:grid;place-items:center;pointer-events:none;overflow:hidden}
+.ds-yay-card{position:relative;background:var(--ds-surface);color:var(--ds-ink);border-radius:24px;padding:22px 28px 16px;display:grid;justify-items:center;gap:8px;min-width:150px;box-shadow:0 18px 50px rgba(0,0,0,.28);animation:dsYayIn .45s cubic-bezier(.3,1.35,.5,1) both,dsYayOut .28s ease-in 1.2s forwards}
+.ds-yay svg{width:64px;height:64px}
+.ds-yay .yc{fill:none;stroke:var(--ds-ok);stroke-width:3;stroke-dasharray:145;stroke-dashoffset:145;animation:dsInk .45s ease-out .08s forwards}
+.ds-yay .yk{fill:none;stroke:var(--ds-ok);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:34;stroke-dashoffset:34;animation:dsInk .28s ease-out .42s forwards}
+.ds-yay b{font-size:15px;font-weight:700}
+.ds-yay i{position:absolute;left:50%;top:54px;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:var(--c);opacity:0;animation:dsSpark .65s ease-out .5s}
+.ds-yay em{position:absolute;top:-16px;left:var(--x);width:8px;height:13px;border-radius:2px;background:var(--c);transform:scale(var(--s));animation:dsFall 2.2s cubic-bezier(.25,.6,.5,1) var(--d) forwards;opacity:0}
+@keyframes dsInk{to{stroke-dashoffset:0}}
+@keyframes dsSpark{0%{opacity:1;transform:rotate(var(--a)) translateY(-30px) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateY(-64px) scale(.3)}}
+@keyframes dsYayIn{from{opacity:0;transform:scale(.6)}}
+@keyframes dsYayOut{to{opacity:0;transform:scale(.92)}}
+@keyframes dsFall{0%{opacity:1;transform:translateY(0) rotate(0) scale(var(--s))}85%{opacity:1}100%{opacity:0;transform:translateY(105vh) rotate(var(--r)) scale(var(--s))}}
+/* Entsperr-Animation */
+.ds-unl{position:fixed;z-index:130;width:0;height:0;pointer-events:none}
+.ds-unl span{position:absolute;left:0;top:0;border-radius:50%;transform:translate(-50%,-50%)}
+.ds-unl-light .glow{width:72px;height:72px;background:radial-gradient(circle,rgba(255,214,90,.95) 0%,rgba(255,196,60,.45) 45%,rgba(255,196,60,0) 72%);animation:dsGlow .7s ease-out forwards}
+.ds-unl-light .ray{width:72px;height:72px;background:conic-gradient(from 0deg,rgba(255,206,84,.55) 0 8deg,transparent 8deg 30deg,rgba(255,206,84,.55) 30deg 38deg,transparent 38deg 60deg,rgba(255,206,84,.55) 60deg 68deg,transparent 68deg 90deg);
+  -webkit-mask:radial-gradient(circle,transparent 42%,#000 44%,#000 70%,transparent 72%);mask:radial-gradient(circle,transparent 42%,#000 44%,#000 70%,transparent 72%);animation:dsRays .7s ease-out forwards}
+.ds-unl-light-ico{animation:dsLit .68s ease-out forwards}
+@keyframes dsGlow{0%{width:40px;height:40px;opacity:0}40%{opacity:1}100%{width:260px;height:260px;opacity:.9}}
+@keyframes dsRays{0%{width:60px;height:60px;opacity:0;transform:translate(-50%,-50%) rotate(-20deg)}50%{opacity:1}100%{width:230px;height:230px;opacity:.85;transform:translate(-50%,-50%) rotate(15deg)}}
+@keyframes dsLit{0%{filter:none}35%{filter:brightness(1.6) saturate(1.2) drop-shadow(0 0 14px rgba(255,205,80,.95))}100%{filter:brightness(1.25) drop-shadow(0 0 22px rgba(255,205,80,.9));transform:scale(1.06)}}
+.ds-unl-heart .ring{width:72px;height:72px;border:3px solid var(--ds-accent);opacity:0;animation:dsRing .75s ease-out forwards}
+.ds-unl-heart .r2{animation-delay:.28s}
+.ds-unl-heart-ico{animation:dsBeat .76s ease-in-out forwards}
+@keyframes dsRing{0%{width:72px;height:72px;opacity:.8}100%{width:220px;height:220px;opacity:0}}
+@keyframes dsBeat{0%{transform:scale(1)}14%{transform:scale(1.18)}28%{transform:scale(.98)}42%{transform:scale(1.13)}70%{transform:scale(1)}100%{transform:scale(1.04)}}
+/* Sicherungs-Status: Punkt am Schloss */
+.ds-lockbtn{position:relative}
+.ds-lockbtn[data-bk]:not([data-bk=""])::after{content:"";position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;box-shadow:0 0 0 2px var(--ds-surface);background:var(--ds-ok)}
+.ds-lockbtn[data-bk="warn"]:not([data-bk=""])::after{background:var(--ds-warn);animation:dsDot 2.4s ease-in-out infinite}
+.ds-lockbtn[data-bk="crit"]:not([data-bk=""])::after{background:var(--ds-crit);animation:dsDot 1.6s ease-in-out infinite}
+@keyframes dsDot{50%{transform:scale(1.35)}}
+@media (prefers-reduced-motion:reduce){.ds-lockbtn::after{animation:none!important}}
+/* Haken beim Speichern */
+.ds-saved{background:var(--ds-ok)!important;border-color:var(--ds-ok)!important;color:#fff!important;display:inline-flex!important;align-items:center;justify-content:center;gap:6px}
+.ds-saved .tk{stroke-dasharray:24;stroke-dashoffset:24;animation:dsInk .3s ease-out forwards}
+/* Wechsel zwischen den Boxen */
+.ds-boxes{display:flex;flex-direction:column;background:var(--ds-surface);border:1px solid var(--ds-line);border-radius:14px;overflow:hidden;margin:0 0 6px}
+.ds-boxlink{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 14px;color:var(--ds-ink);text-decoration:none}
+.ds-boxlink+.ds-boxlink{border-top:1px solid var(--ds-line)}
+.ds-boxlink .ds-qt{display:grid;gap:2px;min-width:0}
+.ds-boxlink .ds-qt b{font-size:15px;font-weight:700}
+.ds-boxlink .ds-qt small{font-size:13px;color:var(--ds-muted)}
+.ds-boxlink .chev{width:20px;height:20px;color:var(--ds-muted)}
+.ds-boxico{width:36px;height:36px;border-radius:10px;display:block}
 
 /* App-spezifisch: Kopfzeile der Bereiche wie in den anderen Apps */
 .acc>summary{color:var(--tx);margin:0}
@@ -280,9 +333,54 @@ dialog form > div > label[for]{font-weight:700}
 .acts a,.acts button,.btnlike{display:inline-flex;align-items:center;gap:6px}
 .todo .ti{display:grid;place-items:center}
 .todo.crit .ti{color:var(--red)} .todo.warn .ti{color:var(--or)}
+/* Zwei Felder nebeneinander im Formular */
+#dlgForm{display:flex;flex-wrap:wrap;column-gap:10px}
+#dlgForm>*{flex:1 1 100%;min-width:0}
+#dlgForm>.half{flex:1 1 calc(50% - 5px)}
+/* Wertekurven: Zielbereich und Ausreißer */
+svg.chart .zband{fill:var(--ok);opacity:.13}
+svg.chart .zout{stroke:var(--card);stroke-width:2}
+@media (prefers-reduced-motion:no-preference){svg.chart .zline{stroke-dasharray:100;stroke-dashoffset:100;animation:zDraw .9s ease-out forwards}svg.chart circle{animation:zPop .3s ease-out .7s backwards}}
+@keyframes zDraw{to{stroke-dashoffset:0}}
+@keyframes zPop{from{opacity:0}}
+.zinfo{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mu);margin:8px 2px 4px}
+.zinfo span:nth-child(2){flex:1}
+.zinfo b{color:var(--tx)}
+.zchip{width:14px;height:10px;border-radius:3px;background:var(--ok);opacity:.35;flex:none}
+.zinfo .ghost{padding:6px 10px;font-size:13px}
+/* Fragen-Merker */
+.fq .fqlist{display:grid;gap:2px;margin-bottom:10px}
+.fqrow{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--bd)}
+.fqrow span{flex:1;min-width:0;overflow-wrap:anywhere}
+.fqchk{width:24px;height:24px;flex:none;border-radius:8px;border:2px solid var(--pri);background:transparent;cursor:pointer;padding:0}
+.fqchk:active{background:var(--pri2)}
+.fqx{background:none;border:0;color:var(--mu);cursor:pointer;padding:4px 6px;font-size:14px}
+.fqadd{display:flex;gap:8px;margin:0}
+.fqadd input{margin:0;flex:1;min-width:0}
+.fqadd .pri{width:auto;padding:0 16px;border-radius:12px;flex:none}
+.fqnext{margin-top:8px}
+/* Vorsorge-Jahresleiste */
+.vyear{position:relative;padding:12px 14px 10px;overflow:hidden}
+.vyhead,.vyrow{display:grid;grid-template-columns:minmax(70px,30%) 1fr;gap:8px;align-items:center}
+.vymons{display:grid;grid-template-columns:repeat(12,1fr);font-size:10px;color:var(--mu);text-align:center;letter-spacing:-.02em}
+.vymons .now{color:var(--pri);font-weight:700}
+.vyrow{all:unset;box-sizing:border-box;display:grid;grid-template-columns:minmax(70px,30%) 1fr;gap:8px;align-items:center;width:100%;padding:7px 0;cursor:pointer;border-top:1px solid var(--bd)}
+.vyn{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vytrack{position:relative;height:16px;border-radius:8px;background:repeating-linear-gradient(90deg,var(--bg) 0 calc(100%/12 - 1px),var(--bd) calc(100%/12 - 1px) calc(100%/12))}
+.vydot{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 2px var(--card)}
+.vydot.or{background:var(--or)} .vydot.red{background:var(--red);animation:vyPulse 1.8s ease-in-out infinite} .vydot.plan{background:var(--pri)} .vydot.q{background:var(--mu)}
+.vydot.far{margin-left:-14px;border-radius:50% 4px 4px 50%}
+@keyframes vyPulse{50%{box-shadow:0 0 0 2px var(--card),0 0 0 6px color-mix(in srgb,var(--red) 30%,transparent)}}
+@media (prefers-reduced-motion:no-preference){.vyrow .vydot{animation-name:vyIn;animation-duration:.5s;animation-timing-function:cubic-bezier(.3,1.35,.5,1);animation-fill-mode:backwards}.vyrow .vydot.red{animation:vyIn .5s cubic-bezier(.3,1.35,.5,1) backwards,vyPulse 1.8s ease-in-out .5s infinite}}
+@keyframes vyIn{from{left:0;opacity:0}}
+.vylegend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;color:var(--mu);margin-top:8px}
+.vylegend span{display:inline-flex;align-items:center;gap:5px}
+.vylegend .vydot{position:static;margin:0;width:9px;height:9px;box-shadow:none;animation:none}
+#dlgForm>.ds-grab{flex:0 0 40px;margin:4px auto 12px}
 
 /* ds:end */
 </style>
+<script src="ds.js" data-app="gesundbox"></script>
 </head>
 <body>
 
@@ -302,6 +400,7 @@ dialog form > div > label[for]{font-weight:700}
       <div class="ghbox" id="lgh" hidden>
         <label for="lgh_o">Konto / Organisation</label><input id="lgh_o" value="jazm-gesundbox" autocomplete="off" autocapitalize="off">
         <label for="lgh_r">Repo</label><input id="lgh_r" value="gesundbox-daten" autocomplete="off" autocapitalize="off">
+        <label for="lgh_d">Ordner im Repo (optional)</label><input id="lgh_d" value="" placeholder="leer lassen oder z. B. gesundbox" autocomplete="off" autocapitalize="off">
         <label for="lgh_t">Zugangsschlüssel (github_pat_…)</label><input id="lgh_t" type="password" autocomplete="off">
         <div class="err" id="lgh_msg"></div>
         <button type="button" class="pri" style="width:100%" id="lgh_go">Sicherung von GitHub laden</button>
@@ -341,7 +440,7 @@ dialog form > div > label[for]{font-weight:700}
 
 <script>
 'use strict';
-const APP_VERSION='2.4.5';
+const APP_VERSION='2.5.0';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -398,7 +497,7 @@ async function enableBio(pw){
     else{toast('Jetzt zur Bestätigung den Passkey „MyGesundBox“ wählen …');k=await prfKey(credId,prfSalt)}
     const iv=rnd(12),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},k,te.encode(pw));
     lsSet(BKEY,JSON.stringify({cred:b64(credId),salt:b64(prfSalt),iv:b64(iv),ct:b64(ct)}));
-    toast('Fingerabdruck eingerichtet ✓');render();
+    DS.yay('Fingerabdruck an');toast('Fingerabdruck eingerichtet ✓');render();
   }catch(err){
     if(err.message==='noprf')alert('Dein Passkey-Anbieter unterstützt diese Funktion nicht. Bitte beim Einrichten den Google Passwortmanager als Speicherort wählen und erneut versuchen.');
     else if(err.name==='NotAllowedError')alert('Einrichtung abgebrochen oder Passkey nicht gefunden. Bitte erneut versuchen und beim Speichern den Google Passwortmanager wählen.');
@@ -418,8 +517,8 @@ function askPwThenBio(){
 }
 
 let KEY=null,SALT=null,D=null,TAB='start',WTYP='bp';
-const empty=()=>({v:1,termine:[],aerzte:[],vorsorge:[],werte:[],dokumente:[],sehwerte:[],sehhilfen:[],meta:{}});
-function normalize(o){const e=empty();for(const k of ['termine','aerzte','vorsorge','werte','dokumente','sehwerte','sehhilfen'])e[k]=Array.isArray(o?.[k])?o[k]:[];if(typeof o?.fk==='string')e.fk=o.fk;if(o?.github?.token)e.github={token:String(o.github.token),repo:String(o.github.repo||defaultRepo())};e.meta=o?.meta&&typeof o.meta==='object'?o.meta:{};const g=o?.backupGh;if(g?.token&&g.owner&&g.repo)e.backupGh={owner:String(g.owner),repo:String(g.repo),token:String(g.token)};return e}
+const empty=()=>({v:1,termine:[],aerzte:[],vorsorge:[],werte:[],dokumente:[],sehwerte:[],sehhilfen:[],fragen:[],meta:{}});
+function normalize(o){const e=empty();for(const k of ['termine','aerzte','vorsorge','werte','dokumente','sehwerte','sehhilfen','fragen'])e[k]=Array.isArray(o?.[k])?o[k]:[];if(typeof o?.fk==='string')e.fk=o.fk;if(o?.github?.token)e.github={token:String(o.github.token),repo:String(o.github.repo||defaultRepo())};e.meta=o?.meta&&typeof o.meta==='object'?o.meta:{};const g=o?.backupGh;if(g?.token&&g.owner&&g.repo){e.backupGh={owner:String(g.owner),repo:String(g.repo),token:String(g.token)};if(g.dir)e.backupGh.dir=String(g.dir)}return e}
 /* ---------- Speicher: Tresor doppelt (localStorage + IndexedDB) ---------- */
 const idb=(()=>{let p;const open=()=>p||(p=new Promise((res,rej)=>{const r=indexedDB.open('gesundbox',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
   const tx=(mode,fn)=>open().then(db=>new Promise((res,rej)=>{const t=db.transaction('kv',mode);const rq=fn(t.objectStore('kv'));t.oncomplete=()=>res(rq&&rq.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)}));
@@ -476,10 +575,12 @@ async function unlockWith(pw){
   const p=JSON.parse(vaultJson);const k=await derive(pw,unb64(p.salt));const data=normalize(await decryptObj(p,k));
   SALT=unb64(p.salt);KEY=k;D=data;VID=p.vid||b64(rnd(12));if(!p.vid)save({clean:true});
   setTimeout(()=>bkQueue(0),3000);
-  $('#lock').hidden=true;$('#app').hidden=false;
+  resetIdle();TAB='start';
+  /* Herzschlag, dann öffnet sich die App (wie die Tresortür der MyBelegBox) */
+  DS.unlockAnim($('#lock'),$('#lock .lockbox img'),'heart',()=>{if(!KEY)return;$('#lock').hidden=true;$('#app').hidden=false;render();
+    try{$('#app').animate([{opacity:0,transform:'scale(.97)'},{opacity:1,transform:'none'}],{duration:380,easing:'cubic-bezier(.2,.85,.25,1)'})}catch{}});
   try{navigator.storage?.persist?.()}catch{}
-  resetIdle();TAB='start';render();
-  setTimeout(()=>{if(!restoreDraft()){handleShare();runGo()}else GO=null},300);setTimeout(cleanFiles,5000);
+  setTimeout(()=>{if(!restoreDraft()){handleShare();runGo()}else GO=null},matchMedia('(prefers-reduced-motion: reduce)').matches?300:1200);setTimeout(cleanFiles,5000);
   if(SEH_LINK){const id=SEH_LINK;SEH_LINK=null;setTimeout(()=>{const x=D.sehhilfen.find(y=>y.id===id);if(!x){toast('Diesen Eintrag gibt es in der MyGesundBox nicht mehr.');return}TAB='werte';WTYP='augen';render();flashCard('h-'+id)},400)}
 }
 $('#lockForm').onsubmit=async e=>{
@@ -494,7 +595,7 @@ $('#lockForm').onsubmit=async e=>{
   try{
     if(!stored){SALT=crypto.getRandomValues(new Uint8Array(16));KEY=await derive(pw,SALT);D=empty();VID=b64(rnd(12));await save({clean:true})}
     await unlockWith(pw);
-    if(!stored&&bioSupported())setTimeout(()=>{if(confirm('Möchtest du künftig per Fingerabdruck entsperren?'))enableBio(pw)},400);
+    if(!stored&&bioSupported())setTimeout(()=>{if(confirm('Möchtest du künftig per Fingerabdruck entsperren?'))enableBio(pw)},1200);
   }catch(err){KEY=null;$('#lockErr').textContent=stored?'Das Passwort ist falsch.':'Fehler: '+err.message}
   finally{btn.disabled=false;btn.textContent=vaultJson?'Entsperren':'MyGesundBox anlegen'}
 };
@@ -511,7 +612,7 @@ $('#lrestore').addEventListener('change',async e=>{const f=e.target.files[0];e.t
   try{restoreVaultStr(await readBackupFile(f))}catch(x){$('#lockErr').textContent=x.message}});
 $('#lghOpen').onclick=()=>{const b=$('#lgh');b.hidden=!b.hidden;if(!b.hidden)$('#lgh_t').focus()};
 $('#lgh_go').onclick=async()=>{const m=$('#lgh_msg'),bt=$('#lgh_go');
-  const g={owner:$('#lgh_o').value.trim(),repo:$('#lgh_r').value.trim(),token:$('#lgh_t').value.trim()};
+  const g={owner:$('#lgh_o').value.trim(),repo:$('#lgh_r').value.trim(),token:$('#lgh_t').value.trim()};const dd=bkDir($('#lgh_d')&&$('#lgh_d').value);if(dd)g.dir=dd;
   if(!g.owner||!g.repo||!g.token){m.textContent='Bitte alle drei Felder ausfüllen.';return}
   bt.disabled=true;m.style.color='var(--mu)';m.textContent='Lade Tresor …';
   try{await restoreVaultStr(await bkRestore(g,(i,n)=>{m.textContent=`Lade Dokumente … ${i} von ${n}`}))}
@@ -586,7 +687,11 @@ function openForm(title,fields,values,onSave,o={}){
   <button type="button" class="ds-btn" data-x="cancel">Abbrechen</button><button class="ds-btn pri">${esc(o.okText||'Speichern')}</button></div>`;
   f.querySelectorAll('[data-x=cancel]').forEach(b=>b.onclick=closeDlg);
   const db=f.querySelector('[data-x=del]');if(db)db.onclick=async()=>{if(confirm('Wirklich löschen?')){await o.del();closeDlg();render()}};
-  f.onsubmit=async e=>{e.preventDefault();const vals=Object.fromEntries(new FormData(f).entries());if(D?.meta?.draft)delete D.meta.draft;const r=await onSave(vals,f);if(r!==false){closeDlg();render()}};
+  f.onsubmit=async e=>{e.preventDefault();const vals=Object.fromEntries(new FormData(f).entries());if(D?.meta?.draft)delete D.meta.draft;const r=await onSave(vals,f);
+    if(r===false)return;
+    /* Haken im Speichern-Knopf, dann schließt das Blatt (wie MySmartBox / MyBelegBox) */
+    const sb=f.querySelector('.row .ds-btn.pri');if(!win&&motion()&&sb&&dlg.open){DS.savedTick(sb);await new Promise(x=>setTimeout(x,600))}
+    closeDlg();render()};
   if(o.onOpen)o.onOpen(f);
   f._dirty=false;f.oninput=f.onchange=()=>{f._dirty=true};
   if(!dlg.open){dlg.showModal();const fi=f.querySelector('input:not([type=hidden]),select,textarea');if(fi)fi.focus({preventScroll:true})}
@@ -867,6 +972,7 @@ function flashCard(id){const el=document.getElementById(id);if(!el)return;el.scr
 let SEARCH=null;const ACC_OPEN=new Set();
 const sheetOpen=()=>!$('#sheet').hidden;
 const ICON={eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>',lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',doctor:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/><path d="M12 14v4M10 16h4"/></svg>',repeat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>',down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',import:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>',pkg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>',list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>'};
+ICON.sun='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
 const icon=k=>ICON[k]||'';
 /* Strich-Symbole statt Emojis (wie MySmartBox / MyBelegBox) */
 const QI={plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',cam:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>',drop:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z"/></svg>',pill:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-45 12 12)"/><path d="M9.5 9.5l5 5"/></svg>',phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>',pin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>',map:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg>',cart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M3 4h2l2.4 11h11l2-8H6.2"/></svg>',q:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01"/></svg>',edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>'};
@@ -911,8 +1017,12 @@ function setFan(on){const f=$('#fan'),b=$('#fab');if(!f)return;b.classList.toggl
   if(on){f.hidden=false;requestAnimationFrame(()=>requestAnimationFrame(()=>f.classList.add('show')));buzz(6)}
   else{f.classList.remove('show');setTimeout(()=>{if(!f.classList.contains('show'))f.hidden=true},motion()?220:0)}}
 const TITLES={start:'MyGesundBox',termine:'Termine',aerzte:'Ärzte',vorsorge:'Vorsorge',werte:'Werte',dok:'Dokumente',mehr:'Mehr'};
+/* Stand der Datensicherung – für Erinnerung und Punkt am Schloss */
+function bkO(){const g=bkCfg(),own=D.termine.length+D.aerzte.length+D.vorsorge.length+D.werte.length+D.dokumente.length>0;
+  return {ghErr:g?(bkStat.err||''):'',ghOk:!!(g&&bkStat.at&&!bkStat.err),own,days:D.meta.lastBackup?-daysUntil(D.meta.lastBackup):null,dirty:D.meta.dirty||0}}
+function dsDot(){try{if(D)DS.lockDot($('#lockNow'),bkO())}catch{}}
 function render(keep){
-  if(!D)return;const y=window.scrollY;
+  if(!D)return;const y=window.scrollY;dsDot();
   const navTab=['aerzte','vorsorge'].includes(TAB)?'termine':TAB;
   document.querySelectorAll('nav button').forEach(b=>{const on=b.dataset.tab===navTab;b.classList.toggle('on',on);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
   $('#fab').hidden=SEARCH!==null;
@@ -960,32 +1070,24 @@ function dashTodos(){
     if(ago>28)T.push(['warn','🩸','Letzte Blutdruckmessung '+relDay(-ago)+(/samsung/i.test(last.quelle||'')?' – Uhr neu kalibrieren?':''),'w-go','bp'])}
   return T;
 }
-/* Erinnerung an die Datensicherung – gleich in MySmartBox, MyGesundBox und MyBelegBox */
-const DS_ICO_DOWN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 19h14"/></svg>';
-const DS_ICO_WARN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9L2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>';
-function dsRemindHtml(o,attr){
-  const e=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const card=(cls,ico,t,s,go)=>`<button type="button" class="ds-remind${cls}" ${attr}><span class="ds-remind-i">${ico}</span><span class="ds-remind-t"><b>${e(t)}</b><small>${e(s)}</small></span><span class="ds-remind-go">${go}</span></button>`;
-  if(o.ghErr)return card(' crit',DS_ICO_WARN,'GitHub-Sicherung: Problem',o.ghErr,'Ansehen');
-  if(!o.own||o.ghOk)return '';
-  const d=o.days,dirty=o.dirty||0;
-  if(d!=null&&d<=14&&dirty<5)return '';
-  return card('',DS_ICO_DOWN,d==null?'Noch keine Datensicherung':dirty>=5?dirty+' Änderungen seit der letzten Datensicherung':'Letzte Datensicherung vor '+d+' Tagen',
-    'Ohne Sicherung sind bei Handyverlust oder gelöschten Browserdaten alle Daten weg.','Sichern');
-}
+/* Erinnerung an die Datensicherung: gemeinsamer Baustein in ds.js */
+const dsRemindHtml=(o,attr)=>DS.remindHtml(o,attr);
 function rStart(){
   const hr=new Date().getHours(),hello=hr<5?'Gute Nacht':hr<11?'Guten Morgen':hr<18?'Hallo':'Guten Abend';
-  const g=bkCfg(),own=D.termine.length+D.aerzte.length+D.vorsorge.length+D.werte.length+D.dokumente.length>0;
-  let h=dsRemindHtml({ghErr:g?(bkStat.err||''):'',ghOk:!!(g&&bkStat.at&&!bkStat.err),own,days:D.meta.lastBackup?-daysUntil(D.meta.lastBackup):null,dirty:D.meta.dirty||0},'data-act="goto-bk"')
+  let h=dsRemindHtml(bkO(),'data-act="goto-bk"')
     +`<div class="hello">${hello}</div>`;
   /* Als Nächstes */
   const nt=D.termine.filter(t=>new Date(t.datum)>=Date.now()-2*3600e3).sort((a,b)=>a.datum.localeCompare(b.datum))[0];
   if(nt){const a=arzt(nt.arztId),n=daysUntil(nt.datum),tel=a?.tel?a.tel.replace(/[^\d+]/g,''):'',ort=nt.ort||a?.adresse||'';
     h+=`<div class="sec">Als Nächstes</div><div class="card next"><div class="big">${esc(relDay(n).replace(/^./,c=>c.toUpperCase()))} · ${esc(new Date(nt.datum).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}))} Uhr</div>
       <h3 data-act="t-edit" data-id="${nt.id}" style="cursor:pointer">${esc(nt.titel)} <span style="opacity:.7;display:inline-block;width:16px;height:16px;vertical-align:-1px">${QI.edit}</span></h3><div class="meta">${esc(fmtDT(nt.datum))}${a?' · '+esc(a.name):''}${ort?'<br>'+esc(ort):''}</div>
-      ${nt.fragen?`<div class="note">Fragen: ${esc(nt.fragen)}</div>`:''}
+      ${nt.fragen?`<div class="note">Fragen: ${esc(nt.fragen)}</div>`:''}${(()=>{const o=D.fragen.filter(q=>!q.done);return o.length?`<div class="note fqnext">${o.length===1?'1 gemerkte Frage':o.length+' gemerkte Fragen'}: ${esc(o.slice(0,3).map(q=>q.txt).join(' · '))}${o.length>3?' …':''}</div>`:''})()}
       <div class="acts">${tel?`<a href="tel:${esc(tel)}">${QI.phone}Anrufen</a>`:''}${ort?`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ort)}" target="_blank" rel="noopener noreferrer">${QI.map}Route</a>`:''}<button data-act="t-ics" data-id="${nt.id}">${ICON.cal}Kalender</button></div></div>`;
   }else h+=`<div class="sec">Als Nächstes</div><div class="card"><div class="meta">Kein Termin geplant.</div><div class="acts"><button data-act="q-termin">${QI.plus}Termin eintragen</button></div></div>`;
+  /* Fragen-Merker: Fragen jederzeit sammeln, beim nächsten Termin mitnehmen */
+  {const open=D.fragen.filter(q=>!q.done);
+   h+=`<div class="sec">Fragen an den Arzt${open.length?` · ${open.length}`:''}</div><div class="card fq">${open.length?`<div class="fqlist">${open.map(q=>`<div class="fqrow"><button class="fqchk" data-act="f-done" data-id="${q.id}" aria-label="Gefragt – abhaken" title="Gefragt – abhaken"></button><span>${esc(q.txt)}</span><button class="fqx" data-act="f-del" data-id="${q.id}" aria-label="Frage löschen" title="Löschen">✕</button></div>`).join('')}</div>`:'<div class="meta">Fällt dir zwischendurch etwas ein? Merk es dir hier – beim nächsten Termin hast du es dabei.</div>'}
+     <form class="fqadd" autocomplete="off"><input id="fqIn" maxlength="200" placeholder="Neue Frage merken …" aria-label="Neue Frage"><button class="pri" type="submit">Merken</button></form></div>`}
   /* Zu erledigen */
   const T=dashTodos();
   if(T.length)h+=`<div class="sec">Zu erledigen</div>`+T.slice(0,6).map(([lv,ic,txt,act,id])=>`<button class="todo ${lv}" data-act="${act}" data-id="${esc(id)}"><span class="ti">${EMO[ic]||ic}</span><span>${esc(txt)}</span><span class="chev">›</span></button>`).join('')+(T.length>6?`<div class="meta">… und ${T.length-6} weitere</div>`:'');
@@ -1041,23 +1143,45 @@ function rAerzte(){
       return '<div>'+ds.slice(0,4).map(x=>`<button class="chipdoc" data-act="d-view" data-id="${x.id}">📎 ${esc(dokTitel(x))}</button>`).join('')+(ds.length>4?`<button class="chipdoc" data-act="a-docs" data-id="${a.id}">+ ${ds.length-4} weitere</button>`:'')+'</div>'})()}
     <div class="acts">${tel?`<a href="tel:${esc(tel)}">📞 Anrufen</a>`:''}${a.adresse?`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a.adresse)}" target="_blank" rel="noopener noreferrer">🗺️ Route</a>`:''}${web?`<a href="${esc(web)}" target="_blank" rel="noopener noreferrer">🌐 Online-Termin</a>`:''}<button data-act="a-termin" data-id="${a.id}">➕ Termin</button><button data-act="a-dok" data-id="${a.id}">📎 Dokument</button><button data-act="a-edit" data-id="${a.id}">✏️</button></div></div>`}).join('');
 }
+/* Jahresleiste: wann welche Vorsorge in den nächsten 12 Monaten fällig ist */
+function vYear(){
+  const t0=new Date(today()+'T00:00'),mons=[...Array(12)].map((_,i)=>new Date(t0.getFullYear(),t0.getMonth()+i,1));
+  const end=new Date(t0.getFullYear(),t0.getMonth()+12,1),span=end-mons[0];
+  const pos=d=>Math.max(0,Math.min(100,(d-mons[0])/span*100));
+  const rows=D.vorsorge.map(v=>({v,s:vStatus(v)})).sort((x,y)=>(x.s.next||0)-(y.s.next||0)).map(({v,s})=>{
+    const d=s.next,late=!d||d<t0,far=d&&d>=end,p=late?0:far?100:pos(d),cls=!d?'q':late?'red':s.rank===2?'or':s.termin?'plan':'ok';
+    const tip=!d?'Unbekannt – planen':late?'Überfällig':(far?'Später als in 12 Monaten':d.toLocaleDateString('de-DE',{month:'long',year:'numeric'}));
+    return `<button class="vyrow" data-act="v-edit" data-id="${v.id}" title="${esc(v.name+' · '+tip)}"><span class="vyn">${esc(v.name)}</span><span class="vytrack"><i class="vydot ${cls}${far?' far':''}" style="left:${p.toFixed(1)}%"></i></span></button>`}).join('');
+  return `<div class="card vyear"><div class="vyhead"><span class="vyn"></span><span class="vymons">${mons.map((m,i)=>`<span${i===0?' class="now"':''}>${m.toLocaleDateString('de-DE',{month:'short'}).replace('.','')}</span>`).join('')}</span></div>${rows}
+    <div class="vylegend"><span><i class="vydot ok"></i>fällig</span><span><i class="vydot or"></i>bald</span><span><i class="vydot red"></i>überfällig</span><span><i class="vydot plan"></i>Termin steht</span></div>
+</div>`;
+}
 function rVorsorge(){
   if(!D.vorsorge.length)return `<div class="empty">Noch keine Vorsorge-Einträge.<br><br><button class="pri" data-act="v-presets">Vorschläge hinzufügen</button><br><br><span class="meta">Die Intervalle sind nur Startwerte – bitte mit deinem Arzt abstimmen und anpassen.</span></div>`;
-  return D.vorsorge.map(v=>({v,s:vStatus(v)})).sort((x,y)=>x.s.rank-y.s.rank||(x.s.next||0)-(y.s.next||0)).map(({v,s})=>{
+  return vYear()+D.vorsorge.map(v=>({v,s:vStatus(v)})).sort((x,y)=>x.s.rank-y.s.rank||(x.s.next||0)-(y.s.next||0)).map(({v,s})=>{
     const a=arzt(v.arztId);
     return `<div class="card"><h3>${esc(v.name)}</h3><span class="badge ${s.cls}">${esc(s.txt)}</span>
     <div class="meta" style="margin-top:6px">Alle ${esc(v.intervall)} Monate · zuletzt ${esc(fmtD(vLetzte(v)))}${a?' · '+esc(a.name):''}</div>
     <div class="acts"><button data-act="v-done" data-id="${v.id}">✅ Heute erledigt</button>${s.termin?`<button data-act="t-edit" data-id="${s.termin.id}">📅 Zum Termin</button>`:`<button data-act="v-termin" data-id="${v.id}">➕ Termin</button>`}${s.next?`<button data-act="v-ics" data-id="${v.id}">📅 Erinnerung</button>`:''}<button data-act="v-edit" data-id="${v.id}">✏️</button></div></div>`}).join('');
 }
+/* Zielbereiche: übliche Richtwerte für Messungen zu Hause, selbst änderbar (mit dem Arzt abstimmen) */
+const ZIEL_DEF={bp:{v1:[100,135],v2:[60,85]},puls:{v1:[50,100]},gewicht:{v1:null}};
+function ziel(typ){const z=(D.meta.ziele||{})[typ];return Object.assign({},ZIEL_DEF[typ]||{},z||{})}
+const inZiel=(r,v)=>!r||v==null||(v>=r[0]&&v<=r[1]);
 function chart(list){
   const pts=list.slice(-30);if(pts.length<2)return '';
   const ser=WTYP==='bp'?[['v1','#b03a52'],['v2','#3b6fd8']]:[['v1','#b03a52']];
-  const all=pts.flatMap(p=>ser.map(([k])=>p[k])).filter(v=>v!=null);
-  let mn=Math.min(...all),mx=Math.max(...all);if(mx===mn){mx+=1;mn-=1}const padv=(mx-mn)*.1;mn-=padv;mx+=padv;
+  const Z=ziel(WTYP),all=pts.flatMap(p=>ser.map(([k])=>p[k])).filter(v=>v!=null);
+  let mn=Math.min(...all),mx=Math.max(...all);
+  for(const [k] of ser){const r=Z[k];if(r){mn=Math.min(mn,r[0]-(r[1]-r[0])*.15);mx=Math.max(mx,r[1]+(r[1]-r[0])*.15)}}
+  if(mx===mn){mx+=1;mn-=1}const padv=(mx-mn)*.1;mn-=padv;mx+=padv;
   const W=340,H=170,X=i=>36+i*(W-46)/(pts.length-1),Y=v=>H-22-(v-mn)/(mx-mn)*(H-36);
-  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Verlauf">`;
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Verlauf mit Zielbereich">`;
+  for(const [k] of ser){const r=Z[k];if(r)s+=`<rect class="zband" x="36" width="${W-46}" y="${Y(r[1]).toFixed(1)}" height="${(Y(r[0])-Y(r[1])).toFixed(1)}" rx="4"/>`}
   for(const v of [mn+padv,(mn+mx)/2,mx-padv])s+=`<line x1="36" x2="${W-10}" y1="${Y(v)}" y2="${Y(v)}" stroke="currentColor" opacity=".12"/><text x="4" y="${Y(v)+4}" font-size="10" fill="currentColor" opacity=".6">${fmtNum(v,WTYP==='gewicht'?1:0)}</text>`;
-  for(const [k,c] of ser){const p=pts.map((q,i)=>q[k]!=null?`${X(i).toFixed(1)},${Y(q[k]).toFixed(1)}`:null).filter(Boolean).join(' ');s+=`<polyline points="${p}" fill="none" stroke="${c}" stroke-width="2.2" stroke-linejoin="round"/>`}
+  for(const [k,c] of ser){const p=pts.map((q,i)=>q[k]!=null?`${X(i).toFixed(1)},${Y(q[k]).toFixed(1)}`:null).filter(Boolean).join(' ');s+=`<polyline class="zline" points="${p}" fill="none" stroke="${c}" stroke-width="2.2" stroke-linejoin="round" pathLength="100"/>`;
+    /* Ausreißer außerhalb des Zielbereichs hervorheben */
+    pts.forEach((q,i)=>{if(q[k]==null)return;const out=!inZiel(Z[k],q[k]);s+=out?`<circle class="zout" cx="${X(i).toFixed(1)}" cy="${Y(q[k]).toFixed(1)}" r="4.5" fill="${c}"/>`:`<circle cx="${X(i).toFixed(1)}" cy="${Y(q[k]).toFixed(1)}" r="2.2" fill="${c}"/>`})}
   s+=`<text x="36" y="${H-6}" font-size="10" fill="currentColor" opacity=".6">${esc(fmtD(pts[0].datum.slice(0,10)))}</text><text x="${W-10}" y="${H-6}" font-size="10" text-anchor="end" fill="currentColor" opacity=".6">${esc(fmtD(pts[pts.length-1].datum.slice(0,10)))}</text></svg>`;
   return s;
 }
@@ -1073,6 +1197,9 @@ function rWerte(){
   const last=list[list.length-1];
   h+=`<div class="card"><div class="meta">Letzter Wert · ${esc(wDate(last))}</div><h3 style="font-size:22px">${esc(wertText(last))}</h3>${list.length>=2?`<div class="meta">${list.length} Messungen · Ø ${WTYP==='bp'?fmtNum(avg(list,'v1'),0)+'/'+fmtNum(avg(list,'v2'),0):fmtNum(avg(list,'v1'))} (letzte 30)</div>`:''}</div>`;
   h+=chart(list);
+  {const Z=ziel(WTYP),u=TYP[WTYP].u,rs=WTYP==='bp'?(Z.v1&&Z.v2?`${Z.v1[0]}–${Z.v1[1]} / ${Z.v2[0]}–${Z.v2[1]} ${u}`:''):(Z.v1?`${fmtNum(Z.v1[0])}–${fmtNum(Z.v1[1])} ${u}`:'');
+   const pts=list.slice(-30),out=pts.filter(w=>Object.entries(Z).some(([k,r])=>!inZiel(r,w[k]))).length;
+   h+=`<div class="zinfo">${rs?`<span class="zchip"></span><span>Zielbereich ${esc(rs)}${out?` · <b>${out} von ${pts.length}</b> außerhalb`:' · alle Werte im Bereich'}</span>`:'<span>Noch kein Zielbereich festgelegt.</span>'}<button class="ghost" data-act="w-ziel">${rs?'Ändern':'Festlegen'}</button></div>`}
   h+=`<div class="sec">Messungen</div>`+list.slice().reverse().slice(0,100).map(w=>`<div class="card" style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px"><div><b>${esc(wertText(w))}</b><div class="meta">${esc(wDate(w))}${w.quelle?' · '+esc(w.quelle):''}</div></div><button class="ghost" data-act="w-edit" data-id="${w.id}">✏️</button></div>`).join('');
   return h;
 }
@@ -1095,7 +1222,7 @@ function rMehr(){
     <div class="ds-acts"><button type="button" class="ds-btn dng" data-act="wipe">Alle Daten löschen</button></div>`)
   +acc('bk','down','Datensicherung',(g?'GitHub '+(bkStat.err?'⚠️ Problem':'an'):'GitHub aus')+' · '+(lb?'Datei '+fmtD(lb):'keine Datei'),`
     <div class="ds-lbl">Automatisch in GitHub</div>
-    ${g?`<p class="ds-hint">Nach jeder Änderung landet der verschlüsselte Tresor in <b>${esc(g.owner)}/${esc(g.repo)}</b>. GitHub sieht nur verschlüsselte Daten.</p>
+    ${g?`<p class="ds-hint">Nach jeder Änderung landet der verschlüsselte Tresor in <b>${esc(g.owner)}/${esc(g.repo)}${g.dir?'/'+esc(g.dir):''}</b>. GitHub sieht nur verschlüsselte Daten.</p>
     <div class="ds-stat" id="bkStatus">${bkText()}</div>
     ${bkStat.conflict?`<div class="ds-box crit">Im Repo liegt ein anderer Tresor (z. B. von einem früheren Gerät). Er bleibt in der Versionsgeschichte von GitHub erhalten, wenn du ihn ersetzt.<div class="ds-acts"><button type="button" class="ds-btn pri" data-act="bk-pull">GitHub-Stand laden</button><button type="button" class="ds-btn dng" data-act="bk-force">Durch diesen ersetzen</button></div></div>`:''}
     <div class="ds-acts"><button type="button" class="ds-btn pri" data-act="bk-now">Jetzt sichern</button><button type="button" class="ds-btn" data-act="bk-off">Trennen</button></div>`
@@ -1114,9 +1241,10 @@ function rMehr(){
     :`<p class="ds-hint">Neue Versionen als Zip direkt aus der App veröffentlichen. Dafür brauchst du einen eigenen Zugangsschlüssel nur für das App-Repo.</p>
     <div class="ds-acts"><button type="button" class="ds-btn pri" data-act="gh-setup">GitHub verbinden</button></div>`}
     <div id="updStatus" class="ds-box"${UPD?'':' hidden'}>${UPD}</div>`,!!UPD)
+  +acc('look','sun','Darstellung',({auto:'Automatisch',light:'Hell',dark:'Dunkel'})[DS.getTheme()]+' · hell oder dunkel',`<div class="ds-lbl">Hell oder dunkel</div>${DS.themeHtml()}`)
   +acc('cnt','list','Einträge',`${D.termine.length} Termine · ${D.dokumente.length} Dokumente`,`
     <p class="ds-hint">${D.termine.length} Termine · ${D.aerzte.length} Ärzte · ${D.vorsorge.length} Vorsorge · ${D.werte.length} Messwerte · ${D.dokumente.length} Dokumente<br><span id="stor"></span></p>`)
-  +`<p class="ds-ver">MyGesundBox · Version ${APP_VERSION}<br>Kein Ersatz für ärztlichen Rat.</p>`;
+  +`<div class="ds-lbl">Meine Boxen</div>${DS.boxesHtml()}<p class="ds-ver">MyGesundBox · Version ${APP_VERSION}<br>Kein Ersatz für ärztlichen Rat.</p>`;
 }
 
 /* ---------- Formulare ---------- */
@@ -1397,7 +1525,7 @@ async function watchRun(repo,tok,sha){
   while(Date.now()-t1<4*60e3){
     await new Promise(r=>setTimeout(r,10000));
     try{const html=await (await fetch('./index.html?v='+Date.now(),{cache:'no-store'})).text();const v=(html.match(/APP_VERSION='([\d.]+)'/)||[])[1];
-      if(v&&v!==APP_VERSION){setUpd(`🎉 Version ${esc(v)} ist online.<div class="ds-acts"><button type="button" class="ds-btn pri" onclick="location.reload()">Jetzt neu laden</button></div>`);return}}catch(e){}
+      if(v&&v!==APP_VERSION){setUpd(`🎉 Version ${esc(v)} ist online.<div class="ds-acts"><button type="button" class="ds-btn pri" onclick="location.reload()">Jetzt neu laden</button></div>`);DS.yay('Update online',true);return}}catch(e){}
   }
   setUpd('✅ Paket übernommen. Die Seite ist noch nicht aktualisiert (gleiche Version oder GitHub braucht länger) – später neu laden.'+link);
 }
@@ -1593,13 +1721,13 @@ async function deliverFile(name,text,type){
   download(name,text,type);return true;
 }
 async function exportBackup(){
-  D.meta.lastBackup=today();D.meta.dirty=0;await save({clean:true});
+  const first=!D.meta.lastBackup;D.meta.lastBackup=today();D.meta.dirty=0;await save({clean:true});
   if(!vaultJson){toast('Es gibt noch nichts zu sichern.');return}
   const files={};let miss=0;
   for(const fid of allFids()){const r=await idb.get('f:'+fid).catch(()=>null);if(r)files[fid]={iv:b64(r.iv),ct:b64(r.ct)};else miss++}
   if(miss)toast(miss+' Datei(en) fehlen auf diesem Gerät und sind nicht in der Sicherung.');
   const payload=JSON.stringify({app:'gesundbox',format:3,exported:new Date().toISOString(),version:APP_VERSION,vault:JSON.parse(vaultJson),files});
-  if(await deliverFile(`mygesundbox-sicherung-${today()}.gesundbox`,payload,'application/json')){toast('Sicherung erstellt. Leg die Datei an einem zweiten Ort ab, z. B. in deiner Cloud.');render()}
+  if(await deliverFile(`mygesundbox-sicherung-${today()}.gesundbox`,payload,'application/json')){DS.yay(first?'Erste Sicherung':'Gesichert',first);toast('Sicherung erstellt. Leg die Datei an einem zweiten Ort ab, z. B. in deiner Cloud.');render()}
 }
 async function readBackupFile(file){
   if(file.size>500e6)throw new Error('Die Datei ist zu groß für eine MyGesundBox-Sicherung.');
@@ -1631,12 +1759,15 @@ async function importBackup(){
 const GHS='gesundbox-gh-status';
 let bkTimer=0,bkBusy=false,bkAgain=null,bkPending=null;
 let bkStat=(()=>{try{return JSON.parse(lsGet(GHS))||{}}catch{return{}}})();
-function setBk(o){const prev=bkStat.err||'';bkStat={...bkStat,...o};lsSet(GHS,JSON.stringify(bkStat));
+function setBk(o){const prev=bkStat.err||'';bkStat={...bkStat,...o};lsSet(GHS,JSON.stringify(bkStat));dsDot();
   const el=document.getElementById('bkStatus');if(el)el.innerHTML=bkText();
   if(D&&o.err!==undefined&&(o.err||'')!==prev&&dlg.open===false&&(TAB==='termine'||sheetOpen()))render(true)}
 function bkCfg(){const g=D?.backupGh;return g?{...g}:null}
+/* Optionaler Ordner im Repo: so können alle drei Boxen in ein gemeinsames Repo sichern */
+const bkDir=v=>String(v||'').trim().replace(/^\/+|\/+$/g,'').replace(/[^\w.\/-]/g,'');
 async function bkFetch(g,method,path,body,raw){
-  const r=await fetch(`https://api.github.com/repos/${encodeURIComponent(g.owner)}/${encodeURIComponent(g.repo)}${path}`,{method,cache:'no-store',
+  path=g.dir&&path.startsWith('/contents/')?'/contents/'+encodeURI(g.dir)+'/'+path.slice(10):g.dir&&path==='/contents'?'/contents/'+encodeURI(g.dir):path;
+    const r=await fetch(`https://api.github.com/repos/${encodeURIComponent(g.owner)}/${encodeURIComponent(g.repo)}${path}`,{method,cache:'no-store',
     headers:{'Authorization':'Bearer '+g.token,'Accept':raw?'application/vnd.github.raw+json':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28',...(body?{'Content-Type':'application/json'}:{})},
     body:body?JSON.stringify(body):undefined});
   if(r.status===404&&method==='GET')return null;
@@ -1707,17 +1838,17 @@ async function bkRestore(g,onStep){
   return{vault:json,files};
 }
 function bkSetup(){
-  openForm('GitHub-Sicherung einrichten',[{k:'owner',l:'Konto / Organisation',req:true},{k:'repo',l:'Privates Repo',req:true},{k:'token',l:'Zugangsschlüssel (github_pat_…)',t:'password',req:true}],
-    {owner:'jazm-gesundbox',repo:'gesundbox-daten'},async(v,f)=>{
-    const g={owner:v.owner.trim(),repo:v.repo.trim(),token:v.token.trim()};
+  openForm('GitHub-Sicherung einrichten',[{k:'owner',l:'Konto / Organisation',req:true},{k:'repo',l:'Privates Repo',req:true},{k:'dir',l:'Ordner im Repo (optional, z. B. gesundbox)'},{k:'token',l:'Zugangsschlüssel (github_pat_…)',t:'password',req:true}],
+    {owner:'jazm-gesundbox',repo:'gesundbox-daten',dir:bkCfg()?.dir||''},async(v,f)=>{
+    const g={owner:v.owner.trim(),repo:v.repo.trim(),token:v.token.trim()};const dd=bkDir(v.dir);if(dd)g.dir=dd;
     try{const info=await bkFetch(g,'GET','');
       if(!info)return ferr(f,bkErrText({status:404}));
       if(!info.private)return ferr(f,'Dieses Repo ist öffentlich. Aus Sicherheitsgründen sichert die MyGesundBox nur in private Repos.');
       if(info.permissions&&info.permissions.push===false)return ferr(f,'Der Schlüssel darf in dieses Repo nicht schreiben. Setze „Contents“ auf „Read and write“.');
     }catch(e){return ferr(f,bkErrText(e))}
     D.backupGh=g;setBk({err:'',at:0,conflict:false});await save({clean:true});
-    setTimeout(async()=>{await bkSync();if(!bkStat.err)toast('Automatische Sicherung ist aktiv ✓')},50);
-  },{okText:'Verbinden & sichern',html:'<p class="ds-dlg-intro">Sichert den verschlüsselten Tresor nach jeder Änderung in ein <b>privates</b> GitHub-Repo. GitHub sieht nur verschlüsselte Daten. Zugangsschlüssel: nur für dieses Repo, mit <b>Contents: Read and write</b>.</p>'});
+    setTimeout(async()=>{await bkSync();if(!bkStat.err){DS.yay('GitHub verbunden',true);toast('Automatische Sicherung ist aktiv ✓')}},50);
+  },{okText:'Verbinden & sichern',html:'<p class="ds-dlg-intro">Sichert den verschlüsselten Tresor nach jeder Änderung in ein <b>privates</b> GitHub-Repo. GitHub sieht nur verschlüsselte Daten. Zugangsschlüssel: nur für dieses Repo, mit <b>Contents: Read and write</b>. Tipp: Für alle drei Boxen genügt ein Repo – trag je Box einen eigenen Ordner ein (z. B. smartbox, gesundbox, belegbox) und nutze denselben Zugangsschlüssel.</p>'});
 }
 function changePw(){
   openForm('Passwort ändern',[{k:'old',l:'Aktuelles Passwort',t:'password',req:true},{k:'n1',l:'Neues Passwort (mind. 10 Zeichen)',t:'password',req:true},{k:'n2',l:'Neues Passwort wiederholen',t:'password',req:true}],{},async(v,f)=>{
@@ -1725,7 +1856,7 @@ function changePw(){
     if(v.n1!==v.n2)return ferr(f,'Die neuen Passwörter stimmen nicht überein.');
     try{const p=JSON.parse(vaultJson);await decryptObj(p,await derive(v.old,unb64(p.salt)))}catch{return ferr(f,'Das aktuelle Passwort ist falsch.')}
     SALT=crypto.getRandomValues(new Uint8Array(16));KEY=await derive(v.n1,SALT);await save();
-    if(lsGet(BKEY)){lsDel(BKEY);setTimeout(()=>{if(confirm('Passwort geändert. Fingerabdruck jetzt neu einrichten?'))enableBio(v.n1)},300)}else toast('Passwort geändert. Ältere Sicherungsdateien brauchen weiter das alte Passwort.');
+    if(lsGet(BKEY)){lsDel(BKEY);setTimeout(()=>{if(confirm('Passwort geändert. Fingerabdruck jetzt neu einrichten?'))enableBio(v.n1)},300)}else{DS.yay('Neu verschlüsselt');toast('Passwort geändert. Ältere Sicherungsdateien brauchen weiter das alte Passwort.')};
   },{okText:'Passwort ändern'});
 }
 async function wipe(){
@@ -1756,12 +1887,21 @@ async function onAct(e){
     case 'a-edit':editArzt(A());break;
     case 'a-termin':editTermin(null,{arztId:id,titel:A().fach?A().fach+' – Termin':'Termin'});break;
     case 'v-edit':editVorsorge(V());break;
-    case 'v-done':{const v=V();v.letzte=today();await save();render();toast('Erledigt – nächster Termin neu berechnet.');break}
+    case 'v-done':{const v=V();v.letzte=today();await save();render();DS.yay('Erledigt');toast('Erledigt – nächster Termin neu berechnet.');break}
     case 'v-termin':{const v=V();editTermin(null,{titel:v.name,arztId:v.arztId||'',vorsorgeId:v.id});break}
     case 'v-ics':{const v=V(),s=vStatus(v);if(!s.next)break;const st=s.next<new Date()?new Date():s.next;
       download(`vorsorge-${localD(st)}.ics`,makeICS([{uid:v.id+'-'+localD(st),titel:'Vorsorge fällig: '+v.name,start:st,allDay:true,notiz:'Termin vereinbaren',alarms:['PT9H']}]),'text/calendar');break}
     case 'v-presets':PRESETS.forEach(([name,intervall])=>D.vorsorge.push({id:uid(),name,intervall,letzte:'',arztId:''}));await save();render();toast('Bitte „Zuletzt gemacht“ bei jedem Eintrag ergänzen.');break;
     case 'w-typ':WTYP=id;render();break;
+    case 'f-done':{const q=D.fragen.find(x=>x.id===id);if(q){q.done=today();await save();render();DS.yay('Gefragt');if(!D.fragen.some(x=>!x.done))toast('Alle Fragen abgehakt.')}break}
+    case 'f-del':D.fragen=D.fragen.filter(x=>x.id!==id);await save();render();break;
+    case 'w-ziel':{const Z=ziel(WTYP),bp=WTYP==='bp',f=bp?[{k:'a',l:'Systolisch von',t:'decimal',half:true},{k:'b',l:'bis',t:'decimal',half:true},{k:'c',l:'Diastolisch von',t:'decimal',half:true},{k:'d',l:'bis',t:'decimal',half:true}]:[{k:'a',l:'Von',t:'decimal',half:true},{k:'b',l:'bis',t:'decimal',half:true}];
+      const vals=bp?{a:Z.v1?.[0],b:Z.v1?.[1],c:Z.v2?.[0],d:Z.v2?.[1]}:{a:Z.v1?.[0]??'',b:Z.v1?.[1]??''};
+      openForm(`Zielbereich ${TYP[WTYP].n}`,f,vals,async(v,fm)=>{const n=x=>dnum(x);const r=(x,y)=>n(x)!=null&&n(y)!=null&&n(x)<n(y)?[n(x),n(y)]:null;
+        const z=bp?{v1:r(v.a,v.b),v2:r(v.c,v.d)}:{v1:r(v.a,v.b)};
+        if(Object.values(z).some(x=>!x)&&Object.values(v).some(x=>String(x).trim()))return ferr(fm,'Bitte jeweils „von“ kleiner als „bis“ eintragen.');
+        D.meta.ziele=Object.assign({},D.meta.ziele,{[WTYP]:z});await save()},
+        {html:`<p class="ds-dlg-intro">Der grüne Bereich im Verlauf. ${bp?'Voreingestellt sind übliche Richtwerte für Messungen zu Hause (bis 135/85 mmHg). ':''}Stimme deine Werte am besten mit deinem Arzt ab.</p>`});break}
     case 'w-edit':editWert(D.werte.find(x=>x.id===id));break;
     case 'csv-import':importCSV();break;
     case 'bk-export':exportBackup();break;
@@ -1806,6 +1946,8 @@ async function onAct(e){
   }
 }
 $('#main').addEventListener('click',onAct);
+$('#main').addEventListener('submit',async e=>{const f=e.target.closest('.fqadd');if(!f)return;e.preventDefault();const i=f.querySelector('#fqIn'),t=i.value.trim();if(!t){i.focus();return}
+  D.fragen.push({id:uid(),txt:t,at:today()});await save();render();buzz(8);setTimeout(()=>{const n=$('#fqIn');if(n)n.focus()},30)});
 $('#sheetBody').addEventListener('click',e=>{if(SHMODE==='search'&&e.target.closest('.ds-qrow'))closeSheet()},true);
 $('#sheetBody').addEventListener('click',onAct);
 $('#sheetBody').addEventListener('toggle',e=>{const d=e.target;if(d.matches?.('details.acc')){d.open?ACC_OPEN.add(d.dataset.k):ACC_OPEN.delete(d.dataset.k)}},true);
