@@ -182,7 +182,7 @@ dialog.drag{transition:none}
 details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 /* ds:start */
-:root{--ds-ink:var(--tx);--ds-muted:var(--mu);--ds-line:var(--bd);--ds-surface:var(--card);--ds-sunk:var(--bg);--ds-accent:var(--pri);--ds-accent-ink:var(--on-pri);--ds-soft:var(--pri2);--ds-crit:var(--red);--ds-crit-soft:var(--redbg);--ds-warn-soft:var(--orbg);--ds-ok:var(--ok)}
+:root{--ds-ink:var(--tx);--ds-muted:var(--mu);--ds-line:var(--bd);--ds-surface:var(--card);--ds-sunk:var(--bg);--ds-accent:var(--pri);--ds-accent-ink:var(--on-pri);--ds-soft:var(--pri2);--ds-crit:var(--red);--ds-crit-soft:var(--redbg);--ds-warn-soft:var(--orbg);--ds-ok:var(--ok);--ds-warn:var(--or)}
 /* ===== Gemeinsamer Baustein „Daten & Sicherheit“ – identisch in MySmartBox, MyGesundBox, MyBelegBox =====
    Nur die Farbzuordnung (--ds-*) oben unterscheidet sich je App. */
 .ds-lbl{display:block;font-size:12px;line-height:1.3;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--ds-muted);margin:14px 0 8px}
@@ -218,6 +218,37 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 .ds-updbar span{flex:1;min-width:0}
 .ds-updbar .ds-btn{min-height:36px;padding:0 12px;font-size:14px}
 .ds-x{all:unset;box-sizing:border-box;cursor:pointer;width:34px;height:34px;flex:none;display:grid;place-items:center;color:var(--ds-muted);border-radius:8px;font-size:16px}
+/* Untertitel der Bereiche nie abschneiden, sondern umbrechen */
+.ds-sheet-sub-wrap{}
+.acc .at small,.accrow .at small,#bxsbody .acchd .at small{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+/* Erinnerung an die Datensicherung oben in der Übersicht */
+.ds-remind{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;margin:0 0 14px;border-radius:16px;background:var(--ds-warn-soft);color:var(--ds-ink);cursor:pointer;text-align:left;font-family:inherit}
+.ds-remind.crit{background:var(--ds-crit-soft)}
+.ds-remind:focus-visible{outline:2px solid var(--ds-accent);outline-offset:2px}
+.ds-remind-i{width:36px;height:36px;flex:none;border-radius:10px;display:grid;place-items:center;background:var(--ds-surface);color:var(--ds-warn)}
+.ds-remind.crit .ds-remind-i{color:var(--ds-crit)}
+.ds-remind-i svg{width:20px;height:20px}
+.ds-remind-t{flex:1;min-width:0;display:grid;gap:2px}
+.ds-remind-t b{font-size:15px;font-weight:700;line-height:1.3}
+.ds-remind-t small{font-size:13px;line-height:1.4;color:var(--ds-muted)}
+.ds-remind-go{flex:none;font-size:14px;font-weight:700;color:var(--ds-surface);background:var(--ds-warn);border-radius:10px;padding:8px 12px}
+.ds-remind.crit .ds-remind-go{background:var(--ds-crit)}
+/* Suche als Blatt von unten – gleich in allen Apps */
+.ds-srch{display:block;margin:0}
+.ds-srch input{width:100%;box-sizing:border-box;margin:0;padding:12px 14px;border:1px solid var(--ds-line);border-radius:12px;background:var(--ds-sunk);color:var(--ds-ink);font:inherit;font-size:17px}
+.ds-qres{display:grid;gap:10px;margin-top:12px}
+.ds-qres .ds-lbl{margin:6px 0 0}
+.ds-qhint{font-size:14px;line-height:1.45;color:var(--ds-muted);padding:8px 2px;margin:0}
+.ds-qlist{display:flex;flex-direction:column;background:var(--ds-surface);border:1px solid var(--ds-line);border-radius:14px;overflow:hidden}
+.ds-qrow{all:unset;box-sizing:border-box;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;padding:12px 14px;cursor:pointer;color:var(--ds-ink);font-family:inherit;text-align:left}
+.ds-qrow+.ds-qrow{border-top:1px solid var(--ds-line)}
+.ds-qrow:focus-visible{outline:2px solid var(--ds-accent);outline-offset:-2px}
+.ds-qrow .ds-qi{width:40px;height:40px;border-radius:10px;background:var(--ds-soft);color:var(--ds-accent);display:grid;place-items:center}
+.ds-qrow .ds-qi svg{width:20px;height:20px}
+.ds-qrow .ds-qt{min-width:0;display:grid;gap:2px}
+.ds-qrow .ds-qt b{font-size:16px;font-weight:700;overflow-wrap:anywhere}
+.ds-qrow .ds-qt small{font-size:13px;color:var(--ds-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ds-srch .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* App-spezifisch: Kopfzeile der Bereiche wie in den anderen Apps */
 .acc>summary{color:var(--tx);margin:0}
@@ -225,6 +256,30 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 /* Meldungen unten: gleich in allen Apps */
 #toast{position:fixed!important;left:50%!important;right:auto!important;top:auto!important;transform:translateX(-50%)!important;bottom:calc(150px + env(safe-area-inset-bottom,0px))!important;z-index:130!important;background:var(--ds-ink)!important;color:var(--ds-surface)!important;padding:10px 16px!important;border-radius:12px!important;font-size:14px!important;line-height:1.4!important;font-weight:500!important;width:max-content!important;max-width:min(calc(100vw - 32px),440px)!important;box-sizing:border-box!important;text-align:center!important;box-shadow:0 6px 20px rgba(0,0,0,.18)!important}
+
+/* Kopfzeile: gleich in allen Apps, App-Name passt auch auf schmale Handys */
+header .brand{flex:1;min-width:0}
+header .brand img{flex:none}
+header .brand h1{font-size:clamp(16px,5.2vw,24px)!important;font-weight:800!important;letter-spacing:-.02em!important;line-height:1.2!important;margin:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;min-width:0!important}
+header .hbtns{flex:none;gap:6px}
+@media (max-width:359px){header .hbtns{gap:4px}header .hbtns .icobtn{width:36px;height:36px}header .brand{gap:8px}header .brand img{width:30px;height:30px}header .brand h1{font-size:17px!important}}
+/* Eingabe-Formulare als Blatt von unten (wie MyBelegBox / MySmartBox) */
+#dlg.sheetdlg{margin:auto auto 0;width:100%;max-width:720px;max-height:92vh;border-radius:20px 20px 0 0}
+#dlg.sheetdlg form{padding:8px 16px calc(20px + env(safe-area-inset-bottom,0px))}
+@media (prefers-reduced-motion:no-preference){#dlg.sheetdlg[open]{animation:dsUp .32s cubic-bezier(.2,.85,.25,1)}}
+@keyframes dsUp{from{transform:translateY(40%);opacity:.4}}
+.ds-grab{width:40px;height:4px;border-radius:99px;background:var(--bd);margin:4px auto 12px}
+.ds-phd{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px}
+.ds-phd h2{margin:0!important;font-size:22px!important;font-weight:800;line-height:1.2}
+#dlg:not(.sheetdlg) .ds-phd h2{font-size:19px!important}
+.ds-pclose{flex:none}
+dialog .row{gap:8px;align-items:center}
+dialog form > div > label[for]{font-weight:700}
+/* Strich-Symbole in Knöpfen der Übersicht */
+.quick svg,.acts svg,.btnlike svg,.todo .ti svg{width:18px;height:18px;flex:none}
+.acts a,.acts button,.btnlike{display:inline-flex;align-items:center;gap:6px}
+.todo .ti{display:grid;place-items:center}
+.todo.crit .ti{color:var(--red)} .todo.warn .ti{color:var(--or)}
 
 /* ds:end */
 </style>
@@ -270,7 +325,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
   </div></div>
   <button id="fab" type="button" aria-expanded="false" aria-controls="fan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="lbl">Neu</span></button>
   <nav aria-label="Bereiche"><div class="in">
-    <button type="button" data-tab="start" class="on"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></i>Start</button>
+    <button type="button" data-tab="start" class="on"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></i>Übersicht</button>
     <button type="button" data-tab="termine"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></i>Termine</button>
     <button type="button" data-tab="werte"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16"/><path d="M5 15l4-5 4 3 6-7"/></svg></i>Werte</button>
     <button type="button" data-tab="dok"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></i>Dokumente</button>
@@ -286,7 +341,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <script>
 'use strict';
-const APP_VERSION='2.4.3';
+const APP_VERSION='2.4.5';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -357,7 +412,7 @@ async function bioGetPassword(){
 }
 function askPwThenBio(){
   openForm('Fingerabdruck einrichten',[{k:'pw',l:'Zur Bestätigung dein Passwort',t:'password',req:true}],{},async v=>{
-    try{const p=JSON.parse(vaultJson);await decryptObj(p,await derive(v.pw,unb64(p.salt)))}catch{toast('Passwort falsch.');return false}
+    try{const p=JSON.parse(vaultJson);await decryptObj(p,await derive(v.pw,unb64(p.salt)))}catch{toast('Das Passwort ist falsch.');return false}
     setTimeout(()=>enableBio(v.pw),50);
   },{okText:'Weiter',html:'<div class="meta" style="margin-bottom:10px">Danach fragt dein Handy nach dem Fingerabdruck. Als Speicherort unbedingt den Google Passwortmanager wählen.</div>'});
 }
@@ -409,7 +464,7 @@ function showLock(auto){
   $('#restoreBox').hidden=has;$('#lgh').hidden=true;$('#lgh_msg').textContent='';
   $('#pw2').hidden=has;$('#pw2').required=!has;
   $('#lockBtnGo').textContent=has?'Entsperren':'MyGesundBox anlegen';
-  $('#lockHint').textContent=has?'Deine Gesundheitsdaten, verschlüsselt auf diesem Gerät.':'Lege ein Passwort fest (mind. 8 Zeichen). Ohne Passwort sind die Daten nicht wiederherstellbar.';
+  $('#lockHint').textContent=has?'Deine Gesundheitsdaten, verschlüsselt auf diesem Gerät.':'Lege ein Passwort fest (mind. 10 Zeichen). Ohne Passwort sind die Daten nicht wiederherstellbar.';
   $('#pw').autocomplete=has?'current-password':'new-password';
   $('#pw').value='';$('#pw2').value='';$('#lockErr').textContent='';
   if(SHARE_PENDING&&has)$('#lockHint').textContent='Entsperre die MyGesundBox, um den geteilten Inhalt zu übernehmen.';
@@ -432,15 +487,15 @@ $('#lockForm').onsubmit=async e=>{
   const pw=$('#pw').value,btn=$('#lockBtnGo');$('#lockErr').textContent='';
   const stored=vaultJson;
   if(!stored){
-    if(pw.length<8){$('#lockErr').textContent='Mindestens 8 Zeichen.';return}
-    if(pw!==$('#pw2').value){$('#lockErr').textContent='Passwörter stimmen nicht überein.';return}
+    if(pw.length<10){$("#lockErr").textContent="Das Passwort braucht mindestens 10 Zeichen.";return}
+    if(pw!==$('#pw2').value){$('#lockErr').textContent='Die Passwörter stimmen nicht überein.';return}
   }
   btn.disabled=true;btn.textContent='Bitte warten …';
   try{
     if(!stored){SALT=crypto.getRandomValues(new Uint8Array(16));KEY=await derive(pw,SALT);D=empty();VID=b64(rnd(12));await save({clean:true})}
     await unlockWith(pw);
     if(!stored&&bioSupported())setTimeout(()=>{if(confirm('Möchtest du künftig per Fingerabdruck entsperren?'))enableBio(pw)},400);
-  }catch(err){KEY=null;$('#lockErr').textContent=stored?'Falsches Passwort.':'Fehler: '+err.message}
+  }catch(err){KEY=null;$('#lockErr').textContent=stored?'Das Passwort ist falsch.':'Fehler: '+err.message}
   finally{btn.disabled=false;btn.textContent=vaultJson?'Entsperren':'MyGesundBox anlegen'}
 };
 let bioBusy=false;
@@ -520,17 +575,21 @@ function field(fd,val){
 let CUR_FORM=null,LOCKING=false;
 /* Fehlermeldung im Fenster anzeigen (wie in MySmartBox / MyBelegBox) */
 function ferr(f,m){let e=f.querySelector('.ds-err');if(!e){e=document.createElement('p');e.className='ds-err';f.querySelector('.row').before(e)}e.textContent=m;e.hidden=false;return false}
+const WIN_FORMS=new Set(['Fingerabdruck einrichten','App-Update verbinden','GitHub-Sicherung einrichten','Passwort ändern','Sicherung laden']);
+const ICO_X='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 function openForm(title,fields,values,onSave,o={}){
   const f=$('#dlgForm');CUR_FORM={draft:o.draft||null,extra:o.draftExtra||null};
-  f.innerHTML=`<h2>${esc(title)}</h2>${o.html||''}${fields.map(fd=>field(fd,values?.[fd.k])).join('')}
-  <div class="row">${o.del?'<button type="button" class="ghost danger left" data-x="del">Löschen</button>':''}
-  <button type="button" class="ghost" data-x="cancel">Abbrechen</button><button class="pri">${esc(o.okText||'Speichern')}</button></div>`;
-  f.querySelector('[data-x=cancel]').onclick=closeDlg;
+  /* Eingabe-Formulare als Blatt von unten mit ✕ (wie MyBelegBox / MySmartBox), kleine Einstellungen als Fenster */
+  const win=!!(o.win||WIN_FORMS.has(title));dlg.classList.toggle('sheetdlg',!win);
+  f.innerHTML=`${win?'':'<div class="ds-grab"></div>'}<div class="ds-phd"><h2>${esc(title)}</h2>${win?'':`<button type="button" class="icobtn ds-pclose" data-x="cancel" aria-label="Schließen">${ICO_X}</button>`}</div>${o.html||''}${fields.map(fd=>field(fd,values?.[fd.k])).join('')}
+  <div class="row">${o.del?'<button type="button" class="ds-btn dng left" data-x="del">Löschen</button>':''}
+  <button type="button" class="ds-btn" data-x="cancel">Abbrechen</button><button class="ds-btn pri">${esc(o.okText||'Speichern')}</button></div>`;
+  f.querySelectorAll('[data-x=cancel]').forEach(b=>b.onclick=closeDlg);
   const db=f.querySelector('[data-x=del]');if(db)db.onclick=async()=>{if(confirm('Wirklich löschen?')){await o.del();closeDlg();render()}};
   f.onsubmit=async e=>{e.preventDefault();const vals=Object.fromEntries(new FormData(f).entries());if(D?.meta?.draft)delete D.meta.draft;const r=await onSave(vals,f);if(r!==false){closeDlg();render()}};
   if(o.onOpen)o.onOpen(f);
   f._dirty=false;f.oninput=f.onchange=()=>{f._dirty=true};
-  if(!dlg.open)dlg.showModal();
+  if(!dlg.open){dlg.showModal();const fi=f.querySelector('input:not([type=hidden]),select,textarea');if(fi)fi.focus({preventScroll:true})}
 }
 let pickingUntil=0;
 function pickFile(accept){return new Promise(res=>{const i=$('#fileIn');i.value='';i.accept=accept;i.onchange=()=>res(i.files[0]||null);pickingUntil=Date.now()+5*60e3;i.click()})}
@@ -809,6 +868,9 @@ let SEARCH=null;const ACC_OPEN=new Set();
 const sheetOpen=()=>!$('#sheet').hidden;
 const ICON={eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>',lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',doctor:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/><path d="M12 14v4M10 16h4"/></svg>',repeat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>',down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',import:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>',pkg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>',list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>'};
 const icon=k=>ICON[k]||'';
+/* Strich-Symbole statt Emojis (wie MySmartBox / MyBelegBox) */
+const QI={plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',cam:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>',drop:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z"/></svg>',pill:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-45 12 12)"/><path d="M9.5 9.5l5 5"/></svg>',phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>',pin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>',map:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg>',cart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M3 4h2l2.4 11h11l2-8H6.2"/></svg>',q:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01"/></svg>',edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>'};
+const EMO={'🔁':ICON.repeat,'📄':ICON.doc,'👁️':ICON.eye,'🛒':QI.cart,'💊':QI.pill,'🩸':QI.drop,'⚠️':ICON.shield,'💾':ICON.down};
 function rSearch(){
   const q=SEARCH.trim().toLowerCase();
   if(!q)return '<div class="empty">Suche in Terminen, Ärzten, Vorsorge und Dokumenten.</div>';
@@ -822,9 +884,28 @@ function rSearch(){
   grp('Dokumente',D.dokumente.filter(d=>has(dokTitel(d),d.notiz,DOKTYP[d.typ],arzt(d.arztId)?.name)).map(d=>row('d-view',d.id,'doc',dokTitel(d),(DOKTYP[d.typ]||'Dokument')+(d.datum?' · '+fmtD(d.datum):''))));
   return n?h:`<div class="empty">Nichts gefunden für „${esc(SEARCH.trim())}“.</div>`;
 }
-function openSearch(){if(sheetOpen())closeSheet();setFan(false);SEARCH='';$('#searchBar').hidden=false;render();$('#q').value='';$('#q').focus()}
+/* Suche als Blatt von unten – wie in MyBelegBox und MySmartBox */
+let SHMODE='menu';
+function rSearchRes(raw){
+  const q=String(raw||'').trim().toLowerCase();
+  if(!q)return `<p class="ds-qhint">${D.termine.length} Termine, ${D.aerzte.length} Ärzte, ${D.vorsorge.length} Vorsorge-Einträge und ${D.dokumente.length} Dokumente durchsuchbar – auch Notizen, Fragen und Orte.</p>`;
+  const has=(...f)=>f.some(x=>String(x||'').toLowerCase().includes(q));
+  const row=(act,id,ic,t,sub)=>`<button type="button" class="ds-qrow" data-act="${act}" data-id="${esc(id)}"><span class="ds-qi">${icon(ic)}</span><span class="ds-qt"><b>${esc(t)}</b><small>${esc(sub)}</small></span></button>`;
+  let h='',n=0;const grp=(title,items)=>{if(items.length){n+=items.length;h+=`<div class="ds-lbl">${title}</div><div class="ds-qlist">${items.slice(0,30).join('')}</div>`}};
+  grp('Termine',D.termine.filter(t=>has(t.titel,t.notiz,t.fragen,t.nachher,t.ort,arzt(t.arztId)?.name)).sort((a,b)=>b.datum.localeCompare(a.datum)).map(t=>row('t-edit',t.id,'cal',t.titel,fmtDT(t.datum)+(arzt(t.arztId)?' · '+arzt(t.arztId).name:''))));
+  grp('Ärzte',D.aerzte.filter(a=>has(a.name,a.fach,a.adresse,a.notiz,a.tel)).map(a=>row('a-edit',a.id,'doctor',a.name,[a.fach,a.tel].filter(Boolean).join(' · '))));
+  grp('Vorsorge',D.vorsorge.filter(v=>has(v.name,v.notiz)).map(v=>row('v-edit',v.id,'repeat',v.name,vStatus(v).txt)));
+  grp('Augen',D.sehhilfen.filter(x=>has(x.name,x.haendler,x.fassung,x.glaeser,x.notiz,hilfeTitel(x))).map(x=>row('hilfe-edit',x.id,'eye',hilfeTitel(x),(x.art==='brille'?'Brille':'Kontaktlinsen')+(x.haendler?' · '+x.haendler:''))));
+  grp('Dokumente',D.dokumente.filter(d=>has(dokTitel(d),d.notiz,DOKTYP[d.typ],arzt(d.arztId)?.name)).map(d=>row('d-view',d.id,'doc',dokTitel(d),(DOKTYP[d.typ]||'Dokument')+(d.datum?' · '+fmtD(d.datum):''))));
+  return n?h:'<p class="ds-qhint">Nichts gefunden.</p>';
+}
+function openSearch(){setFan(false);openSheet('search')}
 function closeSearch(){SEARCH=null;$('#searchBar').hidden=true;$('#q').blur();render()}
-function openSheet(){setFan(false);const sh=$('#sheet');sh.hidden=false;$('#sheetBody').innerHTML=rMehr();setTimeout(showStorage,0);$('#spanel').scrollTop=0;requestAnimationFrame(()=>requestAnimationFrame(()=>sh.classList.add('show')));buzz(6)}
+function openSheet(mode){SHMODE=mode==='search'?'search':'menu';setFan(false);const sh=$('#sheet');sh.hidden=false;
+  $('#sheetH').textContent=SHMODE==='search'?'Suchen':'Daten & Sicherheit';
+  if(SHMODE==='search'){$('#sheetBody').innerHTML=`<label class="ds-srch"><span class="sr">Suchbegriff</span><input id="sq" type="search" placeholder="Termine, Ärzte, Dokumente …" autocomplete="off" enterkeyhint="search"></label><div class="ds-qres" id="sqres">${rSearchRes('')}</div>`;
+    const qi=$('#sq');qi.addEventListener('input',()=>{$('#sqres').innerHTML=rSearchRes(qi.value)});setTimeout(()=>qi.focus(),motion()?320:0)}
+  else{$('#sheetBody').innerHTML=rMehr();setTimeout(showStorage,0)}$('#spanel').scrollTop=0;requestAnimationFrame(()=>requestAnimationFrame(()=>sh.classList.add('show')));buzz(6)}
 function closeSheet(){const sh=$('#sheet');if(sh.hidden)return;sh.classList.remove('show');setTimeout(()=>{if(!sh.classList.contains('show'))sh.hidden=true},motion()?300:0)}
 function setFan(on){const f=$('#fan'),b=$('#fab');if(!f)return;b.classList.toggle('open',on);b.setAttribute('aria-expanded',on);
   if(on){f.hidden=false;requestAnimationFrame(()=>requestAnimationFrame(()=>f.classList.add('show')));buzz(6)}
@@ -835,7 +916,7 @@ function render(keep){
   const navTab=['aerzte','vorsorge'].includes(TAB)?'termine':TAB;
   document.querySelectorAll('nav button').forEach(b=>{const on=b.dataset.tab===navTab;b.classList.toggle('on',on);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
   $('#fab').hidden=SEARCH!==null;
-  if(sheetOpen()){$('#sheetBody').innerHTML=rMehr();setTimeout(showStorage,0)}
+  if(sheetOpen()){if(SHMODE==='search'){const qi=$('#sq');if(qi)$('#sqres').innerHTML=rSearchRes(qi.value)}else{$('#sheetBody').innerHTML=rMehr();setTimeout(showStorage,0)}}
   if(SEARCH!==null){$('#main').innerHTML=rSearch();return}
   $('#main').innerHTML=(['werte','dok'].includes(TAB)?`<h2 class="ptitle">${TITLES[TAB]}</h2>`:'')+(['termine','aerzte','vorsorge'].includes(TAB)?segBar():'')+({start:rStart,termine:rTermine,aerzte:rAerzte,vorsorge:rVorsorge,werte:rWerte,dok:rDok})[TAB]();
   window.scrollTo(0,keep?y:0);
@@ -860,11 +941,7 @@ function trendArrow(vals){
 function dashTodos(){
   const T=[];
   /* Sicherung */
-  const g=bkCfg(),ghOk=g&&!bkStat.err&&bkStat.at,lb=D.meta.lastBackup,dirty=D.meta.dirty||0;
-  const own=D.termine.length+D.aerzte.length+D.vorsorge.length+D.werte.length+D.dokumente.length>0;
-  if(g&&bkStat.err)T.push(['crit','⚠️','GitHub-Sicherung: '+bkStat.err,'goto-mehr','']);
-  if(own&&!ghOk){const ago=lb?Math.round((new Date(today())-new Date(lb))/864e5):null;
-    if(!lb||ago>14||dirty>=5)T.push(['warn','💾',!lb?'Noch keine Sicherung – jetzt sichern':dirty>=5?dirty+' Änderungen seit der letzten Sicherung':'Letzte Sicherung vor '+ago+' Tagen','bk-export',''])}
+  /* (Die Erinnerung an die Datensicherung steht als eigene Karte oben in der Übersicht.) */
   /* Vorsorge */
   for(const v of D.vorsorge){const st=vStatus(v);if(st.rank<=2)T.push([st.rank<=1?'crit':'warn','🔁',v.name+' – '+st.txt,'go','vorsorge'])}
   /* Überweisungen & Co. mit Ablaufdatum */
@@ -883,25 +960,35 @@ function dashTodos(){
     if(ago>28)T.push(['warn','🩸','Letzte Blutdruckmessung '+relDay(-ago)+(/samsung/i.test(last.quelle||'')?' – Uhr neu kalibrieren?':''),'w-go','bp'])}
   return T;
 }
+/* Erinnerung an die Datensicherung – gleich in MySmartBox, MyGesundBox und MyBelegBox */
+const DS_ICO_DOWN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 19h14"/></svg>';
+const DS_ICO_WARN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9L2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>';
+function dsRemindHtml(o,attr){
+  const e=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const card=(cls,ico,t,s,go)=>`<button type="button" class="ds-remind${cls}" ${attr}><span class="ds-remind-i">${ico}</span><span class="ds-remind-t"><b>${e(t)}</b><small>${e(s)}</small></span><span class="ds-remind-go">${go}</span></button>`;
+  if(o.ghErr)return card(' crit',DS_ICO_WARN,'GitHub-Sicherung: Problem',o.ghErr,'Ansehen');
+  if(!o.own||o.ghOk)return '';
+  const d=o.days,dirty=o.dirty||0;
+  if(d!=null&&d<=14&&dirty<5)return '';
+  return card('',DS_ICO_DOWN,d==null?'Noch keine Datensicherung':dirty>=5?dirty+' Änderungen seit der letzten Datensicherung':'Letzte Datensicherung vor '+d+' Tagen',
+    'Ohne Sicherung sind bei Handyverlust oder gelöschten Browserdaten alle Daten weg.','Sichern');
+}
 function rStart(){
   const hr=new Date().getHours(),hello=hr<5?'Gute Nacht':hr<11?'Guten Morgen':hr<18?'Hallo':'Guten Abend';
-  const g=bkCfg();let stat,bad=false;
-  if(g&&bkStat.err){stat='⚠️ Sicherung: Problem';bad=true}
-  else if(g&&bkStat.at){const m=Math.round((Date.now()-bkStat.at)/60000);stat='✓ Gesichert '+(m<1?'gerade eben':m<60?'vor '+m+' Min.':m<1440?'vor '+Math.round(m/60)+' Std.':'am '+new Date(bkStat.at).toLocaleDateString('de-DE'))}
-  else if(D.meta.lastBackup)stat='💾 Letzte Sicherung '+relDay(daysUntil(D.meta.lastBackup));
-  else{stat='💾 Noch keine Sicherung';bad=true}
-  let h=`<div class="hello">${hello}</div><button class="status${bad?' bad':''}" data-act="goto-mehr">${esc(stat)}</button>`;
+  const g=bkCfg(),own=D.termine.length+D.aerzte.length+D.vorsorge.length+D.werte.length+D.dokumente.length>0;
+  let h=dsRemindHtml({ghErr:g?(bkStat.err||''):'',ghOk:!!(g&&bkStat.at&&!bkStat.err),own,days:D.meta.lastBackup?-daysUntil(D.meta.lastBackup):null,dirty:D.meta.dirty||0},'data-act="goto-bk"')
+    +`<div class="hello">${hello}</div>`;
   /* Als Nächstes */
   const nt=D.termine.filter(t=>new Date(t.datum)>=Date.now()-2*3600e3).sort((a,b)=>a.datum.localeCompare(b.datum))[0];
   if(nt){const a=arzt(nt.arztId),n=daysUntil(nt.datum),tel=a?.tel?a.tel.replace(/[^\d+]/g,''):'',ort=nt.ort||a?.adresse||'';
     h+=`<div class="sec">Als Nächstes</div><div class="card next"><div class="big">${esc(relDay(n).replace(/^./,c=>c.toUpperCase()))} · ${esc(new Date(nt.datum).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}))} Uhr</div>
-      <h3 data-act="t-edit" data-id="${nt.id}" style="cursor:pointer">${esc(nt.titel)} <span style="font-size:14px;opacity:.7">✏️</span></h3><div class="meta">${esc(fmtDT(nt.datum))}${a?' · '+esc(a.name):''}${ort?'<br>📍 '+esc(ort):''}</div>
-      ${nt.fragen?`<div class="note">❓ ${esc(nt.fragen)}</div>`:''}
-      <div class="acts">${tel?`<a href="tel:${esc(tel)}">📞 Anrufen</a>`:''}${ort?`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ort)}" target="_blank" rel="noopener noreferrer">🗺️ Route</a>`:''}<button data-act="t-ics" data-id="${nt.id}">📅 Kalender</button></div></div>`;
-  }else h+=`<div class="sec">Als Nächstes</div><div class="card"><div class="meta">Kein Termin geplant.</div><div class="acts"><button data-act="q-termin">➕ Termin eintragen</button></div></div>`;
+      <h3 data-act="t-edit" data-id="${nt.id}" style="cursor:pointer">${esc(nt.titel)} <span style="opacity:.7;display:inline-block;width:16px;height:16px;vertical-align:-1px">${QI.edit}</span></h3><div class="meta">${esc(fmtDT(nt.datum))}${a?' · '+esc(a.name):''}${ort?'<br>'+esc(ort):''}</div>
+      ${nt.fragen?`<div class="note">Fragen: ${esc(nt.fragen)}</div>`:''}
+      <div class="acts">${tel?`<a href="tel:${esc(tel)}">${QI.phone}Anrufen</a>`:''}${ort?`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ort)}" target="_blank" rel="noopener noreferrer">${QI.map}Route</a>`:''}<button data-act="t-ics" data-id="${nt.id}">${ICON.cal}Kalender</button></div></div>`;
+  }else h+=`<div class="sec">Als Nächstes</div><div class="card"><div class="meta">Kein Termin geplant.</div><div class="acts"><button data-act="q-termin">${QI.plus}Termin eintragen</button></div></div>`;
   /* Zu erledigen */
   const T=dashTodos();
-  if(T.length)h+=`<div class="sec">Zu erledigen</div>`+T.slice(0,6).map(([lv,ic,txt,act,id])=>`<button class="todo ${lv}" data-act="${act}" data-id="${esc(id)}"><span class="ti">${ic}</span><span>${esc(txt)}</span><span class="chev">›</span></button>`).join('')+(T.length>6?`<div class="meta">… und ${T.length-6} weitere</div>`:'');
+  if(T.length)h+=`<div class="sec">Zu erledigen</div>`+T.slice(0,6).map(([lv,ic,txt,act,id])=>`<button class="todo ${lv}" data-act="${act}" data-id="${esc(id)}"><span class="ti">${EMO[ic]||ic}</span><span>${esc(txt)}</span><span class="chev">›</span></button>`).join('')+(T.length>6?`<div class="meta">… und ${T.length-6} weitere</div>`:'');
   /* Werte */
   const by=t=>D.werte.filter(w=>w.typ===t).sort((a,b)=>a.datum.localeCompare(b.datum));
   const bp=by('bp'),gw=by('gewicht');
@@ -919,8 +1006,8 @@ function rStart(){
   if(docs.length)h+=`<div class="sec">Zuletzt hinzugefügt</div><div class="recent">${docs.map(x=>`<button data-act="d-view" data-id="${x.id}"><span class="ti">📎</span><span class="tx">${esc(dokTitel(x))}<small>${esc(DOKTYP[x.typ]||'Dokument')}${x.datum?' · '+esc(fmtD(x.datum)):''}</small></span><span class="chev">›</span></button>`).join('')}</div>`;
   /* Schnellaktionen */
   h+=`<div class="sec">Schnell erfassen</div><div class="quick">
-    <button data-act="q-termin">➕ Termin</button><button data-act="q-dok">📷 Dokument</button>
-    <button data-act="q-wert">🩸 Messung</button><a href="${MYTHERAPY}">💊 MyTherapy</a></div>`;
+    <button data-act="q-termin">${QI.plus}Termin</button><button data-act="q-dok">${QI.cam}Dokument</button>
+    <button data-act="q-wert">${QI.drop}Messung</button><a href="${MYTHERAPY}">${QI.pill}MyTherapy</a></div>`;
   return h;
 }
 function terminCard(t){
@@ -1017,7 +1104,7 @@ function rMehr(){
     <div class="ds-lbl sep">Sicherungsdatei</div>
     <p class="ds-hint">Zusätzlich oder statt GitHub: eine Datei, die du selbst ablegst. Sie ist mit deinem aktuellen Passwort verschlüsselt und enthält auch alle Dokumente. ${lb?'Letzte Sicherung: '+esc(fmtD(lb))+'.':'Bisher keine Sicherung.'}</p>
     <div class="ds-acts"><button type="button" class="ds-btn${g?'':' pri'}" data-act="bk-export">Sicherung erstellen</button><button type="button" class="ds-btn" data-act="bk-restore">Sicherung laden</button></div>`,g&&(bkStat.conflict||bkStat.err))
-  +acc('imp','import','Importieren','Termine (.ics) · Werte (CSV, Samsung Health)',`
+  +acc('imp','import','Importieren','Termine (.ics) · Messwerte (CSV)',`
     <p class="ds-hint">Samsung Health: Im Export-Ordner einfach <b>alle Dateien</b> auswählen – die MyGesundBox nimmt sich Blutdruck, Puls (als Tageswert) und Gewicht selbst heraus.</p>
     <div class="ds-acts"><button type="button" class="ds-btn" data-act="ics-import">Termine aus .ics</button><button type="button" class="ds-btn" data-act="csv-import">Werte aus CSV / Samsung Health</button></div>
     <p class="ds-hint" style="margin-top:10px">Tipp: In anderen Apps auf <b>Teilen → MyGesundBox</b> tippen. So kommen Terminbestätigungen (.ics oder Text), CSV-Messwerte, Samsung-Health-Exporte (CSV oder ZIP) sowie Fotos und PDFs (z. B. Arztbriefe) direkt hierher.</p>`)
@@ -1321,7 +1408,7 @@ async function watchRun(repo,tok,sha){
 const DOKTYP={ueberweisung:'Überweisung',rezept:'Rezept',medikationsplan:'Medikationsplan',brief:'Arztbrief',befund:'Befund',brillenpass:'Brillen-/Linsenpass',rechnung:'Rechnung',sonstiges:'Sonstiges'};
 /* MyTherapy (Android): öffnet die App, sonst den Play Store */
 const MYTHERAPY='intent://#Intent;package=eu.smartpatient.mytherapy;S.browser_fallback_url='+encodeURIComponent('https://play.google.com/store/apps/details?id=eu.smartpatient.mytherapy')+';end';
-const mtBtn=()=>`<a class="btnlike" href="${MYTHERAPY}">💊 MyTherapy öffnen</a>`;
+const mtBtn=()=>`<a class="btnlike" href="${MYTHERAPY}">${QI.pill}MyTherapy öffnen</a>`;
 let FKEY=null,DTYP='alle',DARZT='';
 const kb=n=>n>=1e6?(n/1e6).toLocaleString('de-DE',{maximumFractionDigits:1})+' MB':Math.max(1,Math.round(n/1e3))+' KB';
 const allFids=()=>D?D.dokumente.flatMap(d=>(d.files||[]).map(f=>f.fid)).concat((D.meta.draft?.pages||[]).map(p=>p.fid).filter(Boolean)):[];
@@ -1633,8 +1720,8 @@ function bkSetup(){
   },{okText:'Verbinden & sichern',html:'<p class="ds-dlg-intro">Sichert den verschlüsselten Tresor nach jeder Änderung in ein <b>privates</b> GitHub-Repo. GitHub sieht nur verschlüsselte Daten. Zugangsschlüssel: nur für dieses Repo, mit <b>Contents: Read and write</b>.</p>'});
 }
 function changePw(){
-  openForm('Passwort ändern',[{k:'old',l:'Aktuelles Passwort',t:'password',req:true},{k:'n1',l:'Neues Passwort (mind. 8 Zeichen)',t:'password',req:true},{k:'n2',l:'Neues Passwort wiederholen',t:'password',req:true}],{},async(v,f)=>{
-    if(v.n1.length<8)return ferr(f,'Das neue Passwort braucht mindestens 8 Zeichen.');
+  openForm('Passwort ändern',[{k:'old',l:'Aktuelles Passwort',t:'password',req:true},{k:'n1',l:'Neues Passwort (mind. 10 Zeichen)',t:'password',req:true},{k:'n2',l:'Neues Passwort wiederholen',t:'password',req:true}],{},async(v,f)=>{
+    if(v.n1.length<10)return ferr(f,'Das neue Passwort braucht mindestens 10 Zeichen.');
     if(v.n1!==v.n2)return ferr(f,'Die neuen Passwörter stimmen nicht überein.');
     try{const p=JSON.parse(vaultJson);await decryptObj(p,await derive(v.old,unb64(p.salt)))}catch{return ferr(f,'Das aktuelle Passwort ist falsch.')}
     SALT=crypto.getRandomValues(new Uint8Array(16));KEY=await derive(v.n1,SALT);await save();
@@ -1689,6 +1776,7 @@ async function onAct(e){
     case 'bk-pull':if(confirm('Die Daten auf diesem Gerät durch den GitHub-Stand ersetzen?')){try{restoreVaultStr(await bkRestore(bkCfg()))}catch(e){toast(e.status?bkErrText(e):e.message)}}break;
     case 'bk-off':if(confirm('GitHub-Sicherung trennen? Im Repo bleibt alles liegen.')){delete D.backupGh;setBk({err:'',at:0,conflict:false});await save({clean:true});render();toast('GitHub-Sicherung getrennt.')}break;
     case 'goto-mehr':openSheet();break;
+    case 'goto-bk':ACC_OPEN.add('bk');openSheet();break;
     case 'go':goTab(id);break;
     case 'w-go':WTYP=id;TAB='werte';render();break;
     case 'q-termin':editTermin();break;
@@ -1718,13 +1806,14 @@ async function onAct(e){
   }
 }
 $('#main').addEventListener('click',onAct);
+$('#sheetBody').addEventListener('click',e=>{if(SHMODE==='search'&&e.target.closest('.ds-qrow'))closeSheet()},true);
 $('#sheetBody').addEventListener('click',onAct);
 $('#sheetBody').addEventListener('toggle',e=>{const d=e.target;if(d.matches?.('details.acc')){d.open?ACC_OPEN.add(d.dataset.k):ACC_OPEN.delete(d.dataset.k)}},true);
 $('#fan').addEventListener('click',e=>{const b=e.target.closest('[data-act]');setFan(false);if(b)onAct(e)});
 $('#fab').onclick=()=>setFan(!$('#fab').classList.contains('open'));
-$('#menuBtn').onclick=()=>{if(SEARCH!==null){SEARCH=null;$('#searchBar').hidden=true}openSheet()};
+$('#menuBtn').onclick=()=>openSheet();
 $('#sheetX').onclick=closeSheet;$('#sheet .sbg').onclick=closeSheet;
-$('#searchBtn').onclick=()=>SEARCH===null?openSearch():closeSearch();
+$('#searchBtn').onclick=()=>openSearch();
 $('#qX').onclick=closeSearch;
 $('#q').addEventListener('input',()=>{SEARCH=$('#q').value;render()});
 document.addEventListener('keydown',e=>{if(e.key!=='Escape'||dlg.open||!$('#viewer').hidden)return;if(!$('#fan').hidden)setFan(false);else if(sheetOpen())closeSheet();else if(SEARCH!==null)closeSearch()});
