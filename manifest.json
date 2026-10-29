@@ -62,5 +62,59 @@
         }
       ]
     }
-  }
+  },
+  "shortcuts": [
+    {
+      "name": "Neuer Termin",
+      "short_name": "Termin",
+      "description": "Arzttermin eintragen",
+      "url": "./?go=termin",
+      "icons": [
+        {
+          "src": "shortcuts/termin.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Messung erfassen",
+      "short_name": "Messung",
+      "description": "Blutdruck, Puls oder Gewicht eintragen",
+      "url": "./?go=messung",
+      "icons": [
+        {
+          "src": "shortcuts/messung.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Dokument hinzufügen",
+      "short_name": "Dokument",
+      "description": "Befund, Rezept oder Brief ablegen",
+      "url": "./?go=dokument",
+      "icons": [
+        {
+          "src": "shortcuts/dokument.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Termine",
+      "short_name": "Termine",
+      "description": "Alle Termine anzeigen",
+      "url": "./?go=termine",
+      "icons": [
+        {
+          "src": "shortcuts/termine.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
 }

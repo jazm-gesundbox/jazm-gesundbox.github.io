@@ -227,7 +227,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <script>
 'use strict';
-const APP_VERSION='2.2.0';
+const APP_VERSION='2.3.0';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -365,7 +365,7 @@ async function unlockWith(pw){
   $('#lock').hidden=true;$('#app').hidden=false;
   try{navigator.storage?.persist?.()}catch{}
   resetIdle();TAB='start';render();
-  setTimeout(()=>{if(!restoreDraft())handleShare()},300);setTimeout(cleanFiles,5000);
+  setTimeout(()=>{if(!restoreDraft()){handleShare();runGo()}else GO=null},300);setTimeout(cleanFiles,5000);
 }
 $('#lockForm').onsubmit=async e=>{
   e.preventDefault();
@@ -1201,6 +1201,13 @@ async function viewDok(d){
 
 /* ---------- Teilen aus anderen Apps (Web Share Target, über sw.js) ---------- */
 let SHARE_PENDING=false;
+/* Verknüpfungen am App-Symbol: ?go=… merken, Adresse säubern, nach dem Entsperren öffnen */
+let GO=(()=>{try{const u=new URL(location.href),g=u.searchParams.get('go');if(g){u.searchParams.delete('go');history.replaceState(null,'',u.pathname+u.search+u.hash)}return /^[a-z]{2,20}$/.test(g||'')?g:null}catch{return null}})();
+function runGo(){const g=GO;GO=null;if(!g||!D)return;
+  if(g==='termin')editTermin();
+  else if(g==='messung'){TAB='werte';render();WTYP='bp';editWert()}
+  else if(g==='dokument'){TAB='dok';render();DTYP='alle';DARZT='';editDok(null,{})}
+  else if(g==='termine'){TAB='termine';render();window.scrollTo(0,0)}}
 const MON={jan:1,feb:2,'mär':3,mar:3,apr:4,mai:5,jun:6,jul:7,aug:8,sep:9,okt:10,oct:10,nov:11,dez:12,dec:12};
 function guessDate(t){
   let d=null,mo=null,y=null;
@@ -1571,7 +1578,7 @@ swipeClose($('#spanel'),()=>$('#spanel'),async()=>true,()=>closeSheet());
 
 /* ---------- Start ---------- */
 if(!window.crypto?.subtle){document.body.innerHTML='<p style="padding:24px">Diese App braucht HTTPS und einen aktuellen Browser.</p>'}
-else{boot().then(()=>showLock(true));if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').then(r=>{swReg=r}).catch(()=>{})}
+else{boot().then(()=>showLock(true));if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{swReg=r}).catch(()=>{})}
 </script>
 </body>
 </html>
