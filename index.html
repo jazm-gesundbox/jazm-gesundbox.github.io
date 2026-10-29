@@ -136,6 +136,17 @@ svg.chart{width:100%;height:auto;background:var(--card);border:1px solid var(--b
 .recent .tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
 .recent small{display:block;font-size:12px;opacity:.75;overflow:hidden;text-overflow:ellipsis}
 .recent .chev{opacity:.6}
+.seh{width:100%;border-collapse:collapse;margin:8px 0 6px;font-variant-numeric:tabular-nums;font-size:15px}
+.seh th,.seh td{padding:6px 4px;text-align:center;border-bottom:1px solid var(--bd)}
+.seh tr:first-child th{font-size:12px;color:var(--mu);font-weight:600}
+.seh tr th:first-child{width:24px;color:var(--pri);font-weight:800;text-align:left}
+.seh tr:last-child td,.seh tr:last-child th{border-bottom:0}
+.sehgrid{display:grid;gap:6px;align-items:center;margin:4px 0 12px}
+.sehgrid b{font-size:12px;color:var(--mu);text-align:center}
+.sehgrid input{margin:0;padding:10px 4px;text-align:center;min-width:0}
+.linkish{background:none;border:0;padding:0;color:var(--pri);text-decoration:underline;font:inherit;cursor:pointer}
+.card.flash{animation:flash 1.6s ease-out}
+@keyframes flash{0%,40%{box-shadow:0 0 0 3px var(--pri)}100%{box-shadow:0 0 0 0 transparent}}
 .chipdoc{display:inline-block;font-size:13px;padding:4px 10px;border-radius:999px;background:var(--pri2);color:var(--pri);border:0;margin:6px 6px 0 0;cursor:pointer}
 .hello{font-size:22px;font-weight:700;margin:6px 0 2px}
 .status{font-size:13px;color:var(--mu);margin-bottom:6px;background:none;border:0;padding:0;text-align:left;cursor:pointer}
@@ -227,7 +238,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <script>
 'use strict';
-const APP_VERSION='2.3.0';
+const APP_VERSION='2.4.0';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -304,8 +315,8 @@ function askPwThenBio(){
 }
 
 let KEY=null,SALT=null,D=null,TAB='start',WTYP='bp';
-const empty=()=>({v:1,termine:[],aerzte:[],vorsorge:[],werte:[],dokumente:[],meta:{}});
-function normalize(o){const e=empty();for(const k of ['termine','aerzte','vorsorge','werte','dokumente'])e[k]=Array.isArray(o?.[k])?o[k]:[];if(typeof o?.fk==='string')e.fk=o.fk;if(o?.github?.token)e.github={token:String(o.github.token),repo:String(o.github.repo||defaultRepo())};e.meta=o?.meta&&typeof o.meta==='object'?o.meta:{};const g=o?.backupGh;if(g?.token&&g.owner&&g.repo)e.backupGh={owner:String(g.owner),repo:String(g.repo),token:String(g.token)};return e}
+const empty=()=>({v:1,termine:[],aerzte:[],vorsorge:[],werte:[],dokumente:[],sehwerte:[],sehhilfen:[],meta:{}});
+function normalize(o){const e=empty();for(const k of ['termine','aerzte','vorsorge','werte','dokumente','sehwerte','sehhilfen'])e[k]=Array.isArray(o?.[k])?o[k]:[];if(typeof o?.fk==='string')e.fk=o.fk;if(o?.github?.token)e.github={token:String(o.github.token),repo:String(o.github.repo||defaultRepo())};e.meta=o?.meta&&typeof o.meta==='object'?o.meta:{};const g=o?.backupGh;if(g?.token&&g.owner&&g.repo)e.backupGh={owner:String(g.owner),repo:String(g.repo),token:String(g.token)};return e}
 /* ---------- Speicher: Tresor doppelt (localStorage + IndexedDB) ---------- */
 const idb=(()=>{let p;const open=()=>p||(p=new Promise((res,rej)=>{const r=indexedDB.open('gesundbox',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
   const tx=(mode,fn)=>open().then(db=>new Promise((res,rej)=>{const t=db.transaction('kv',mode);const rq=fn(t.objectStore('kv'));t.oncomplete=()=>res(rq&&rq.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)}));
@@ -366,6 +377,7 @@ async function unlockWith(pw){
   try{navigator.storage?.persist?.()}catch{}
   resetIdle();TAB='start';render();
   setTimeout(()=>{if(!restoreDraft()){handleShare();runGo()}else GO=null},300);setTimeout(cleanFiles,5000);
+  if(SEH_LINK){const id=SEH_LINK;SEH_LINK=null;setTimeout(()=>{const x=D.sehhilfen.find(y=>y.id===id);if(!x){toast('Diesen Eintrag gibt es in der MyGesundBox nicht mehr.');return}TAB='werte';WTYP='augen';render();flashCard('h-'+id)},400)}
 }
 $('#lockForm').onsubmit=async e=>{
   e.preventDefault();
@@ -437,6 +449,8 @@ function restoreDraft(){
     case 'vorsorge':TAB='vorsorge';render();editVorsorge(by(D.vorsorge));break;
     case 'wert':TAB='werte';if(TYP[dr.typ])WTYP=dr.typ;render();editWert(by(D.werte));break;
     case 'dok':TAB='dok';render();editDok(by(D.dokumente),null,null,dr.pages);break;
+    case 'seh':{TAB='werte';WTYP='augen';render();editSeh(by(D.sehwerte),{art:dr.vals?.art||'brille'});const sa=$('#sehArt');if(sa&&dr.vals?.art){sa.value=dr.vals.art;sa.onchange()}break}
+    case 'hilfe':TAB='werte';WTYP='augen';render();editHilfe(by(D.sehhilfen),dr.vals&&'dauer' in dr.vals?'kontaktlinsen':'brille');break;
     default:delete D.meta.draft;return false;
   }
   const f=$('#dlgForm');
@@ -584,11 +598,157 @@ const TYP={bp:{n:'Blutdruck',u:'mmHg'},gewicht:{n:'Gewicht',u:'kg'},puls:{n:'Pul
 const wDate=w=>w.cnt?fmtD(w.datum.slice(0,10))+' · Tageswert aus '+w.cnt+' Messungen':fmtDT(w.datum);
 function wertText(w){if(w.typ==='puls'&&w.min!=null)return `Ø ${fmtNum(w.v1,0)} bpm · ${fmtNum(w.min,0)}–${fmtNum(w.max,0)}`;if(w.typ==='bp')return `${fmtNum(w.v1,0)}/${fmtNum(w.v2,0)} mmHg${w.v3!=null?' · Puls '+fmtNum(w.v3,0):''}`;return `${fmtNum(w.v1)} ${TYP[w.typ]?.u||''}`}
 
+/* ---------- Augen: Sehstärke, Brillen, Kontaktlinsen ----------
+   Sehstärke (Dioptrien) je Auge, getrennt für Brille und Kontaktlinsen, mit Herkunft (Augenoptiker/Augenarzt).
+   Brillen und Kontaktlinsen mit Kauf (wo, wann, Preis), Kontaktlinsen mit Wechsel und Vorrat.
+   Verbindung zur MyBelegBox: Link mit vorausgefülltem Eintrag (ohne Sehstärke-Werte), Rückweg über ?seh=<id>. */
+let SEH_LINK=(()=>{try{const q=new URLSearchParams(location.search),v=q.get('seh');if(v){q.delete('seh');history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:''))}return v}catch{return null}})();
+const BELEG_URL='https://jazm-belegbox.github.io/',GESUND_URL='https://jazm-gesundbox.github.io/';
+const SEHART={brille:'Brille',kontaktlinse:'Kontaktlinsen'};
+const SEHCOLS={brille:[['sph','Sph'],['cyl','Zyl'],['ach','Achse'],['add','Add']],kontaktlinse:[['sph','Sph'],['cyl','Zyl'],['ach','Achse'],['bc','BC'],['dia','Ø']]};
+const BRTYP={einstaerken:'Einstärkenbrille',gleitsicht:'Gleitsichtbrille',lese:'Lesebrille',arbeitsplatz:'Arbeitsplatzbrille',sonne:'Sonnenbrille mit Stärke',sport:'Sportbrille',sonstige:'Brille'};
+const KLDAUER={1:'Tageslinsen',14:'2-Wochen-Linsen',30:'Monatslinsen',90:'3-Monats-Linsen',365:'Jahreslinsen'};
+const HSTATUS={aktiv:'In Gebrauch',ersatz:'Ersatz',alt:'Ausgemustert'};
+const dnum=v=>{if(v==null||v==='')return null;const x=num(String(v).replace(/[−–]/g,'-').replace(/^\+/,''));return x};
+const dpt=v=>v==null?'–':(v>0?'+':v<0?'−':'±')+Math.abs(v).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const sehFmt=(k,v)=>v==null?'–':k==='ach'?Math.round(v)+'°':(k==='bc'||k==='dia')?v.toLocaleString('de-DE',{maximumFractionDigits:2}):dpt(v);
+const eur=v=>v==null?'':v.toLocaleString('de-DE',{style:'currency',currency:'EUR'});
+const addDays=(ds,n)=>{const d=new Date(ds.slice(0,10)+'T00:00');d.setDate(d.getDate()+n);return localD(d)};
+const hilfeTitel=x=>x.name||(x.art==='brille'?(BRTYP[x.typ]||'Brille'):(KLDAUER[x.dauer]||'Kontaktlinsen'));
+const sehWer=w=>[w.quelle==='augenarzt'?'Augenarzt':w.quelle==='optiker'?'Augenoptiker':'',arzt(w.arztId)?.name||w.wo||''].filter(Boolean).join(' · ');
+function sehTable(w){const c=SEHCOLS[w.art]||SEHCOLS.brille;
+  return `<table class="seh"><tr><th></th>${c.map(([,n])=>`<th>${n}</th>`).join('')}</tr>${[['R','r'],['L','l']].map(([n,e])=>`<tr><th>${n}</th>${c.map(([k])=>`<td>${sehFmt(k,w[e]?.[k]??null)}</td>`).join('')}</tr>`).join('')}</table>`}
+function sehDiff(w){
+  const prev=D.sehwerte.filter(x=>x.art===w.art&&x.id!==w.id&&x.datum<w.datum).sort((a,b)=>b.datum.localeCompare(a.datum))[0];if(!prev)return '';
+  const part=(e,n)=>{const a=prev[e]?.sph,b=w[e]?.sph;if(a==null||b==null)return '';const d=Math.round((b-a)*100)/100;return n+' '+(d===0?'gleich':dpt(d))};
+  const t=[part('r','R'),part('l','L')].filter(Boolean).join(' · ');return t?'Sph seit '+fmtD(prev.datum)+': '+t:''}
+function klInfo(x){const dauer=+x.dauer||30,o={dauer,wechsel:null,vorrat:null,reicht:null};
+  if(dauer>1&&x.eingesetzt)o.wechsel=daysUntil(addDays(x.eingesetzt,dauer));
+  let v=dnum(x.vorrat);if(v!=null){if(dauer===1&&x.stand)v=Math.max(0,v-Math.max(0,-daysUntil(x.stand)));o.vorrat=Math.floor(v);
+    o.reicht=dauer===1?o.vorrat:o.vorrat*dauer+(o.wechsel!=null?Math.max(0,o.wechsel):0)}
+  return o}
+const sehDocs=id=>D.dokumente.filter(d=>d.sehId===id);
+const docChips=id=>{const ds=sehDocs(id);return ds.length?'<div>'+ds.map(d=>`<button class="chipdoc" data-act="d-view" data-id="${d.id}">📎 ${esc(dokTitel(d))}</button>`).join('')+'</div>':''};
+function sehDokOpts(){return [['','– nichts –'],
+  ...D.sehhilfen.map(x=>[x.id,(x.art==='brille'?'👓 ':'👁️ ')+hilfeTitel(x)]),
+  ...D.sehwerte.slice().sort((a,b)=>b.datum.localeCompare(a.datum)).map(w=>[w.id,'Sehstärke '+SEHART[w.art]+' vom '+fmtD(w.datum)])]}
+function sehCard(w,main){
+  const df=main?sehDiff(w):'';
+  return `<div class="card" id="h-${w.id}"><div class="meta"><b>${SEHART[w.art]||''}</b> · ${esc(fmtD(w.datum))}${sehWer(w)?' · '+esc(sehWer(w)):''}</div>${sehTable(w)}
+    ${w.pd?`<div class="meta">Pupillendistanz ${esc(w.pd)} mm</div>`:''}${df?`<div class="meta">${esc(df)}</div>`:''}${w.notiz?`<div class="note">${esc(w.notiz)}</div>`:''}${docChips(w.id)}
+    <div class="acts"><button data-act="seh-edit" data-id="${w.id}">✏️ Bearbeiten</button><button data-act="seh-dok" data-id="${w.id}">📷 Pass fotografieren</button></div></div>`}
+function hilfeCard(x){
+  const w=D.sehwerte.find(y=>y.id===x.sehId),st=x.status&&x.status!=='aktiv'?`<span class="badge b-mu">${HSTATUS[x.status]}</span>`:'';
+  const kauf=[x.haendler?'bei '+esc(x.haendler):'',x.gekauft?'am '+esc(fmtD(x.gekauft)):'',dnum(x.preis)!=null?esc(eur(dnum(x.preis))):'',dnum(x.kasse)?'Zuschuss '+esc(eur(dnum(x.kasse))):''].filter(Boolean).join(' · ');
+  let body='',acts='';
+  if(x.art==='brille'){
+    body=`<div class="meta">${esc([BRTYP[x.typ]||'',x.fassung,x.glaeser].filter(Boolean).join(' · '))}</div>${kauf?`<div class="meta">Gekauft ${kauf}</div>`:''}
+      ${+x.garantie&&x.gekauft?`<div class="meta">Herstellergarantie bis ${esc(fmtD(localD(addMonths(x.gekauft,+x.garantie))))}</div>`:''}`;
+    acts=`<button data-act="beleg" data-id="${x.id}">🧾 ${x.beleg?'In MyBelegBox öffnen':'In MyBelegBox übernehmen'}</button>`;
+  }else{
+    const k=klInfo(x);
+    const wech=k.dauer>1?(x.eingesetzt?(k.wechsel<0?`<span class="badge b-red">Wechsel seit ${-k.wechsel} Tagen fällig</span>`:k.wechsel<=1?`<span class="badge b-or">Wechsel ${relDay(k.wechsel)}</span>`:`<span class="badge b-ok">Wechsel ${relDay(k.wechsel)}</span>`)+` <span class="meta">aktuelles Paar seit ${esc(fmtD(x.eingesetzt))}</span>`:'<span class="meta">Noch nicht eingetragen, wann das aktuelle Paar eingesetzt wurde.</span>'):'';
+    const vor=k.vorrat!=null?`<div class="meta">Vorrat: ${k.vorrat} ${k.vorrat===1?'Paar':'Paare'} · reicht ca. ${k.reicht} Tage${k.reicht<=21&&!+x.abo?' – <b>nachbestellen</b>':''}</div>`:'';
+    body=`<div class="meta">${esc(KLDAUER[x.dauer]||'')}${+x.abo?` · Abo alle ${+x.abo} ${+x.abo===1?'Monat':'Monate'}`:''}</div><div style="margin:4px 0">${wech}</div>${vor}${kauf?`<div class="meta">Zuletzt gekauft ${kauf}</div>`:''}`;
+    acts=(k.dauer>1?`<button data-act="kl-wechsel" data-id="${x.id}">✅ Neues Paar eingesetzt</button>`:'')+(+x.abo?`<button data-act="beleg" data-id="${x.id}">🧾 ${x.beleg?'Abo in MyBelegBox öffnen':'Abo in MyBelegBox übernehmen'}</button>`:'');
+  }
+  return `<div class="card" id="h-${x.id}"><h3>${esc(hilfeTitel(x))} ${st}</h3>${body}
+    ${w?`<div class="meta">Sehstärke: <button class="linkish" data-act="seh-edit" data-id="${w.id}">${esc(SEHART[w.art])} vom ${esc(fmtD(w.datum))}</button></div>`:''}
+    ${x.notiz?`<div class="note">${esc(x.notiz)}</div>`:''}${docChips(x.id)}
+    <div class="acts">${acts}<button data-act="hilfe-dok" data-id="${x.id}">📷 Rechnung</button><button data-act="hilfe-edit" data-id="${x.id}">✏️</button></div></div>`}
+function rAugen(){
+  const W=D.sehwerte.slice().sort((a,b)=>b.datum.localeCompare(a.datum));
+  const ord=a=>a.status==='alt'?2:a.status==='ersatz'?1:0;
+  const H=D.sehhilfen.slice().sort((a,b)=>ord(a)-ord(b)||(b.gekauft||'').localeCompare(a.gekauft||''));
+  let h=`<div class="toolbar"><button class="ghost" data-act="seh-new" data-id="brille">➕ Sehstärke</button><button class="ghost" data-act="hilfe-new" data-id="brille">👓 Brille</button><button class="ghost" data-act="hilfe-new" data-id="kontaktlinsen">👁️ Kontaktlinsen</button></div>`;
+  const latest=['brille','kontaktlinse'].map(a=>W.find(x=>x.art===a)).filter(Boolean),older=W.filter(x=>!latest.includes(x));
+  h+=`<div class="sec">Sehstärke</div>`+(latest.length?latest.map(w=>sehCard(w,true)).join(''):`<div class="card meta">Noch keine Sehstärke eingetragen. Die Werte stehen im Brillenpass, im Kontaktlinsenpass oder auf der Rechnung vom Optiker.</div>`);
+  if(older.length)h+=`<details><summary>Frühere Messungen (${older.length})</summary>${older.map(w=>sehCard(w,false)).join('')}</details>`;
+  const br=H.filter(x=>x.art==='brille'),kl=H.filter(x=>x.art==='kontaktlinsen');
+  h+=`<div class="sec">Brillen</div>`+(br.length?br.map(hilfeCard).join(''):`<div class="card meta">Noch keine Brille eingetragen.</div>`);
+  h+=`<div class="sec">Kontaktlinsen</div>`+(kl.length?kl.map(hilfeCard).join(''):`<div class="card meta">Noch keine Kontaktlinsen eingetragen.</div>`);
+  h+=`<p class="meta" style="margin-top:14px">Kaufbeleg und Garantie einer Brille oder ein Kontaktlinsen-Abo verwaltest du in der MyBelegBox. Die Sehstärke bleibt nur hier.</p>`;
+  return h}
+function sehGrid(art,vals){const c=SEHCOLS[art];
+  return `<div class="sehgrid" style="grid-template-columns:24px repeat(${c.length},minmax(0,1fr))"><span></span>${c.map(([,n])=>`<b>${n}</b>`).join('')}${['r','l'].map(e=>`<b>${e.toUpperCase()}</b>${c.map(([k])=>`<input name="${e}_${k}" inputmode="decimal" autocomplete="off" aria-label="${e==='r'?'Rechts':'Links'} ${k}" value="${esc(vals[e+'_'+k]??'')}">`).join('')}`).join('')}</div>`}
+function editSeh(w,preset){
+  const isNew=!w;w=w||{id:uid(),datum:today(),art:'brille',quelle:'optiker',arztId:'',wo:'',r:{},l:{},pd:'',notiz:'',...preset};
+  const vals={};for(const e of ['r','l'])for(const [k] of SEHCOLS.kontaktlinse.concat([['add']]))if(w[e]?.[k]!=null)vals[e+'_'+k]=String(w[e][k]).replace('.',',');
+  openForm(isNew?'Sehstärke eintragen':'Sehstärke bearbeiten',[
+    {k:'datum',l:'Gemessen am',t:'date',req:true},
+    {k:'quelle',l:'Gemessen von',t:'select',opts:[['optiker','Augenoptiker'],['augenarzt','Augenarzt'],['sonst','Sonstige']]},
+    {k:'arztId',l:'Aus deiner Arztliste (optional)',t:'select',opts:arztOpts()},
+    {k:'wo',l:'… oder Name und Ort',ph:'z. B. Fielmann Leipzig'},
+    {k:'pd',l:'Pupillendistanz in mm (optional)',t:'decimal'},
+    {k:'notiz',l:'Notiz',t:'textarea'},
+  ],w,async v=>{
+    const art=v.art==='kontaktlinse'?'kontaktlinse':'brille',eye={r:{},l:{}};let bad='';
+    for(const e of ['r','l'])for(const [k] of SEHCOLS[art]){const raw=v[e+'_'+k];const x=dnum(raw);if(raw&&raw.trim()&&x==null)bad=`„${raw}“ ist keine Zahl.`;
+      if(x!=null){if(k==='ach'&&(x<0||x>180))bad='Die Achse liegt zwischen 0 und 180°.';if((k==='sph'||k==='cyl'||k==='add')&&Math.abs(x)>30)bad='Bitte die Dioptrien prüfen (z. B. -1,25).';eye[e][k]=x}}
+    if(bad){toast(bad);return false}
+    if(!Object.keys(eye.r).length&&!Object.keys(eye.l).length){toast('Bitte mindestens einen Wert eintragen.');return false}
+    Object.assign(w,{datum:v.datum,art,quelle:v.quelle,arztId:v.arztId,wo:v.wo.trim(),pd:v.pd.trim(),notiz:v.notiz,r:eye.r,l:eye.l});
+    if(isNew)D.sehwerte.push(w);await save();
+  },{html:`<label for="sehArt">Für</label><select id="sehArt" name="art"><option value="brille"${w.art==='brille'?' selected':''}>Brille</option><option value="kontaktlinse"${w.art==='kontaktlinse'?' selected':''}>Kontaktlinsen</option></select>
+     <div class="meta" style="margin:-4px 0 6px">Werte aus dem Pass übernehmen. Minus = kurzsichtig, Plus = weitsichtig. Leere Felder bleiben leer.</div><div id="sehGridBox">${sehGrid(w.art,vals)}</div>`,
+   draft:{kind:'seh',id:isNew?null:w.id},
+   onOpen:f=>{const sel=f.querySelector('#sehArt');sel.onchange=()=>{const cur={};f.querySelectorAll('#sehGridBox input').forEach(i=>{if(i.value)cur[i.name]=i.value});f.querySelector('#sehGridBox').innerHTML=sehGrid(sel.value,cur)}},
+   del:isNew?null:async()=>{D.sehwerte=D.sehwerte.filter(y=>y.id!==w.id);D.sehhilfen.forEach(y=>{if(y.sehId===w.id)y.sehId=''});await save()}});
+}
+function editHilfe(x,art){
+  const isNew=!x;x=x||{id:uid(),art:art==='kontaktlinsen'?'kontaktlinsen':'brille',status:'aktiv',gekauft:today(),dauer:30,typ:'einstaerken',garantie:'0',abo:'0'};
+  const kl=x.art==='kontaktlinsen',sArt=kl?'kontaktlinse':'brille';
+  const sehOpts=[['','– noch nicht eingetragen –'],...D.sehwerte.filter(w=>w.art===sArt).sort((a,b)=>b.datum.localeCompare(a.datum)).map(w=>[w.id,'vom '+fmtD(w.datum)+(sehWer(w)?' · '+sehWer(w):'')])];
+  if(isNew&&sehOpts.length>1)x.sehId=sehOpts[1][0];
+  const common=[{k:'sehId',l:'Sehstärke',t:'select',opts:sehOpts},{k:'status',l:'Status',t:'select',opts:Object.entries(HSTATUS)}];
+  const fields=kl?[
+    {k:'name',l:'Produkt',ph:'z. B. Dailies Total1, Air Optix'},
+    {k:'dauer',l:'Art',t:'select',opts:Object.entries(KLDAUER)},
+    ...common,
+    {k:'eingesetzt',l:'Aktuelles Paar eingesetzt am',t:'date'},
+    {k:'vorrat',l:'Paare auf Vorrat (ohne das aktuelle)',t:'decimal'},
+    {k:'haendler',l:'Gekauft bei',ph:'z. B. Optiker, Lensbest, dm'},
+    {k:'gekauft',l:'Zuletzt gekauft am',t:'date'},
+    {k:'preis',l:'Preis der Bestellung (€)',t:'decimal'},
+    {k:'abo',l:'Abo / Sparabo',t:'select',opts:[['0','kein Abo'],['1','monatlich'],['3','alle 3 Monate'],['6','alle 6 Monate'],['12','jährlich']]},
+    {k:'notiz',l:'Notiz',t:'textarea',ph:'z. B. Pflegemittel, Tragezeiten'},
+  ]:[
+    {k:'name',l:'Bezeichnung',ph:'z. B. Alltagsbrille, Lesebrille Büro'},
+    {k:'typ',l:'Art',t:'select',opts:Object.entries(BRTYP)},
+    ...common,
+    {k:'haendler',l:'Gekauft bei',ph:'z. B. Fielmann Leipzig, Apollo, online'},
+    {k:'gekauft',l:'Gekauft am',t:'date'},
+    {k:'preis',l:'Preis (€)',t:'decimal'},
+    {k:'kasse',l:'Zuschuss Krankenkasse / Versicherung (€)',t:'decimal'},
+    {k:'fassung',l:'Fassung (Marke, Modell)'},
+    {k:'glaeser',l:'Gläser',ph:'z. B. entspiegelt, Blaufilter, Kunststoff 1,6'},
+    {k:'garantie',l:'Herstellergarantie',t:'select',opts:[['0','keine'],['12','1 Jahr'],['24','2 Jahre'],['36','3 Jahre']]},
+    {k:'notiz',l:'Notiz',t:'textarea'},
+  ];
+  openForm(isNew?(kl?'Kontaktlinsen eintragen':'Brille eintragen'):(kl?'Kontaktlinsen bearbeiten':'Brille bearbeiten'),fields,x,async v=>{
+    for(const k of ['preis','kasse','vorrat'])if(v[k]!=null&&v[k].trim()&&dnum(v[k])==null){toast(`„${v[k]}“ ist keine Zahl.`);return false}
+    if(kl&&String(v.vorrat??'')!==String(x.vorrat??''))v.stand=today();
+    Object.assign(x,v);if(isNew)D.sehhilfen.push(x);await save();
+  },{draft:{kind:'hilfe',id:isNew?null:x.id},del:isNew?null:async()=>{D.sehhilfen=D.sehhilfen.filter(y=>y.id!==x.id);D.dokumente.forEach(d=>{if(d.sehId===x.id)d.sehId=''});await save()},
+   html:isNew?'':`${x.beleg?'<div class="meta" style="margin-bottom:8px">🧾 Mit der MyBelegBox verknüpft.</div>':''}`});
+}
+/* Link in die MyBelegBox: vorausgefüllter Eintrag, ohne Sehstärke-Werte */
+const b64url=t=>b64(te.encode(t)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+function belegLink(x){
+  const ref='mygesundbox:'+x.id,url=GESUND_URL+'?seh='+encodeURIComponent(x.id),p=dnum(x.preis);let o;
+  if(x.art==='kontaktlinsen')o={v:1,k:'c',ref,url,what:'Kontaktlinsen: Wechsel, Vorrat und Sehstärke',anbieter:x.haendler||hilfeTitel(x),kosten:p||0,intervall:+x.abo||1,modus:'offen',frist:0,
+    notiz:[hilfeTitel(x),KLDAUER[x.dauer]||''].filter(Boolean).join(' · ')};
+  else o={v:1,k:'d',ref,url,what:'Sehstärke, Gläser und Garantie',name:hilfeTitel(x),hersteller:x.fassung||'',modell:BRTYP[x.typ]||'',kauf:x.gekauft||'',preis:p||0,haendler:x.haendler||'',garantieMonate:+x.garantie||0,
+    notiz:[x.glaeser?'Gläser: '+x.glaeser:'',dnum(x.kasse)?'Zuschuss Krankenkasse/Versicherung: '+eur(dnum(x.kasse)):''].filter(Boolean).join('\n')};
+  return BELEG_URL+'?neu='+b64url(JSON.stringify(o));
+}
+function flashCard(id){const el=document.getElementById(id);if(!el)return;el.scrollIntoView({block:'center',behavior:motion()?'smooth':'auto'});el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),1600)}
+
 /* ---------- Rendering ---------- */
 /* ---------- Suche, Menü (Daten & Sicherheit), Neu-Auswahl – wie in der MyBelegBox ---------- */
 let SEARCH=null;const ACC_OPEN=new Set();
 const sheetOpen=()=>!$('#sheet').hidden;
-const ICON={cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>',lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',doctor:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/><path d="M12 14v4M10 16h4"/></svg>',repeat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>',down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',import:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>',pkg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>',list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>'};
+const ICON={eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>',lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',doctor:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/><path d="M12 14v4M10 16h4"/></svg>',repeat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>',down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',import:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>',pkg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>',list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>'};
 const icon=k=>ICON[k]||'';
 function rSearch(){
   const q=SEARCH.trim().toLowerCase();
@@ -599,6 +759,7 @@ function rSearch(){
   grp('Termine',D.termine.filter(t=>has(t.titel,t.notiz,t.fragen,t.nachher,t.ort,arzt(t.arztId)?.name)).sort((a,b)=>b.datum.localeCompare(a.datum)).map(t=>row('t-edit',t.id,'cal',t.titel,fmtDT(t.datum)+(arzt(t.arztId)?' · '+arzt(t.arztId).name:''))));
   grp('Ärzte',D.aerzte.filter(a=>has(a.name,a.fach,a.adresse,a.notiz,a.tel)).map(a=>row('a-edit',a.id,'doctor',a.name,[a.fach,a.tel].filter(Boolean).join(' · '))));
   grp('Vorsorge',D.vorsorge.filter(v=>has(v.name,v.notiz)).map(v=>row('v-edit',v.id,'repeat',v.name,vStatus(v).txt)));
+  grp('Augen',D.sehhilfen.filter(x=>has(x.name,x.haendler,x.fassung,x.glaeser,x.notiz,hilfeTitel(x))).map(x=>row('hilfe-edit',x.id,'eye',hilfeTitel(x),(x.art==='brille'?'Brille':'Kontaktlinsen')+(x.haendler?' · '+x.haendler:''))));
   grp('Dokumente',D.dokumente.filter(d=>has(dokTitel(d),d.notiz,DOKTYP[d.typ],arzt(d.arztId)?.name)).map(d=>row('d-view',d.id,'doc',dokTitel(d),(DOKTYP[d.typ]||'Dokument')+(d.datum?' · '+fmtD(d.datum):''))));
   return n?h:`<div class="empty">Nichts gefunden für „${esc(SEARCH.trim())}“.</div>`;
 }
@@ -650,6 +811,10 @@ function dashTodos(){
   /* Überweisungen & Co. mit Ablaufdatum */
   for(const d of D.dokumente){if(!d.gueltig)continue;const n=daysUntil(d.gueltig);
     if(n<=14&&n>=-7)T.push([n<0?'crit':'warn','📄',dokTitel(d)+(n<0?' ist abgelaufen':' läuft '+relDay(n)+' ab'),'d-view',d.id])}
+  /* Kontaktlinsen: wechseln und nachbestellen */
+  for(const x of D.sehhilfen){if(x.art!=='kontaktlinsen'||x.status==='alt')continue;const k=klInfo(x),n=hilfeTitel(x);
+    if(k.wechsel!=null&&k.wechsel<=1)T.push([k.wechsel<0?'crit':'warn','👁️',`${n}: wechseln – `+(k.wechsel<0?`seit ${-k.wechsel} Tagen fällig`:k.wechsel===0?'heute fällig':'morgen fällig'),'goto-augen',x.id]);
+    if(k.reicht!=null&&k.reicht<=21&&!+x.abo)T.push([k.reicht<=7?'crit':'warn','🛒',`${n}: nachbestellen – Vorrat reicht noch ca. ${Math.max(0,k.reicht)} Tage`,'goto-augen',x.id]);}
   /* Medikationsplan */
   const mp=D.dokumente.filter(x=>x.typ==='medikationsplan').sort((a,b)=>(b.datum||'').localeCompare(a.datum||''))[0];
   if(mp&&-daysUntil(mp.datum)>90)T.push(['warn','💊','Medikationsplan ist '+(-daysUntil(mp.datum))+' Tage alt – noch aktuell?','d-view',mp.id]);
@@ -755,8 +920,9 @@ function rWerte(){
   /* Puls: auch den Puls aus den Blutdruckmessungen zeigen (Bearbeiten öffnet die Blutdruckmessung) */
   if(WTYP==='puls')list=list.concat(D.werte.filter(w=>w.typ==='bp'&&w.v3!=null).map(w=>({...w,typ:'puls',v1:w.v3,v2:null,v3:null,quelle:(w.quelle?w.quelle+' · ':'')+'aus Blutdruckmessung'})));
   list.sort((a,b)=>a.datum.localeCompare(b.datum));
-  let h=`<div class="chips">${Object.entries(TYP).map(([k,t])=>`<button data-act="w-typ" data-id="${k}" class="${k===WTYP?'on':''}">${t.n}</button>`).join('')}</div>
-  <div class="toolbar"><button class="ghost" data-act="csv-import">📥 Importieren (CSV / Samsung Health)</button></div>`;
+  const chips=`<div class="chips">${Object.entries(TYP).map(([k,t])=>`<button data-act="w-typ" data-id="${k}" class="${k===WTYP?'on':''}">${t.n}</button>`).join('')}<button data-act="w-typ" data-id="augen" class="${WTYP==='augen'?'on':''}">👓 Augen</button></div>`;
+  if(WTYP==='augen')return chips+rAugen();
+  let h=chips+`<div class="toolbar"><button class="ghost" data-act="csv-import">📥 Importieren (CSV / Samsung Health)</button></div>`;
   if(!list.length)return h+`<div class="empty">Noch keine ${TYP[WTYP].n}-Werte.<br>Tippe auf <b>+</b> oder importiere eine CSV-Datei aus deiner Mess-App.</div>`;
   const last=list[list.length-1];
   h+=`<div class="card"><div class="meta">Letzter Wert · ${esc(wDate(last))}</div><h3 style="font-size:22px">${esc(wertText(last))}</h3>${list.length>=2?`<div class="meta">${list.length} Messungen · Ø ${WTYP==='bp'?fmtNum(avg(list,'v1'),0)+'/'+fmtNum(avg(list,'v2'),0):fmtNum(avg(list,'v1'))} (letzte 30)</div>`:''}</div>`;
@@ -773,7 +939,6 @@ function rMehr(){
   +acc('sec','lock','Sicherheit','Passwort · Fingerabdruck '+(bio?'an':'aus'),`<div class="meta" style="margin-top:12px">Alle Daten liegen verschlüsselt auf diesem Gerät und werden nirgendwohin gesendet – außer in deine eigene GitHub-Sicherung (ebenfalls verschlüsselt).</div><div class="acts">${bioSupported()?(lsGet(BKEY)?'<button data-act="bio-off">👆 Fingerabdruck deaktivieren</button>':'<button data-act="bio-on">👆 Fingerabdruck einrichten</button>'):''}<button data-act="pw-change">🔑 Passwort ändern</button><button data-act="wipe" class="danger">🗑️ Alle Daten löschen</button></div>`)
   +acc('bk','down','Sicherung',(g?'GitHub '+(bkStat.err?'⚠️ Problem':'an'):'GitHub aus')+' · '+(lb?'Datei '+fmtD(lb):'keine Datei'),`
     <div class="srow" style="margin-top:8px"><span>☁️ GitHub</span><span class="meta" id="bkStatus">${g?bkText():'nicht eingerichtet'}</span></div>
-    <div class="srow"><span>☁️ GitHub</span><span class="meta" id="bkStatus">${g?bkText():'nicht eingerichtet'}</span></div>
     <div class="srow" style="border:0"><span>💾 Sicherungsdatei</span><span class="meta">${lb?'zuletzt '+esc(fmtD(lb)):'noch keine'}</span></div>
     ${g&&bkStat.conflict?`<div class="conflict">Im Repo liegt ein anderer Tresor (z. B. von einem früheren Gerät). Er bleibt in der Versionsgeschichte von GitHub erhalten, wenn du ihn ersetzt.<div class="acts"><button data-act="bk-pull">⬇️ GitHub-Stand laden</button><button data-act="bk-force" class="danger">⬆️ Durch diesen Tresor ersetzen</button></div></div>`:''}
     <div class="acts">${g?'<button data-act="bk-now">☁️ Jetzt sichern</button>':'<button data-act="bk-setup">☁️ GitHub einrichten</button>'}<button data-act="bk-export">💾 Datei erstellen</button><button data-act="bk-restore">📂 Wiederherstellen</button></div>
@@ -1073,7 +1238,7 @@ async function watchRun(repo,tok,sha){
 /* ---------- Dokumente: Fotos & PDFs, verschlüsselt in IndexedDB ----------
    Jede Datei wird mit einem zufälligen Dateischlüssel (liegt im Tresor) verschlüsselt.
    So bleiben Dateien beim Passwortwechsel gültig und müssen nie neu hochgeladen werden. */
-const DOKTYP={ueberweisung:'Überweisung',rezept:'Rezept',medikationsplan:'Medikationsplan',brief:'Arztbrief',befund:'Befund',sonstiges:'Sonstiges'};
+const DOKTYP={ueberweisung:'Überweisung',rezept:'Rezept',medikationsplan:'Medikationsplan',brief:'Arztbrief',befund:'Befund',brillenpass:'Brillen-/Linsenpass',rechnung:'Rechnung',sonstiges:'Sonstiges'};
 /* MyTherapy (Android): öffnet die App, sonst den Play Store */
 const MYTHERAPY='intent://#Intent;package=eu.smartpatient.mytherapy;S.browser_fallback_url='+encodeURIComponent('https://play.google.com/store/apps/details?id=eu.smartpatient.mytherapy')+';end';
 const mtBtn=()=>`<a class="btnlike" href="${MYTHERAPY}">💊 MyTherapy öffnen</a>`;
@@ -1113,7 +1278,7 @@ async function prepFile(file){
   }
   return{buf:await file.arrayBuffer(),mime:mime||'application/octet-stream',name:file.name||'datei'};
 }
-const guessTyp=n=>/medikation|medikamentenplan|mytherapy/i.test(n)?'medikationsplan':/rezept/i.test(n)?'rezept':/(über|ueber)weis/i.test(n)?'ueberweisung':/befund|labor|röntgen|mrt/i.test(n)?'befund':/brief|bericht/i.test(n)?'brief':'sonstiges';
+const guessTyp=n=>/brillenpass|linsenpass|kontaktlinsenpass/i.test(n)?'brillenpass':/rechnung|invoice/i.test(n)?'rechnung':/medikation|medikamentenplan|mytherapy/i.test(n)?'medikationsplan':/rezept/i.test(n)?'rezept':/(über|ueber)weis/i.test(n)?'ueberweisung':/befund|labor|röntgen|mrt/i.test(n)?'befund':/brief|bericht/i.test(n)?'brief':'sonstiges';
 function dokBadge(d){
   if(d.typ==='medikationsplan'){
     const neu=D.dokumente.filter(x=>x.typ==='medikationsplan').sort((a,b)=>(b.datum||'').localeCompare(a.datum||''))[0];
@@ -1155,6 +1320,7 @@ function editDok(d,preset,incoming,draftPages){
     {k:'gueltig',l:'Gültig bis (optional, z. B. bei Überweisungen)',t:'date'},
     {k:'arztId',l:'Arzt',t:'select',opts:arztOpts()},
     {k:'terminId',l:'Zu Termin',t:'select',opts:termOpts},
+    ...(D.sehwerte.length||D.sehhilfen.length?[{k:'sehId',l:'Gehört zu (Augen)',t:'select',opts:sehDokOpts()}]:[]),
     {k:'notiz',l:'Notiz',t:'textarea'},
   ],d,async v=>{
     if(!pages.length){toast('Bitte mindestens ein Foto oder eine Datei hinzufügen.');return false}
@@ -1449,6 +1615,18 @@ async function onAct(e){
     case 'q-dok':DTYP='alle';DARZT='';editDok(null,{});{const c=document.getElementById('pgCam');if(c)c.click()}break;
     case 'q-wert':WTYP='bp';editWert();break;
     case 'q-arzt':editArzt();break;
+    case 'goto-augen':TAB='werte';WTYP='augen';render();if(id)setTimeout(()=>flashCard('h-'+id),80);break;
+    case 'seh-new':editSeh(null,{art:id||'brille'});break;
+    case 'seh-edit':editSeh(D.sehwerte.find(x=>x.id===id));break;
+    case 'hilfe-new':editHilfe(null,id||'brille');break;
+    case 'hilfe-edit':{const x=D.sehhilfen.find(y=>y.id===id);if(x){if(TAB!=='werte'||WTYP!=='augen'){TAB='werte';WTYP='augen';render()}editHilfe(x)}break}
+    case 'seh-dok':editDok(null,{typ:'brillenpass',sehId:id});break;
+    case 'hilfe-dok':editDok(null,{typ:'rechnung',sehId:id});break;
+    case 'kl-wechsel':{const x=D.sehhilfen.find(y=>y.id===id);if(!x)break;const k=klInfo(x);
+      x.eingesetzt=today();if(k.vorrat!=null){x.vorrat=String(Math.max(0,k.vorrat-1));x.stand=today()}
+      await save();render();toast('Neues Paar eingetragen'+(k.vorrat!=null?` – noch ${Math.max(0,k.vorrat-1)} Paare auf Vorrat.`:'.'));break}
+    case 'beleg':{const x=D.sehhilfen.find(y=>y.id===id);if(!x)break;
+      window.open(belegLink(x),'_blank','noopener');if(!x.beleg){x.beleg=true;await save();render()}break}
     case 'q-vorsorge':editVorsorge();break;
     case 'pw-change':changePw();break;
     case 'wipe':wipe();break;
