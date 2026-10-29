@@ -180,6 +180,53 @@ svg.chart{width:100%;height:auto;background:var(--card);border:1px solid var(--b
 dialog.drag{transition:none}
 .conflict{background:var(--redbg);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:14px}
 details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
+
+/* ds:start */
+:root{--ds-ink:var(--tx);--ds-muted:var(--mu);--ds-line:var(--bd);--ds-surface:var(--card);--ds-sunk:var(--bg);--ds-accent:var(--pri);--ds-accent-ink:var(--on-pri);--ds-soft:var(--pri2);--ds-crit:var(--red);--ds-crit-soft:var(--redbg);--ds-warn-soft:var(--orbg);--ds-ok:var(--ok)}
+/* ===== Gemeinsamer Baustein „Daten & Sicherheit“ – identisch in MySmartBox, MyGesundBox, MyBelegBox =====
+   Nur die Farbzuordnung (--ds-*) oben unterscheidet sich je App. */
+.ds-lbl{display:block;font-size:12px;line-height:1.3;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--ds-muted);margin:14px 0 8px}
+.ds-lbl.sep{border-top:1px solid var(--ds-line);padding-top:14px;margin-top:18px}
+.ds-hint{display:block;font-size:14px;line-height:1.45;color:var(--ds-muted);font-weight:400;margin:0 0 10px;max-width:none}
+.ds-hint b{color:var(--ds-ink);font-weight:700}
+.ds-stat{font-weight:400;display:flex;align-items:center;gap:8px;font-size:14px;line-height:1.4;color:var(--ds-ink);background:var(--ds-sunk);border-radius:10px;padding:9px 12px;margin:0 0 10px}
+.ds-acts{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 4px}
+.ds-btn{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;padding:0 16px;border-radius:12px;border:1px solid var(--ds-line);background:var(--ds-surface);color:var(--ds-ink);font-family:inherit;font-size:15px;font-weight:600;line-height:1.1;cursor:pointer;white-space:nowrap;text-align:center}
+.ds-btn:focus-visible{outline:2px solid var(--ds-accent);outline-offset:2px}
+.ds-btn.pri{background:var(--ds-accent);border-color:var(--ds-accent);color:var(--ds-accent-ink)}
+.ds-btn.dng{background:transparent;border-color:var(--ds-crit);color:var(--ds-crit)}
+.ds-btn.dng.sure{background:var(--ds-crit);color:var(--ds-surface)}
+.ds-btn[disabled],.ds-btn[aria-disabled="true"]{opacity:.55;pointer-events:none}
+.ds-btn input[type=file]{display:none}
+.ds-box{font-weight:400!important;border-radius:12px;padding:12px;margin:0 0 10px;font-size:14px;line-height:1.45;color:var(--ds-ink);background:var(--ds-sunk);overflow-wrap:anywhere}
+.ds-box.crit{background:var(--ds-crit-soft)} .ds-box.warn{background:var(--ds-warn-soft)}
+.ds-box .ds-acts{margin:10px 0 0}
+.ds-box a{color:var(--ds-accent);font-weight:700}
+.ds-box .ds-btn{min-height:36px;padding:0 12px;font-size:14px}
+.ds-check{font-weight:400;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ds-ink);margin:0 0 10px}
+.ds-end{height:4px}
+.ds-ver{text-align:center;color:var(--ds-muted);font-size:12px;line-height:1.5;margin:14px 0 4px}
+/* Akkordeon-Kopf im Blatt: gleiche Maße überall */
+.ds-sheet .ds-acc-ai{width:36px;height:36px;flex:none;border-radius:10px;background:var(--ds-soft);color:var(--ds-accent);display:grid;place-items:center}
+.ds-sheet .ds-acc-ai svg{width:19px;height:19px}
+/* Fenster (GitHub einrichten, Passwort ändern) */
+.ds-dlg-intro{font-size:14px;line-height:1.45;color:var(--ds-muted);margin:0 0 12px}
+.ds-dlg-intro b{color:var(--ds-ink)}
+.ds-err{font-size:14px;line-height:1.4;color:var(--ds-crit);margin:0 0 10px}
+/* Hinweis „Neue Version“ oben */
+.ds-updbar{position:fixed;z-index:120;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 10px);max-width:560px;margin:0 auto;display:flex;align-items:center;gap:8px;padding:8px 6px 8px 16px;border-radius:14px;background:var(--ds-surface);color:var(--ds-ink);border:1px solid var(--ds-line);box-shadow:0 8px 24px rgba(0,0,0,.16);font-size:14px;font-weight:600;line-height:1.35;transform:none}
+.ds-updbar span{flex:1;min-width:0}
+.ds-updbar .ds-btn{min-height:36px;padding:0 12px;font-size:14px}
+.ds-x{all:unset;box-sizing:border-box;cursor:pointer;width:34px;height:34px;flex:none;display:grid;place-items:center;color:var(--ds-muted);border-radius:8px;font-size:16px}
+
+/* App-spezifisch: Kopfzeile der Bereiche wie in den anderen Apps */
+.acc>summary{color:var(--tx);margin:0}
+.accb>.ds-lbl:first-child,.accb>.ds-hint:first-child{margin-top:12px}.lockbox h1{font-size:24px;font-weight:800;line-height:1.2}
+
+/* Meldungen unten: gleich in allen Apps */
+#toast{position:fixed!important;left:50%!important;right:auto!important;top:auto!important;transform:translateX(-50%)!important;bottom:calc(150px + env(safe-area-inset-bottom,0px))!important;z-index:130!important;background:var(--ds-ink)!important;color:var(--ds-surface)!important;padding:10px 16px!important;border-radius:12px!important;font-size:14px!important;line-height:1.4!important;font-weight:500!important;width:max-content!important;max-width:min(calc(100vw - 32px),440px)!important;box-sizing:border-box!important;text-align:center!important;box-shadow:0 6px 20px rgba(0,0,0,.18)!important}
+
+/* ds:end */
 </style>
 </head>
 <body>
@@ -188,12 +235,12 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
   <form class="lockbox" id="lockForm" autocomplete="off">
     <img src="icon-192.png" alt="">
     <h1>MyGesundBox</h1>
-    <p id="lockHint">Deine Gesundheitsdaten, verschlüsselt nur auf diesem Gerät.</p>
+    <p id="lockHint">Deine Gesundheitsdaten, verschlüsselt auf diesem Gerät.</p>
     <input type="password" id="pw" placeholder="Passwort" autocomplete="current-password" required>
     <input type="password" id="pw2" placeholder="Passwort wiederholen" autocomplete="new-password" hidden>
     <div class="err" id="lockErr"></div>
     <button class="pri" style="width:100%" id="lockBtnGo">Entsperren</button>
-    <button type="button" class="ghost" style="width:100%;margin-top:10px" id="bioBtn" hidden>👆 Mit Fingerabdruck entsperren</button>
+    <button type="button" class="ghost" style="width:100%;margin-top:10px" id="bioBtn" hidden><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-4px;margin-right:8px"><path d="M6.5 8.5a6 6 0 0 1 11 3.3c0 1.6-.1 3.2-.4 4.7"/><path d="M4 12.5c0-1 .1-2 .4-2.9"/><path d="M9 21c.8-2.2 1-4.6 1-7a2 2 0 0 1 4 0c0 1 0 2-.1 3"/><path d="M12.5 21.5c.4-.9.7-1.8.9-2.8"/><path d="M6.6 19.4c.7-1.7 1-3.5 1-5.4a4.4 4.4 0 0 1 .7-2.4"/><path d="M16.5 20c.2-.6.3-1.3.4-1.9"/></svg>Mit Fingerabdruck entsperren</button>
     <div id="restoreBox" hidden>
       <label class="linkbtn">Neues Handy? Sicherung wiederherstellen<input type="file" id="lrestore" accept=".gesundbox,.json,application/json" hidden></label>
       <button type="button" class="linkbtn" id="lghOpen">Aus GitHub wiederherstellen</button>
@@ -239,7 +286,7 @@ details summary{cursor:pointer;color:var(--mu);margin:16px 0 4px}
 
 <script>
 'use strict';
-const APP_VERSION='2.4.2';
+const APP_VERSION='2.4.3';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -362,7 +409,7 @@ function showLock(auto){
   $('#restoreBox').hidden=has;$('#lgh').hidden=true;$('#lgh_msg').textContent='';
   $('#pw2').hidden=has;$('#pw2').required=!has;
   $('#lockBtnGo').textContent=has?'Entsperren':'MyGesundBox anlegen';
-  $('#lockHint').textContent=has?'Deine Gesundheitsdaten, verschlüsselt nur auf diesem Gerät.':'Lege ein Passwort fest (mind. 8 Zeichen). Ohne Passwort sind die Daten nicht wiederherstellbar.';
+  $('#lockHint').textContent=has?'Deine Gesundheitsdaten, verschlüsselt auf diesem Gerät.':'Lege ein Passwort fest (mind. 8 Zeichen). Ohne Passwort sind die Daten nicht wiederherstellbar.';
   $('#pw').autocomplete=has?'current-password':'new-password';
   $('#pw').value='';$('#pw2').value='';$('#lockErr').textContent='';
   if(SHARE_PENDING&&has)$('#lockHint').textContent='Entsperre die MyGesundBox, um den geteilten Inhalt zu übernehmen.';
@@ -471,6 +518,8 @@ function field(fd,val){
 }
 /* fields: [{k,l,t,opts,req,def}] | onSave(vals) | opts.del, opts.okText, opts.html */
 let CUR_FORM=null,LOCKING=false;
+/* Fehlermeldung im Fenster anzeigen (wie in MySmartBox / MyBelegBox) */
+function ferr(f,m){let e=f.querySelector('.ds-err');if(!e){e=document.createElement('p');e.className='ds-err';f.querySelector('.row').before(e)}e.textContent=m;e.hidden=false;return false}
 function openForm(title,fields,values,onSave,o={}){
   const f=$('#dlgForm');CUR_FORM={draft:o.draft||null,extra:o.draftExtra||null};
   f.innerHTML=`<h2>${esc(title)}</h2>${o.html||''}${fields.map(fd=>field(fd,values?.[fd.k])).join('')}
@@ -946,20 +995,41 @@ function rMehr(){
   const acc=(k,ic,t,sub,body,force)=>`<details class="acc" data-k="${k}"${ACC_OPEN.has(k)||force?' open':''}><summary><span class="ai">${icon(ic)}</span><span class="at">${t}<small>${sub}</small></span>${icon('chev').replace('<svg','<svg class="chev"')}</summary><div class="accb">${body}</div></details>`;
   const bio=bioSupported()&&lsGet(BKEY);
   return `<div class="sintro">${icon('shield')}<span>Verschlüsselt mit AES-256 · sperrt nach 5 Min. ohne Eingabe oder 1 Min. im Hintergrund</span></div>`
-  +acc('sec','lock','Sicherheit','Passwort · Fingerabdruck '+(bio?'an':'aus'),`<div class="meta" style="margin-top:12px">Alle Daten liegen verschlüsselt auf diesem Gerät und werden nirgendwohin gesendet – außer in deine eigene GitHub-Sicherung (ebenfalls verschlüsselt).</div><div class="acts">${bioSupported()?(lsGet(BKEY)?'<button data-act="bio-off">👆 Fingerabdruck deaktivieren</button>':'<button data-act="bio-on">👆 Fingerabdruck einrichten</button>'):''}<button data-act="pw-change">🔑 Passwort ändern</button><button data-act="wipe" class="danger">🗑️ Alle Daten löschen</button></div>`)
-  +acc('bk','down','Sicherung',(g?'GitHub '+(bkStat.err?'⚠️ Problem':'an'):'GitHub aus')+' · '+(lb?'Datei '+fmtD(lb):'keine Datei'),`
-    <div class="srow" style="margin-top:8px"><span>☁️ GitHub</span><span class="meta" id="bkStatus">${g?bkText():'nicht eingerichtet'}</span></div>
-    <div class="srow" style="border:0"><span>💾 Sicherungsdatei</span><span class="meta">${lb?'zuletzt '+esc(fmtD(lb)):'noch keine'}</span></div>
-    ${g&&bkStat.conflict?`<div class="conflict">Im Repo liegt ein anderer Tresor (z. B. von einem früheren Gerät). Er bleibt in der Versionsgeschichte von GitHub erhalten, wenn du ihn ersetzt.<div class="acts"><button data-act="bk-pull">⬇️ GitHub-Stand laden</button><button data-act="bk-force" class="danger">⬆️ Durch diesen Tresor ersetzen</button></div></div>`:''}
-    <div class="acts">${g?'<button data-act="bk-now">☁️ Jetzt sichern</button>':'<button data-act="bk-setup">☁️ GitHub einrichten</button>'}<button data-act="bk-export">💾 Datei erstellen</button><button data-act="bk-restore">📂 Wiederherstellen</button></div>
-    <div class="hint">${g?`GitHub sichert automatisch nach jeder Änderung in <b>${esc(g.owner)}/${esc(g.repo)}</b>.`:'Mit GitHub wird nach jeder Änderung automatisch gesichert.'} Die Datei ist eine zusätzliche Kopie, die du selbst ablegst. Beides ist mit deinem Passwort verschlüsselt.</div>
-    ${g?'<details><summary>GitHub-Sicherung trennen</summary><div class="acts"><button data-act="bk-off">✖ Trennen</button></div></details>':''}`,g&&(bkStat.conflict||bkStat.err))
-  +acc('imp','import','Importieren','Termine (.ics) · Werte (CSV, Samsung Health)',`<div class="acts"><button data-act="ics-import">📅 Termine aus .ics</button><button data-act="csv-import">📈 Werte aus CSV / Samsung Health</button></div>
-    <div class="hint">Samsung Health: Im Export-Ordner einfach <b>alle Dateien</b> auswählen – die MyGesundBox nimmt sich Blutdruck, Puls (als Tageswert) und Gewicht selbst heraus.</div>
-    <div class="hint">Tipp: In anderen Apps auf <b>Teilen → MyGesundBox</b> tippen. So kommen Terminbestätigungen (.ics oder Text), CSV-Messwerte, Samsung-Health-Exporte (CSV oder ZIP) sowie Fotos und PDFs (z. B. Arztbriefe) direkt hierher.</div>`)
-  +acc('upd','pkg','App-Update','Version '+APP_VERSION+' · '+(D.github?'GitHub verbunden':'nicht verbunden'),`${D.github?`<div class="meta">Verbunden mit ${esc(D.github.repo)}</div><div class="acts"><button data-act="gh-upload">📦 Update-Zip hochladen</button><button data-act="gh-setup">🔧 Verbindung ändern</button><button data-act="gh-off">✖ Trennen</button></div>`:`<div class="meta">Neue Versionen als Zip direkt aus der App ins GitHub-Repo laden.</div><div class="acts"><button data-act="gh-setup">🔗 GitHub verbinden</button></div>`}<div id="updStatus" class="note" style="margin-top:8px">${UPD}</div>`,!!UPD)
-  +acc('cnt','list','Einträge',`${D.termine.length} Termine · ${D.dokumente.length} Dokumente`,`<div class="meta" style="margin-top:12px">${D.termine.length} Termine · ${D.aerzte.length} Ärzte · ${D.vorsorge.length} Vorsorge · ${D.werte.length} Messwerte · ${D.dokumente.length} Dokumente<br><span id="stor"></span></div>`)
-  +`<p class="meta" style="text-align:center">MyGesundBox · Version ${APP_VERSION}<br>Kein Ersatz für ärztlichen Rat.</p>`;
+  +acc('sec','lock','Sicherheit','Passwort · Fingerabdruck '+(bio?'an':'aus'),`
+    <p class="ds-hint">Alle Daten liegen verschlüsselt auf diesem Gerät${g?' und als verschlüsselte Sicherung in deinem privaten GitHub-Repo':''}. Sonst wird nichts gesendet. Dein Passwort wird nicht gespeichert.</p>
+    ${bioSupported()?`<div class="ds-lbl">Fingerabdruck</div>
+    <p class="ds-hint">${bio?'Entsperren per Fingerabdruck ist eingeschaltet. Das Passwort funktioniert weiterhin und bleibt für den Notfall wichtig.':'Entsperre die MyGesundBox mit Fingerabdruck oder Gesichtserkennung statt mit dem Passwort. Dafür wird ein Passkey „MyGesundBox“ in deinem Passwortmanager angelegt.'}</p>
+    <div class="ds-acts">${bio?'<button type="button" class="ds-btn" data-act="bio-off">Ausschalten</button>':'<button type="button" class="ds-btn pri" data-act="bio-on">Einschalten</button>'}</div>`:''}
+    <div class="ds-lbl${bioSupported()?' sep':''}">Passwort</div>
+    <p class="ds-hint">Beim Ändern werden alle Daten neu verschlüsselt. Ältere Sicherungsdateien brauchen weiter das Passwort, das beim Sichern galt.</p>
+    <div class="ds-acts"><button type="button" class="ds-btn" data-act="pw-change">Passwort ändern</button></div>
+    <div class="ds-lbl sep">Alle Daten löschen</div>
+    <p class="ds-hint">Löscht alle Daten und Dokumente auf diesem Gerät. Das lässt sich nicht rückgängig machen.</p>
+    <div class="ds-acts"><button type="button" class="ds-btn dng" data-act="wipe">Alle Daten löschen</button></div>`)
+  +acc('bk','down','Datensicherung',(g?'GitHub '+(bkStat.err?'⚠️ Problem':'an'):'GitHub aus')+' · '+(lb?'Datei '+fmtD(lb):'keine Datei'),`
+    <div class="ds-lbl">Automatisch in GitHub</div>
+    ${g?`<p class="ds-hint">Nach jeder Änderung landet der verschlüsselte Tresor in <b>${esc(g.owner)}/${esc(g.repo)}</b>. GitHub sieht nur verschlüsselte Daten.</p>
+    <div class="ds-stat" id="bkStatus">${bkText()}</div>
+    ${bkStat.conflict?`<div class="ds-box crit">Im Repo liegt ein anderer Tresor (z. B. von einem früheren Gerät). Er bleibt in der Versionsgeschichte von GitHub erhalten, wenn du ihn ersetzt.<div class="ds-acts"><button type="button" class="ds-btn pri" data-act="bk-pull">GitHub-Stand laden</button><button type="button" class="ds-btn dng" data-act="bk-force">Durch diesen ersetzen</button></div></div>`:''}
+    <div class="ds-acts"><button type="button" class="ds-btn pri" data-act="bk-now">Jetzt sichern</button><button type="button" class="ds-btn" data-act="bk-off">Trennen</button></div>`
+    :`<p class="ds-hint">Sichert den verschlüsselten Tresor nach jeder Änderung in ein <b>privates</b> GitHub-Repo – auch wenn Browserdaten gelöscht werden, bleibt alles erhalten.</p>
+    <div class="ds-acts"><button type="button" class="ds-btn pri" data-act="bk-setup">GitHub einrichten</button></div>`}
+    <div class="ds-lbl sep">Sicherungsdatei</div>
+    <p class="ds-hint">Zusätzlich oder statt GitHub: eine Datei, die du selbst ablegst. Sie ist mit deinem aktuellen Passwort verschlüsselt und enthält auch alle Dokumente. ${lb?'Letzte Sicherung: '+esc(fmtD(lb))+'.':'Bisher keine Sicherung.'}</p>
+    <div class="ds-acts"><button type="button" class="ds-btn${g?'':' pri'}" data-act="bk-export">Sicherung erstellen</button><button type="button" class="ds-btn" data-act="bk-restore">Sicherung laden</button></div>`,g&&(bkStat.conflict||bkStat.err))
+  +acc('imp','import','Importieren','Termine (.ics) · Werte (CSV, Samsung Health)',`
+    <p class="ds-hint">Samsung Health: Im Export-Ordner einfach <b>alle Dateien</b> auswählen – die MyGesundBox nimmt sich Blutdruck, Puls (als Tageswert) und Gewicht selbst heraus.</p>
+    <div class="ds-acts"><button type="button" class="ds-btn" data-act="ics-import">Termine aus .ics</button><button type="button" class="ds-btn" data-act="csv-import">Werte aus CSV / Samsung Health</button></div>
+    <p class="ds-hint" style="margin-top:10px">Tipp: In anderen Apps auf <b>Teilen → MyGesundBox</b> tippen. So kommen Terminbestätigungen (.ics oder Text), CSV-Messwerte, Samsung-Health-Exporte (CSV oder ZIP) sowie Fotos und PDFs (z. B. Arztbriefe) direkt hierher.</p>`)
+  +acc('upd','pkg','App-Update','Version '+APP_VERSION+' · '+(D.github?'GitHub verbunden':'nicht verbunden'),`
+    ${D.github?`<p class="ds-hint">Verbunden mit <b>${esc(D.github.repo)}</b>. Lade hier das Zip-Paket einer neuen Version hoch – GitHub prüft die Versionsnummer und veröffentlicht es in 1–2 Minuten.</p>
+    <div class="ds-acts"><button type="button" class="ds-btn pri" data-act="gh-upload">Update-Zip hochladen</button><button type="button" class="ds-btn" data-act="gh-setup">Verbindung ändern</button><button type="button" class="ds-btn" data-act="gh-off">Trennen</button></div>`
+    :`<p class="ds-hint">Neue Versionen als Zip direkt aus der App veröffentlichen. Dafür brauchst du einen eigenen Zugangsschlüssel nur für das App-Repo.</p>
+    <div class="ds-acts"><button type="button" class="ds-btn pri" data-act="gh-setup">GitHub verbinden</button></div>`}
+    <div id="updStatus" class="ds-box"${UPD?'':' hidden'}>${UPD}</div>`,!!UPD)
+  +acc('cnt','list','Einträge',`${D.termine.length} Termine · ${D.dokumente.length} Dokumente`,`
+    <p class="ds-hint">${D.termine.length} Termine · ${D.aerzte.length} Ärzte · ${D.vorsorge.length} Vorsorge · ${D.werte.length} Messwerte · ${D.dokumente.length} Dokumente<br><span id="stor"></span></p>`)
+  +`<p class="ds-ver">MyGesundBox · Version ${APP_VERSION}<br>Kein Ersatz für ärztlichen Rat.</p>`;
 }
 
 /* ---------- Formulare ---------- */
@@ -1190,7 +1260,7 @@ function importCSVText(fname,text){
 /* ---------- Update direkt aus der App (GitHub) ---------- */
 const defaultRepo=()=>{const h=location.hostname;return h.endsWith('.github.io')?h.split('.')[0]+'/'+h:''};
 let UPD='';
-function setUpd(html){UPD=html;const el=document.getElementById('updStatus');if(el)el.innerHTML=html;}
+function setUpd(html){UPD=html;const el=document.getElementById('updStatus');if(el){el.innerHTML=html;el.hidden=!html}}
 async function gh(path,opt={},tok){
   const g=tok?{token:tok}:D?.github;if(!g?.token)throw new Error('Kein GitHub-Token hinterlegt.');
   const r=await fetch('https://api.github.com'+path,{...opt,headers:{'Accept':'application/vnd.github+json','Authorization':'Bearer '+g.token,'X-GitHub-Api-Version':'2022-11-28',...(opt.body?{'Content-Type':'application/json'}:{})}});
@@ -1200,12 +1270,12 @@ async function gh(path,opt={},tok){
   return j;
 }
 function ghSetup(){
-  openForm('GitHub verbinden',[{k:'token',l:'Fine-grained Token (github_pat_…)',t:'password',req:true},{k:'repo',l:'Repo (Besitzer/Name)',req:true}],{repo:D.github?.repo||defaultRepo()},async v=>{
+  openForm('App-Update verbinden',[{k:'repo',l:'Repo (Besitzer/Name)',req:true},{k:'token',l:'Zugangsschlüssel (github_pat_…)',t:'password',req:true}],{repo:D.github?.repo||defaultRepo()},async(v,f)=>{
     const repo=v.repo.trim().replace(/^https:\/\/github\.com\//,'').replace(/\/$/,''),token=v.token.trim();
-    try{const j=await gh('/repos/'+repo,{},token);if(j.permissions&&!j.permissions.push){toast('Token hat keine Schreibrechte für das Repo.');return false}}
-    catch(e){toast(e.message);return false}
+    try{const j=await gh('/repos/'+repo,{},token);if(j.permissions&&!j.permissions.push)return ferr(f,'Der Schlüssel darf in dieses Repo nicht schreiben. Setze „Contents“ auf „Read and write“.')}
+    catch(e){return ferr(f,e.message)}
     D.github={token,repo};await save();toast('GitHub verbunden ✓');
-  },{okText:'Prüfen & speichern',html:'<div class="meta" style="margin-bottom:10px">Der Token wird verschlüsselt in der MyGesundBox gespeichert und nur für Updates genutzt. Rechte: <b>Contents: Read and write</b> und <b>Actions: Read</b>, nur für dieses eine Repo.</div>'});
+  },{okText:'Prüfen & verbinden',html:'<p class="ds-dlg-intro">Dafür brauchst du einen eigenen Fine-grained-Zugangsschlüssel nur für das App-Repo mit den Rechten <b>Contents: Read and write</b> und <b>Actions: Read</b>. Er wird verschlüsselt im Tresor gespeichert. Der Schlüssel der Datensicherung reicht dafür nicht.</p>'});
 }
 async function ghUpload(){
   const file=await pickFile('.zip,application/zip');if(!file)return;
@@ -1240,7 +1310,7 @@ async function watchRun(repo,tok,sha){
   while(Date.now()-t1<4*60e3){
     await new Promise(r=>setTimeout(r,10000));
     try{const html=await (await fetch('./index.html?v='+Date.now(),{cache:'no-store'})).text();const v=(html.match(/APP_VERSION='([\d.]+)'/)||[])[1];
-      if(v&&v!==APP_VERSION){setUpd(`🎉 Version ${esc(v)} ist online. <button class="pri" style="padding:6px 12px;margin-left:6px" onclick="location.reload()">Jetzt neu laden</button>`);return}}catch(e){}
+      if(v&&v!==APP_VERSION){setUpd(`🎉 Version ${esc(v)} ist online.<div class="ds-acts"><button type="button" class="ds-btn pri" onclick="location.reload()">Jetzt neu laden</button></div>`);return}}catch(e){}
   }
   setUpd('✅ Paket übernommen. Die Seite ist noch nicht aktualisiert (gleiche Version oder GitHub braucht länger) – später neu laden.'+link);
 }
@@ -1551,25 +1621,25 @@ async function bkRestore(g,onStep){
 }
 function bkSetup(){
   openForm('GitHub-Sicherung einrichten',[{k:'owner',l:'Konto / Organisation',req:true},{k:'repo',l:'Privates Repo',req:true},{k:'token',l:'Zugangsschlüssel (github_pat_…)',t:'password',req:true}],
-    {owner:'jazm-gesundbox',repo:'gesundbox-daten'},async v=>{
+    {owner:'jazm-gesundbox',repo:'gesundbox-daten'},async(v,f)=>{
     const g={owner:v.owner.trim(),repo:v.repo.trim(),token:v.token.trim()};
     try{const info=await bkFetch(g,'GET','');
-      if(!info){toast(bkErrText({status:404}));return false}
-      if(!info.private){toast('Dieses Repo ist öffentlich. Gesichert wird nur in private Repos.');return false}
-      if(info.permissions&&info.permissions.push===false){toast('Der Schlüssel darf nicht in dieses Repo schreiben (Contents: Read and write).');return false}
-    }catch(e){toast(bkErrText(e));return false}
+      if(!info)return ferr(f,bkErrText({status:404}));
+      if(!info.private)return ferr(f,'Dieses Repo ist öffentlich. Aus Sicherheitsgründen sichert die MyGesundBox nur in private Repos.');
+      if(info.permissions&&info.permissions.push===false)return ferr(f,'Der Schlüssel darf in dieses Repo nicht schreiben. Setze „Contents“ auf „Read and write“.');
+    }catch(e){return ferr(f,bkErrText(e))}
     D.backupGh=g;setBk({err:'',at:0,conflict:false});await save({clean:true});
     setTimeout(async()=>{await bkSync();if(!bkStat.err)toast('Automatische Sicherung ist aktiv ✓')},50);
-  },{okText:'Verbinden & sichern',html:'<div class="meta" style="margin-bottom:10px">Sichert den verschlüsselten Tresor nach jeder Änderung in ein <b>privates</b> GitHub-Repo. GitHub sieht nur verschlüsselte Daten. Schlüssel: nur dieses Repo, <b>Contents: Read and write</b>.</div>'});
+  },{okText:'Verbinden & sichern',html:'<p class="ds-dlg-intro">Sichert den verschlüsselten Tresor nach jeder Änderung in ein <b>privates</b> GitHub-Repo. GitHub sieht nur verschlüsselte Daten. Zugangsschlüssel: nur für dieses Repo, mit <b>Contents: Read and write</b>.</p>'});
 }
 function changePw(){
-  openForm('Passwort ändern',[{k:'old',l:'Aktuelles Passwort',t:'password',req:true},{k:'n1',l:'Neues Passwort (mind. 8 Zeichen)',t:'password',req:true},{k:'n2',l:'Neues Passwort wiederholen',t:'password',req:true}],{},async v=>{
-    try{const p=JSON.parse(vaultJson);await decryptObj(p,await derive(v.old,unb64(p.salt)))}catch{toast('Aktuelles Passwort falsch.');return false}
-    if(v.n1.length<8){toast('Mindestens 8 Zeichen.');return false}
-    if(v.n1!==v.n2){toast('Neue Passwörter stimmen nicht überein.');return false}
+  openForm('Passwort ändern',[{k:'old',l:'Aktuelles Passwort',t:'password',req:true},{k:'n1',l:'Neues Passwort (mind. 8 Zeichen)',t:'password',req:true},{k:'n2',l:'Neues Passwort wiederholen',t:'password',req:true}],{},async(v,f)=>{
+    if(v.n1.length<8)return ferr(f,'Das neue Passwort braucht mindestens 8 Zeichen.');
+    if(v.n1!==v.n2)return ferr(f,'Die neuen Passwörter stimmen nicht überein.');
+    try{const p=JSON.parse(vaultJson);await decryptObj(p,await derive(v.old,unb64(p.salt)))}catch{return ferr(f,'Das aktuelle Passwort ist falsch.')}
     SALT=crypto.getRandomValues(new Uint8Array(16));KEY=await derive(v.n1,SALT);await save();
     if(lsGet(BKEY)){lsDel(BKEY);setTimeout(()=>{if(confirm('Passwort geändert. Fingerabdruck jetzt neu einrichten?'))enableBio(v.n1)},300)}else toast('Passwort geändert. Ältere Sicherungsdateien brauchen weiter das alte Passwort.');
-  },{okText:'Ändern'});
+  },{okText:'Passwort ändern'});
 }
 async function wipe(){
   if(!confirm('Wirklich ALLE Daten auf diesem Gerät löschen? Das kann nicht rückgängig gemacht werden.'))return;
@@ -1611,9 +1681,9 @@ async function onAct(e){
     case 'bk-import':importBackup();break;
     case 'bk-setup':bkSetup();break;
     case 'bk-restore':{const g=bkCfg();if(!g){importBackup();break}
-      openForm('Sicherung wiederherstellen',[{k:'q',l:'Woher?',t:'select',opts:[['datei','Aus einer Sicherungsdatei'],['github','Aus GitHub ('+g.owner+'/'+g.repo+')']]}],{},v=>{
+      openForm('Sicherung laden',[{k:'q',l:'Woher?',t:'select',opts:[['datei','Aus einer Sicherungsdatei'],['github','Aus GitHub ('+g.owner+'/'+g.repo+')']]}],{},v=>{
         setTimeout(async()=>{if(v.q==='datei')importBackup();else if(confirm('Die Daten auf diesem Gerät durch den GitHub-Stand ersetzen?')){try{restoreVaultStr(await bkRestore(g))}catch(e){toast(e.status?bkErrText(e):e.message)}}},50);
-      },{okText:'Weiter',html:'<div class="meta" style="margin-bottom:10px">Die Daten auf diesem Gerät werden durch die Sicherung ersetzt. Danach mit dem Passwort entsperren, das beim Sichern galt.</div>'});break}
+      },{okText:'Weiter',html:'<p class="ds-dlg-intro">Die Daten auf diesem Gerät werden durch die Sicherung ersetzt. Danach mit dem Passwort entsperren, das beim Sichern galt.</p>'});break}
     case 'bk-now':await bkSync();if(!bkStat.err)toast('Auf GitHub gesichert ✓');break;
     case 'bk-force':if(confirm('Den Tresor im Repo durch diesen ersetzen? Der alte bleibt in der GitHub-Versionsgeschichte.')){await bkSync(true);render()}break;
     case 'bk-pull':if(confirm('Die Daten auf diesem Gerät durch den GitHub-Stand ersetzen?')){try{restoreVaultStr(await bkRestore(bkCfg()))}catch(e){toast(e.status?bkErrText(e):e.message)}}break;
@@ -1643,7 +1713,7 @@ async function onAct(e){
     case 'bio-on':askPwThenBio();break;
     case 'gh-setup':ghSetup();break;
     case 'gh-upload':ghUpload();break;
-    case 'gh-off':if(confirm('GitHub-Verbindung entfernen? Den Token kannst du danach auf GitHub löschen.')){delete D.github;await save();render()}break;
+    case 'gh-off':if(confirm('GitHub-Verbindung für Updates entfernen? Den Schlüssel kannst du danach auf GitHub löschen.')){delete D.github;await save();render();toast('App-Update getrennt.')}break;
     case 'bio-off':if(confirm('Fingerabdruck-Entsperrung deaktivieren?')){lsDel(BKEY);render();toast('Fingerabdruck deaktiviert. Den Passkey kannst du im Google Passwortmanager löschen.')}break;
   }
 }
@@ -1766,7 +1836,14 @@ swipeClose($('#spanel'),()=>$('#spanel'),async()=>true,()=>closeSheet());
 
 /* ---------- Start ---------- */
 if(!window.crypto?.subtle){document.body.innerHTML='<p style="padding:24px">Diese App braucht HTTPS und einen aktuellen Browser.</p>'}
-else{boot().then(()=>showLock(true));if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{swReg=r}).catch(()=>{})}
+else{boot().then(()=>showLock(true));if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{swReg=r}).catch(()=>{});
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadCtl&&!refreshing)showUpdBar()})}}
+/* Hinweis „Neue Version“ – gleich wie in MySmartBox und MyBelegBox */
+function showUpdBar(){if(document.getElementById('dsupd'))return;const b=document.createElement('div');b.id='dsupd';b.className='ds-updbar';b.setAttribute('role','status');
+  b.innerHTML='<span>Neue Version der MyGesundBox ist da.</span><button type="button" class="ds-btn pri">Aktualisieren</button><button type="button" class="ds-x" aria-label="Später">✕</button>';
+  b.querySelector('.ds-btn').onclick=async()=>{b.querySelector('.ds-btn').disabled=true;try{await stashDraft()}catch{}location.reload()};
+  b.querySelector('.ds-x').onclick=()=>b.remove();document.body.appendChild(b)}
 </script>
 </body>
 </html>
