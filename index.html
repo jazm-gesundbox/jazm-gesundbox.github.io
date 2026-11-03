@@ -379,6 +379,11 @@ svg.chart .zout{stroke:var(--card);stroke-width:2}
 #dlgForm>.ds-grab{flex:0 0 40px;margin:4px auto 12px}
 
 /* ds:end */
+.medi .mstock{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;margin:8px 0 6px}
+.medi .mstock b{font-size:26px;line-height:1}.medi .mstock>span:not(.badge){color:var(--mu);font-size:14px}
+.medi .mbar{height:8px;border-radius:5px;background:var(--bg);overflow:hidden;margin:0 0 8px}
+.medi .mbar i{display:block;height:100%;border-radius:5px;background:var(--ok)}.medi .mbar i.b-or{background:var(--or)}.medi .mbar i.b-red{background:var(--red)}
+.medi.off{opacity:.65}
 </style>
 <script src="ds.js" data-app="gesundbox"></script>
 </head>
@@ -420,6 +425,7 @@ svg.chart .zout{stroke:var(--card);stroke-width:2}
     <button type="button" data-act="q-termin" style="--n:3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Termin</button>
     <button type="button" data-act="q-wert" style="--n:2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>Messung</button>
     <button type="button" data-act="q-arzt" style="--n:1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/><path d="M12 14v4M10 16h4"/></svg>Arzt</button>
+    <button type="button" data-act="q-medi" style="--n:5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-45 12 12)"/><path d="M9.5 9.5l5 5"/></svg>Medikament</button>
     <button type="button" data-act="q-vorsorge" style="--n:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>Vorsorge</button>
   </div></div>
   <button id="fab" type="button" aria-expanded="false" aria-controls="fan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="lbl">Neu</span></button>
@@ -440,7 +446,7 @@ svg.chart .zout{stroke:var(--card);stroke-width:2}
 
 <script>
 'use strict';
-const APP_VERSION='2.6.0';
+const APP_VERSION='2.7.0';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -517,8 +523,8 @@ function askPwThenBio(){
 }
 
 let KEY=null,SALT=null,D=null,TAB='start',WTYP='bp';
-const empty=()=>({v:1,termine:[],aerzte:[],vorsorge:[],werte:[],dokumente:[],sehwerte:[],sehhilfen:[],fragen:[],meta:{}});
-function normalize(o){const e=empty();for(const k of ['termine','aerzte','vorsorge','werte','dokumente','sehwerte','sehhilfen','fragen'])e[k]=Array.isArray(o?.[k])?o[k]:[];if(typeof o?.fk==='string')e.fk=o.fk;if(o?.github?.token)e.github={token:String(o.github.token),repo:String(o.github.repo||defaultRepo())};e.meta=o?.meta&&typeof o.meta==='object'?o.meta:{};const g=o?.backupGh;if(g?.token&&g.owner&&g.repo){e.backupGh={owner:String(g.owner),repo:String(g.repo),token:String(g.token)};if(g.dir)e.backupGh.dir=String(g.dir)}return e}
+const empty=()=>({v:1,termine:[],aerzte:[],vorsorge:[],werte:[],dokumente:[],sehwerte:[],sehhilfen:[],fragen:[],medis:[],meta:{}});
+function normalize(o){const e=empty();for(const k of ['termine','aerzte','vorsorge','werte','dokumente','sehwerte','sehhilfen','fragen','medis'])e[k]=Array.isArray(o?.[k])?o[k]:[];if(typeof o?.fk==='string')e.fk=o.fk;if(o?.github?.token)e.github={token:String(o.github.token),repo:String(o.github.repo||defaultRepo())};e.meta=o?.meta&&typeof o.meta==='object'?o.meta:{};const g=o?.backupGh;if(g?.token&&g.owner&&g.repo){e.backupGh={owner:String(g.owner),repo:String(g.repo),token:String(g.token)};if(g.dir)e.backupGh.dir=String(g.dir)}return e}
 /* ---------- Speicher: Tresor doppelt (localStorage + IndexedDB) ---------- */
 const idb=(()=>{let p;const open=()=>p||(p=new Promise((res,rej)=>{const r=indexedDB.open('gesundbox',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
   const tx=(mode,fn)=>open().then(db=>new Promise((res,rej)=>{const t=db.transaction('kv',mode);const rq=fn(t.objectStore('kv'));t.oncomplete=()=>res(rq&&rq.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)}));
@@ -651,6 +657,7 @@ function restoreDraft(){
     case 'termin':TAB='termine';render();editTermin(by(D.termine));break;
     case 'arzt':TAB='aerzte';render();editArzt(by(D.aerzte));break;
     case 'vorsorge':TAB='vorsorge';render();editVorsorge(by(D.vorsorge));break;
+    case 'medi':TAB='werte';WTYP='medis';render();editMedi(by(D.medis));break;
     case 'wert':TAB='werte';if(TYP[dr.typ])WTYP=dr.typ;render();editWert(by(D.werte));break;
     case 'dok':TAB='dok';render();editDok(by(D.dokumente),null,null,dr.pages);break;
     case 'seh':{TAB='werte';WTYP='augen';render();editSeh(by(D.sehwerte),{art:dr.vals?.art||'brille'});const sa=$('#sehArt');if(sa&&dr.vals?.art){sa.value=dr.vals.art;sa.onchange()}break}
@@ -870,6 +877,56 @@ function hilfeCard(x){
     ${w?`<div class="meta">Sehstärke: <button class="linkish" data-act="seh-edit" data-id="${w.id}">${esc(SEHART[w.art])} vom ${esc(fmtD(w.datum))}</button></div>`:''}
     ${x.notiz?`<div class="note">${esc(x.notiz)}</div>`:''}${docChips(x.id)}
     <div class="acts">${acts}<button data-act="hilfe-dok" data-id="${x.id}">📷 Rechnung</button><button data-act="hilfe-edit" data-id="${x.id}">✏️</button></div></div>`}
+/* ---------- Medikamente: Bestand zählt automatisch runter, Erinnerung an neues Rezept ----------
+   Einnahme als Schema (z. B. 1-0-1 oder 1/2-0-1) oder als Stück pro Tag; „bei Bedarf“ zählt nicht automatisch. */
+function mDose(t){t=String(t||'').trim().replace(/,/g,'.');if(!t)return 0;
+  const part=x=>{x=x.trim();const f=x.match(/^(\d+)\s*\/\s*(\d+)$/);if(f)return +f[1]/+f[2];if(x==='½')return .5;if(x==='¼')return .25;const n=parseFloat(x);return isFinite(n)&&n>0?n:0};
+  if(/[-–]/.test(t))return t.split(/\s*[-–]\s*/).reduce((a,x)=>a+part(x),0);return part(t)}
+function mInfo(m){const per=m.bedarf?0:mDose(m.schema),b=dnum(m.bestand);
+  if(b==null)return {per,cur:null,reicht:null,leer:null};
+  const since=m.stand?Math.max(0,-daysUntil(m.stand)):0,cur=Math.max(0,b-per*since);
+  const reicht=per>0?Math.floor(cur/per+1e-9):null;
+  return {per,cur,reicht,leer:reicht!=null?addDays(today(),reicht):null,vorlauf:+m.vorlauf||10}}
+const mFmt=n=>n==null?'–':(Math.round(n*10)/10).toLocaleString('de-DE');
+const mUnit=m=>m.einheit||'Stück';
+function mediCard(m){const i=mInfo(m),a=arzt(m.arztId),tel=a?.tel?a.tel.replace(/[^\d+]/g,''):'';
+  const pk=dnum(m.packung),f=pk&&i.cur!=null?Math.min(1,i.cur/pk):null;
+  const st=i.reicht==null?'':i.reicht<=Math.min(3,i.vorlauf)?'b-red':i.reicht<=i.vorlauf?'b-or':'b-ok';
+  return `<div class="card medi${m.aktiv===false?' off':''}" id="m-${m.id}"><h3>${esc(m.name)}${m.staerke?` <span class="meta" style="font-weight:600">${esc(m.staerke)}</span>`:''}${m.aktiv===false?' <span class="badge b-mu">Abgesetzt</span>':''}</h3>
+    <div class="meta">${m.bedarf?'bei Bedarf':[/[-–]/.test(m.schema||'')?esc(m.schema):'',i.per?`${mFmt(i.per)} ${esc(mUnit(m))} am Tag`:''].filter(Boolean).join(' · ')}${a?' · '+esc(a.name):''}</div>
+    ${i.cur!=null?`<div class="mstock"><b class="num">${mFmt(i.cur)}</b> <span>${esc(mUnit(m))} übrig${pk?' von '+mFmt(pk):''}</span>${i.reicht!=null?`<span class="badge ${st}">${i.reicht===0?'heute leer':'reicht bis '+esc(fmtD(i.leer))+' · '+i.reicht+' Tage'}</span>`:''}</div>
+      ${f!=null?`<div class="mbar"><i class="${st}" style="width:${Math.max(f>0?3:0,f*100)}%"></i></div>`:''}
+      ${i.reicht!=null&&i.reicht<=i.vorlauf&&m.aktiv!==false?`<div class="note">💊 <b>Neues Rezept besorgen</b> – ${i.reicht<=0?'der Vorrat ist aufgebraucht.':'der Vorrat reicht nur noch '+i.reicht+(i.reicht===1?' Tag.':' Tage.')}</div>`:''}`
+    :`<div class="meta">Bestand noch nicht eingetragen.</div>`}
+    ${m.notiz?`<div class="note">${esc(m.notiz)}</div>`:''}
+    <div class="acts">${pk?`<button data-act="m-pack" data-id="${m.id}">➕ Neue Packung (${mFmt(pk)})</button>`:''}<button data-act="m-stock" data-id="${m.id}">🔢 Bestand</button>${tel?`<a href="tel:${esc(tel)}">${QI.phone}Rezept anfragen</a>`:''}${a?`<button data-act="m-termin" data-id="${m.id}">📅 Rezept-Termin</button>`:''}<button data-act="m-edit" data-id="${m.id}">✏️</button></div></div>`}
+function rMedis(){
+  const L=D.medis.slice().sort((a,b)=>(a.aktiv===false)-(b.aktiv===false)||(mInfo(a).reicht??1e9)-(mInfo(b).reicht??1e9)||a.name.localeCompare(b.name));
+  let h=`<div class="toolbar"><button class="ghost" data-act="m-new">➕ Medikament</button><a class="ghost btnlike" style="text-decoration:none" href="${MYTHERAPY}">${QI.pill}MyTherapy</a></div>`;
+  if(!L.length)return h+`<div class="empty">Noch keine Medikamente.<br>Trag Bestand und Einnahme ein – die MyGesundBox zählt dann jeden Tag runter und erinnert dich rechtzeitig an ein neues Rezept.</div>`;
+  return h+L.map(mediCard).join('')}
+function editMedi(m){
+  const isNew=!m;m=m||{id:uid(),schema:'1-0-0',einheit:'Tabletten',vorlauf:10,stand:today()};
+  const am=[['','– kein Arzt –'],...D.aerzte.map(a=>[a.id,a.name+(a.fach?' ('+a.fach+')':'')])];
+  openForm(isNew?'Neues Medikament':'Medikament bearbeiten',[
+    {k:'name',l:'Name',req:true,ph:'z. B. Ramipril'},{k:'staerke',l:'Stärke',ph:'z. B. 5 mg',half:true},{k:'einheit',l:'Einheit',half:true,ph:'Tabletten'},
+    {k:'schema',l:'Einnahme (morgens-mittags-abends oder Stück pro Tag)',ph:'z. B. 1-0-1 oder 1/2-0-0'},
+    {k:'bedarf',l:'Art',t:'select',opts:[['','regelmäßig – automatisch runterzählen'],['1','nur bei Bedarf – nicht runterzählen']]},
+    {k:'bestand',l:'Bestand jetzt',t:'decimal',half:true,ph:'z. B. 42'},{k:'packung',l:'Stück pro Packung',t:'decimal',half:true,ph:'z. B. 100'},
+    {k:'vorlauf',l:'An Rezept erinnern, wenn der Vorrat nur noch so lange reicht',t:'select',opts:[['5','5 Tage'],['7','7 Tage'],['10','10 Tage'],['14','14 Tage'],['21','3 Wochen']]},
+    {k:'arztId',l:'Verschrieben von',t:'select',opts:am},
+    {k:'aktiv',l:'Status',t:'select',opts:[['1','wird eingenommen'],['0','abgesetzt']]},
+    {k:'notiz',l:'Notiz',t:'textarea'}],
+  {...m,bestand:m.bestand!=null&&m.bestand!==''?mFmt(mInfo(m).cur):'',bedarf:m.bedarf?'1':'',aktiv:m.aktiv===false?'0':'1',vorlauf:String(m.vorlauf||10)},
+  async(v,f)=>{const b=v.bestand.trim()===''?'':dnum(v.bestand);if(v.bestand.trim()!==''&&(b==null||b<0))return ferr(f,'Bitte beim Bestand eine Zahl eintragen.');
+    if(!v.bedarf&&v.schema.trim()&&!mDose(v.schema))return ferr(f,'Die Einnahme verstehe ich nicht. Beispiele: 1-0-1, 1/2-0-0 oder 2.');
+    const old=isNew?null:mInfo(m);
+    Object.assign(m,{name:v.name.trim(),staerke:v.staerke.trim(),einheit:v.einheit.trim(),schema:v.schema.trim(),bedarf:!!v.bedarf,packung:v.packung.trim(),vorlauf:+v.vorlauf||10,arztId:v.arztId,aktiv:v.aktiv!=='0',notiz:v.notiz});
+    if(b===''){m.bestand='';m.stand=''}else if(isNew||old.cur==null||Math.abs(b-old.cur)>1e-6){m.bestand=String(b);m.stand=today()}
+    if(isNew)D.medis.push(m);await save()},
+  {draft:{kind:'medi',id:isNew?null:m.id},del:isNew?null:async()=>{D.medis=D.medis.filter(x=>x.id!==m.id);await save()},
+   html:'<p class="ds-dlg-intro">Der Bestand zählt ab heute jeden Tag um die tägliche Menge runter. Bei einer neuen Packung tippst du einfach auf „Neue Packung“.</p>'});
+}
 function rAugen(){
   const W=D.sehwerte.slice().sort((a,b)=>b.datum.localeCompare(a.datum));
   const ord=a=>a.status==='alt'?2:a.status==='ersatz'?1:0;
@@ -989,6 +1046,7 @@ function rSearch(){
   grp('Vorsorge',D.vorsorge.filter(v=>has(v.name,v.notiz)).map(v=>row('v-edit',v.id,'repeat',v.name,vStatus(v).txt)));
   grp('Augen',D.sehhilfen.filter(x=>has(x.name,x.haendler,x.fassung,x.glaeser,x.notiz,hilfeTitel(x))).map(x=>row('hilfe-edit',x.id,'eye',hilfeTitel(x),(x.art==='brille'?'Brille':'Kontaktlinsen')+(x.haendler?' · '+x.haendler:''))));
   grp('Dokumente',D.dokumente.filter(d=>has(dokTitel(d),d.notiz,DOKTYP[d.typ],arzt(d.arztId)?.name)).map(d=>row('d-view',d.id,'doc',dokTitel(d),(DOKTYP[d.typ]||'Dokument')+(d.datum?' · '+fmtD(d.datum):''))));
+  grp('Medikamente',D.medis.filter(m=>has(m.name,m.staerke,m.notiz)).map(m=>row('goto-medis',m.id,'doc',m.name,[m.staerke,m.bedarf?'bei Bedarf':m.schema].filter(Boolean).join(' · '))));
   return n?h:`<div class="empty">Nichts gefunden für „${esc(SEARCH.trim())}“.</div>`;
 }
 /* Suche als Blatt von unten – wie in MyBelegBox und MySmartBox */
@@ -1004,6 +1062,7 @@ function rSearchRes(raw){
   grp('Vorsorge',D.vorsorge.filter(v=>has(v.name,v.notiz)).map(v=>row('v-edit',v.id,'repeat',v.name,vStatus(v).txt)));
   grp('Augen',D.sehhilfen.filter(x=>has(x.name,x.haendler,x.fassung,x.glaeser,x.notiz,hilfeTitel(x))).map(x=>row('hilfe-edit',x.id,'eye',hilfeTitel(x),(x.art==='brille'?'Brille':'Kontaktlinsen')+(x.haendler?' · '+x.haendler:''))));
   grp('Dokumente',D.dokumente.filter(d=>has(dokTitel(d),d.notiz,DOKTYP[d.typ],arzt(d.arztId)?.name)).map(d=>row('d-view',d.id,'doc',dokTitel(d),(DOKTYP[d.typ]||'Dokument')+(d.datum?' · '+fmtD(d.datum):''))));
+  grp('Medikamente',D.medis.filter(m=>has(m.name,m.staerke,m.notiz)).map(m=>row('goto-medis',m.id,'doc',m.name,[m.staerke,m.bedarf?'bei Bedarf':m.schema].filter(Boolean).join(' · '))));
   return n?h:'<p class="ds-qhint">Nichts gefunden.</p>';
 }
 function openSearch(){setFan(false);openSheet('search')}
@@ -1062,6 +1121,9 @@ function dashTodos(){
   for(const x of D.sehhilfen){if(x.art!=='kontaktlinsen'||x.status==='alt')continue;const k=klInfo(x),n=hilfeTitel(x);
     if(k.wechsel!=null&&k.wechsel<=1)T.push([k.wechsel<0?'crit':'warn','👁️',`${n}: wechseln – `+(k.wechsel<0?`seit ${-k.wechsel} Tagen fällig`:k.wechsel===0?'heute fällig':'morgen fällig'),'goto-augen',x.id]);
     if(k.reicht!=null&&k.reicht<=21&&!+x.abo)T.push([k.reicht<=7?'crit':'warn','🛒',`${n}: nachbestellen – Vorrat reicht noch ca. ${Math.max(0,k.reicht)} Tage`,'goto-augen',x.id]);}
+  /* Medikamente: neues Rezept besorgen */
+  for(const m of D.medis){if(m.aktiv===false)continue;const i=mInfo(m);if(i.reicht==null||i.reicht>i.vorlauf)continue;
+    T.push([i.reicht<=3?'crit':'warn','💊',`${m.name}: neues Rezept besorgen – `+(i.reicht<=0?'Vorrat aufgebraucht':'reicht noch '+i.reicht+(i.reicht===1?' Tag':' Tage')),'goto-medis',m.id])}
   /* Medikationsplan */
   const mp=D.dokumente.filter(x=>x.typ==='medikationsplan').sort((a,b)=>(b.datum||'').localeCompare(a.datum||''))[0];
   if(mp&&-daysUntil(mp.datum)>90)T.push(['warn','💊','Medikationsplan ist '+(-daysUntil(mp.datum))+' Tage alt – noch aktuell?','d-view',mp.id]);
@@ -1077,11 +1139,12 @@ function dashTodos(){
 const SCHED='sched-gesundbox',LEADS=[7,14,30];
 const remOn=()=>!!(D&&D.meta&&D.meta.remind);
 function remLead(){const v=+(D&&D.meta&&D.meta.remindLead);return LEADS.includes(v)?v:14}
-const RMLAB={t:'Arzttermin',v:'Vorsorge',u:'Ablauf eines Dokuments',w:'Kontaktlinsen-Wechsel',n:'Kontaktlinsen nachbestellen'};
+const RMLAB={t:'Arzttermin',v:'Vorsorge',u:'Ablauf eines Dokuments',w:'Kontaktlinsen-Wechsel',n:'Kontaktlinsen nachbestellen',m:'Neues Rezept'};
 function schedItems(){const L=remLead(),td=today(),it=[];
   for(const t of D.termine){const d=String(t.datum||'').slice(0,10);if(d&&d>=td)it.push({d,t:'t',l:1})}
   for(const v of D.vorsorge){const st=vStatus(v);if(st.termin||!st.next)continue;const d=localD(st.next);if(d>=td)it.push({d,t:'v',l:L})}
   for(const x of D.dokumente){const d=String(x.gueltig||'').slice(0,10);if(d&&d>=td)it.push({d,t:'u',l:L})}
+  for(const m of D.medis){if(m.aktiv===false)continue;const i=mInfo(m);if(i.leer&&i.reicht>=0)it.push({d:i.leer,t:'m',l:i.vorlauf})}
   for(const x of D.sehhilfen){if(x.art!=='kontaktlinsen'||x.status==='alt')continue;const k=klInfo(x);
     if(k.wechsel!=null&&k.wechsel>=0)it.push({d:addDays(td,k.wechsel),t:'w',l:1});
     if(k.reicht!=null&&k.reicht>=0&&!+x.abo)it.push({d:addDays(td,k.reicht),t:'n',l:L})}
@@ -1123,12 +1186,12 @@ async function remindOff(){
 }
 function rRemind(){
   if(!('Notification' in window&&'serviceWorker' in navigator))return '<p class="ds-hint">Dieser Browser kann keine Benachrichtigungen anzeigen.</p>';
-  if(!remOn())return `<p class="ds-hint">Die MyGesundBox meldet sich vor <b>Arztterminen</b> (am Vortag und am Tag), vor fälligen <b>Vorsorgen</b>, ablaufenden <b>Überweisungen</b> und anderen Dokumenten mit „Gültig bis“, zum <b>Kontaktlinsen-Wechsel</b> und wenn der Linsen-Vorrat zur Neige geht. Dafür liegen nur die <b>Daten ohne Titel, Ärzte oder Inhalte</b> unverschlüsselt auf dem Handy.</p>
+  if(!remOn())return `<p class="ds-hint">Die MyGesundBox meldet sich vor <b>Arztterminen</b> (am Vortag und am Tag), wenn ein <b>Medikament</b> bald aufgebraucht ist, vor fälligen <b>Vorsorgen</b>, ablaufenden <b>Überweisungen</b> und anderen Dokumenten mit „Gültig bis“, zum <b>Kontaktlinsen-Wechsel</b> und wenn der Linsen-Vorrat zur Neige geht. Dafür liegen nur die <b>Daten ohne Titel, Ärzte oder Inhalte</b> unverschlüsselt auf dem Handy.</p>
     <div class="ds-acts"><button type="button" class="ds-btn pri" data-act="rm-on">Einschalten</button></div>`;
   const P=Notification.permission;
   return `<p class="ds-hint">An. Die MyGesundBox meldet sich einmal am Tag mit einer neutralen Benachrichtigung – ohne Titel, Ärzte oder Inhalte. Geprüft wird bei jedem Öffnen der App${D.meta.remindBg?' und ab und zu bei geschlossener App – wie oft, entscheidet Android':'. Bei geschlossener App nur, wenn sie auf dem Startbildschirm installiert ist'}. Arzttermine kannst du zusätzlich unter Termine in den Kalender exportieren.</p>
     <div class="ds-lbl">So früh melden</div><div class="ds-seg" role="radiogroup" aria-label="So früh melden" style="margin:0 0 6px">${LEADS.map(k=>`<button type="button" role="radio" aria-checked="${remLead()===k}" data-act="rm-lead" data-id="${k}">${k} Tage</button>`).join('')}</div>
-    <p class="ds-hint" style="font-size:13px">Gilt für Vorsorge, Dokumente und Linsen-Vorrat. Arzttermine und Linsen-Wechsel meldet die App immer am Vortag und am Tag selbst.</p>
+    <p class="ds-hint" style="font-size:13px">Gilt für Vorsorge, Dokumente und Linsen-Vorrat. Arzttermine und Linsen-Wechsel meldet die App immer am Vortag und am Tag selbst, Medikamente so früh, wie du es beim Medikament eingestellt hast.</p>
     ${P!=='granted'?`<div class="ds-box crit"><b>Benachrichtigungen sind ${P==='default'?'nicht erlaubt':'blockiert'}.</b> Darum kommt keine Meldung. ${P==='default'?'Tippe auf „Erlauben“.':'Erlaube sie in den Android-Einstellungen: Apps → MyGesundBox (oder Chrome) → Benachrichtigungen → an. Falls dort alles an ist: in Chrome auf das Symbol neben der Adresse → Berechtigungen → Benachrichtigungen → zulassen.'}<div class="ds-acts"><button type="button" class="ds-btn" data-act="rm-perm">${P==='default'?'Erlauben':'Erneut prüfen'}</button></div></div>`:''}
     <p class="ds-stat" style="display:block">${remindNext()}</p>
     <div class="ds-acts"><button type="button" class="ds-btn" data-act="rm-test">Test-Benachrichtigung</button><button type="button" class="ds-btn" data-act="rm-off">Ausschalten</button></div>`;
@@ -1253,8 +1316,9 @@ function rWerte(){
   /* Puls: auch den Puls aus den Blutdruckmessungen zeigen (Bearbeiten öffnet die Blutdruckmessung) */
   if(WTYP==='puls')list=list.concat(D.werte.filter(w=>w.typ==='bp'&&w.v3!=null).map(w=>({...w,typ:'puls',v1:w.v3,v2:null,v3:null,quelle:(w.quelle?w.quelle+' · ':'')+'aus Blutdruckmessung'})));
   list.sort((a,b)=>a.datum.localeCompare(b.datum));
-  const chips=`<div class="chips">${Object.entries(TYP).map(([k,t])=>`<button data-act="w-typ" data-id="${k}" class="${k===WTYP?'on':''}">${t.n}</button>`).join('')}<button data-act="w-typ" data-id="augen" class="${WTYP==='augen'?'on':''}">👓 Augen</button></div>`;
+  const chips=`<div class="chips">${Object.entries(TYP).map(([k,t])=>`<button data-act="w-typ" data-id="${k}" class="${k===WTYP?'on':''}">${t.n}</button>`).join('')}<button data-act="w-typ" data-id="augen" class="${WTYP==='augen'?'on':''}">👓 Augen</button><button data-act="w-typ" data-id="medis" class="${WTYP==='medis'?'on':''}">💊 Medikamente</button></div>`;
   if(WTYP==='augen')return chips+rAugen();
+  if(WTYP==='medis')return chips+rMedis();
   let h=chips+`<div class="toolbar"><button class="ghost" data-act="csv-import">📥 Importieren (CSV / Samsung Health)</button></div>`;
   if(!list.length)return h+`<div class="empty">Noch keine ${TYP[WTYP].n}-Werte.<br>Tippe auf <b>+</b> oder importiere eine CSV-Datei aus deiner Mess-App.</div>`;
   const last=list[list.length-1];
@@ -1997,6 +2061,14 @@ async function onAct(e){
     case 'q-dok':DTYP='alle';DARZT='';editDok(null,{});{const c=document.getElementById('pgCam');if(c)c.click()}break;
     case 'q-wert':WTYP='bp';editWert();break;
     case 'q-arzt':editArzt();break;
+    case 'goto-medis':TAB='werte';WTYP='medis';render();if(id)setTimeout(()=>flashCard('m-'+id),80);break;
+    case 'm-new':case 'q-medi':TAB='werte';WTYP='medis';render();editMedi();break;
+    case 'm-edit':editMedi(D.medis.find(x=>x.id===id));break;
+    case 'm-pack':{const m=D.medis.find(x=>x.id===id);if(!m)break;const i=mInfo(m),pk=dnum(m.packung)||0;m.bestand=String((i.cur||0)+pk);m.stand=today();await save();render();flashCard('m-'+id);DS.yay('Neue Packung');toast(`${m.name}: jetzt ${mFmt((i.cur||0)+pk)} ${mUnit(m)}.`);break}
+    case 'm-stock':{const m=D.medis.find(x=>x.id===id);if(!m)break;const i=mInfo(m);
+      openForm('Bestand',[{k:'b',l:'So viele '+mUnit(m)+' sind gerade da',t:'decimal',req:true}],{b:i.cur!=null?mFmt(i.cur):''},async(v,f)=>{const b=dnum(v.b);if(b==null||b<0)return ferr(f,'Bitte eine Zahl eintragen.');m.bestand=String(b);m.stand=today();await save()},{win:true,okText:'Übernehmen'});break}
+    case 'm-termin':{const m=D.medis.find(x=>x.id===id);if(!m)break;const d=new Date();d.setDate(d.getDate()+1);d.setHours(9,0,0,0);
+      editTermin(null,{arztId:m.arztId||'',titel:'Rezept: '+m.name,datum:localDT(d)});break}
     case 'goto-augen':TAB='werte';WTYP='augen';render();if(id)setTimeout(()=>flashCard('h-'+id),80);break;
     case 'seh-new':editSeh(null,{art:id||'brille'});break;
     case 'seh-edit':editSeh(D.sehwerte.find(x=>x.id===id));break;

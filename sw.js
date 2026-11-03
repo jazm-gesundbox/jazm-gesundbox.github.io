@@ -1,6 +1,6 @@
 // MyGesundBox Service Worker – Netzwerk zuerst, offline aus dem Cache.
 // Bei eingeschalteten Erinnerungen liegt zusätzlich eine Liste von Daten ohne Titel, Ärzte oder Inhalte im Cache „sched-gesundbox“.
-const CACHE = 'gesundbox-2.6.0', SCHED = 'sched-gesundbox';
+const CACHE = 'gesundbox-2.7.0', SCHED = 'sched-gesundbox';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-badge-96.png', './ds.js', './boxen/smartbox.png', './boxen/gesundbox.png', './boxen/belegbox.png'];
 
 self.addEventListener('install', e => {
@@ -64,6 +64,7 @@ function line(x) {
   if (x.t === 't') return 'Ein Arzttermin ist ' + when(x.n) + '.';
   if (x.t === 'n') return x.n === 0 ? 'Der Kontaktlinsen-Vorrat ist aufgebraucht.' : 'Der Kontaktlinsen-Vorrat reicht noch ' + x.n + (x.n === 1 ? ' Tag.' : ' Tage.');
   if (x.t === 'w') return 'Kontaktlinsen wechseln: ' + when(x.n) + '.';
+  if (x.t === 'm') return x.n === 0 ? 'Ein Medikament ist heute aufgebraucht – neues Rezept besorgen.' : 'Ein Medikament reicht noch ' + x.n + (x.n === 1 ? ' Tag' : ' Tage') + ' – neues Rezept besorgen.';
   return (ONE[x.t] || 'Etwas ist fällig') + ' ' + when(x.n) + '.';
 }
 
