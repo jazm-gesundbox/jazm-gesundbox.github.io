@@ -446,7 +446,7 @@ svg.chart .zout{stroke:var(--card);stroke-width:2}
 
 <script>
 'use strict';
-const APP_VERSION='2.7.0';
+const APP_VERSION='2.8.0';
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -476,7 +476,7 @@ async function decryptObj(p,k){const pt=await crypto.subtle.decrypt({name:'AES-G
 
 /* ---------- Fingerabdruck (Passkey + PRF): verschlüsselt das Passwort mit einem Geräte-Geheimnis ---------- */
 const BKEY='gesundbox_bio';
-const bioSupported=()=>!!(window.PublicKeyCredential&&navigator.credentials&&window.isSecureContext);
+const bioSupported=()=>!window.MBX_EMBED&&!!(window.PublicKeyCredential&&navigator.credentials&&window.isSecureContext);
 const rnd=n=>crypto.getRandomValues(new Uint8Array(n));
 async function prfKey(credId,prfSalt){
   const a=await navigator.credentials.get({publicKey:{challenge:rnd(32),rpId:location.hostname,allowCredentials:[{type:'public-key',id:credId}],userVerification:'required',timeout:60000,extensions:{prf:{eval:{first:prfSalt}}}}});
@@ -627,12 +627,12 @@ $('#lgh_go').onclick=async()=>{const m=$('#lgh_msg'),bt=$('#lgh_go');
 $('#lockNow').onclick=()=>showLock(false);
 /* Auto-Sperre: 5 Min. Inaktivität oder 1 Min. im Hintergrund */
 let idleT,hiddenAt=0;
-function resetIdle(){clearTimeout(idleT);if(KEY)idleT=setTimeout(async()=>{await stashDraft();showLock(false)},5*60*1000)}
+function resetIdle(){if(window.MBX_EMBED)return;clearTimeout(idleT);if(KEY)idleT=setTimeout(async()=>{await stashDraft();showLock(false)},5*60*1000)}
 ['pointerdown','keydown','scroll','touchstart'].forEach(ev=>addEventListener(ev,resetIdle,{passive:true}));
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){hiddenAt=Date.now();stashDraft();return}
   if(Date.now()<pickingUntil){pickingUntil=0;return} /* Kamera/Dateiauswahl: nicht sperren */
-  if(KEY&&hiddenAt&&Date.now()-hiddenAt>60000)showLock(true);
+  if(!window.MBX_EMBED&&KEY&&hiddenAt&&Date.now()-hiddenAt>60000)showLock(true);
   else if(!KEY&&!$('#lock').hidden)setTimeout(tryBio,300);
 });
 
@@ -865,13 +865,13 @@ function hilfeCard(x){
   if(x.art==='brille'){
     body=`<div class="meta">${esc([BRTYP[x.typ]||'',x.fassung,x.glaeser].filter(Boolean).join(' · '))}</div>${kauf?`<div class="meta">Gekauft ${kauf}</div>`:''}
       ${+x.garantie&&x.gekauft?`<div class="meta">Herstellergarantie bis ${esc(fmtD(localD(addMonths(x.gekauft,+x.garantie))))}</div>`:''}`;
-    acts=`<button data-act="beleg" data-id="${x.id}">🧾 ${x.beleg?'In MyBelegBox öffnen':'In MyBelegBox übernehmen'}</button>`;
+    acts=`<button data-act="beleg" data-id="${x.id}">🧾 ${window.MBX_EMBED?((window.MBXL?MBXL(x):x.beleg)?'Beleg öffnen':'Als Beleg anlegen'):(x.beleg?'In MyBelegBox öffnen':'In MyBelegBox übernehmen')}</button>`;
   }else{
     const k=klInfo(x);
     const wech=k.dauer>1?(x.eingesetzt?(k.wechsel<0?`<span class="badge b-red">Wechsel seit ${-k.wechsel} Tagen fällig</span>`:k.wechsel<=1?`<span class="badge b-or">Wechsel ${relDay(k.wechsel)}</span>`:`<span class="badge b-ok">Wechsel ${relDay(k.wechsel)}</span>`)+` <span class="meta">aktuelles Paar seit ${esc(fmtD(x.eingesetzt))}</span>`:'<span class="meta">Noch nicht eingetragen, wann das aktuelle Paar eingesetzt wurde.</span>'):'';
     const vor=k.vorrat!=null?`<div class="meta">Vorrat: ${k.vorrat} ${k.vorrat===1?'Paar':'Paare'} · reicht ca. ${k.reicht} Tage${k.reicht<=21&&!+x.abo?' – <b>nachbestellen</b>':''}</div>`:'';
     body=`<div class="meta">${esc(KLDAUER[x.dauer]||'')}${+x.abo?` · Abo ${dnum(x.aboBetrag)!=null?esc(eur(dnum(x.aboBetrag)))+' ':''}${{1:'monatlich',3:'vierteljährlich',6:'halbjährlich',12:'jährlich'}[+x.abo]||''}${dnum(x.aboBetrag)!=null&&+x.abo>1?' ('+esc(eur(dnum(x.aboBetrag)/+x.abo))+' im Monat)':''}`:''}</div><div style="margin:4px 0">${wech}</div>${vor}${kauf?`<div class="meta">Zuletzt gekauft ${kauf}</div>`:''}`;
-    acts=(k.dauer>1?`<button data-act="kl-wechsel" data-id="${x.id}">✅ Neues Paar eingesetzt</button>`:'')+(+x.abo?`<button data-act="beleg" data-id="${x.id}">🧾 ${x.beleg?'Abo in MyBelegBox öffnen':'Abo in MyBelegBox übernehmen'}</button>`:'');
+    acts=(k.dauer>1?`<button data-act="kl-wechsel" data-id="${x.id}">✅ Neues Paar eingesetzt</button>`:'')+(+x.abo?`<button data-act="beleg" data-id="${x.id}">🧾 ${window.MBX_EMBED?((window.MBXL?MBXL(x):x.beleg)?'Abo-Vertrag öffnen':'Abo als Vertrag anlegen'):(x.beleg?'Abo in MyBelegBox öffnen':'Abo in MyBelegBox übernehmen')}</button>`:'');
   }
   return `<div class="card" id="h-${x.id}"><h3>${esc(hilfeTitel(x))} ${st}</h3>${body}
     ${w?`<div class="meta">Sehstärke: <button class="linkish" data-act="seh-edit" data-id="${w.id}">${esc(SEHART[w.art])} vom ${esc(fmtD(w.datum))}</button></div>`:''}
@@ -915,13 +915,15 @@ function editMedi(m){
     {k:'bestand',l:'Bestand jetzt',t:'decimal',half:true,ph:'z. B. 42'},{k:'packung',l:'Stück pro Packung',t:'decimal',half:true,ph:'z. B. 100'},
     {k:'vorlauf',l:'An Rezept erinnern, wenn der Vorrat nur noch so lange reicht',t:'select',opts:[['5','5 Tage'],['7','7 Tage'],['10','10 Tage'],['14','14 Tage'],['21','3 Wochen']]},
     {k:'arztId',l:'Verschrieben von',t:'select',opts:am},
-    {k:'aktiv',l:'Status',t:'select',opts:[['1','wird eingenommen'],['0','abgesetzt']]},
+    {k:'zuzahlung',l:'Zuzahlung pro Packung in € (optional)',t:'decimal',half:true,ph:'z. B. 5'},
+    {k:'aktiv',l:'Status',t:'select',opts:[['1','wird eingenommen'],['0','abgesetzt']],half:true},
     {k:'notiz',l:'Notiz',t:'textarea'}],
-  {...m,bestand:m.bestand!=null&&m.bestand!==''?mFmt(mInfo(m).cur):'',bedarf:m.bedarf?'1':'',aktiv:m.aktiv===false?'0':'1',vorlauf:String(m.vorlauf||10)},
+  {...m,bestand:m.bestand!=null&&m.bestand!==''?mFmt(mInfo(m).cur):'',bedarf:m.bedarf?'1':'',aktiv:m.aktiv===false?'0':'1',vorlauf:String(m.vorlauf||10),zuzahlung:m.zuzahlung!=null&&m.zuzahlung!==''?String(m.zuzahlung).replace('.',','):''},
   async(v,f)=>{const b=v.bestand.trim()===''?'':dnum(v.bestand);if(v.bestand.trim()!==''&&(b==null||b<0))return ferr(f,'Bitte beim Bestand eine Zahl eintragen.');
     if(!v.bedarf&&v.schema.trim()&&!mDose(v.schema))return ferr(f,'Die Einnahme verstehe ich nicht. Beispiele: 1-0-1, 1/2-0-0 oder 2.');
+    const zz=String(v.zuzahlung||'').trim();if(zz&&(dnum(zz)==null||dnum(zz)<0))return ferr(f,'Bitte bei der Zuzahlung eine Zahl eintragen.');
     const old=isNew?null:mInfo(m);
-    Object.assign(m,{name:v.name.trim(),staerke:v.staerke.trim(),einheit:v.einheit.trim(),schema:v.schema.trim(),bedarf:!!v.bedarf,packung:v.packung.trim(),vorlauf:+v.vorlauf||10,arztId:v.arztId,aktiv:v.aktiv!=='0',notiz:v.notiz});
+    Object.assign(m,{name:v.name.trim(),staerke:v.staerke.trim(),einheit:v.einheit.trim(),schema:v.schema.trim(),bedarf:!!v.bedarf,packung:v.packung.trim(),vorlauf:+v.vorlauf||10,arztId:v.arztId,aktiv:v.aktiv!=='0',notiz:v.notiz,zuzahlung:zz?dnum(zz):''});
     if(b===''){m.bestand='';m.stand=''}else if(isNew||old.cur==null||Math.abs(b-old.cur)>1e-6){m.bestand=String(b);m.stand=today()}
     if(isNew)D.medis.push(m);await save()},
   {draft:{kind:'medi',id:isNew?null:m.id},del:isNew?null:async()=>{D.medis=D.medis.filter(x=>x.id!==m.id);await save()},
@@ -1010,7 +1012,7 @@ function editHilfe(x,art){
     if(kl&&String(v.vorrat??'')!==String(x.vorrat??''))v.stand=today();
     Object.assign(x,v);if(isNew)D.sehhilfen.push(x);await save();
   },{draft:{kind:'hilfe',id:isNew?null:x.id},del:isNew?null:async()=>{D.sehhilfen=D.sehhilfen.filter(y=>y.id!==x.id);D.dokumente.forEach(d=>{if(d.sehId===x.id)d.sehId=''});await save()},
-   html:isNew?'':`${x.beleg?'<div class="meta" style="margin-bottom:8px">🧾 Mit der MyBelegBox verknüpft.</div>':''}`});
+   html:isNew?'':`${(window.MBXL?MBXL(x):x.beleg)?'<div class="meta" style="margin-bottom:8px">🧾 '+(window.MBX_EMBED?'Mit dem Bereich Belege verknüpft.':'Mit der MyBelegBox verknüpft.')+'</div>':''}`});
 }
 /* Link in die MyBelegBox: vorausgefüllter Eintrag, ohne Sehstärke-Werte */
 const b64url=t=>b64(te.encode(t)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
@@ -1137,8 +1139,8 @@ function dashTodos(){
    Für Meldungen bei geschlossener App liegen nur Datum, Art und Vorlauf unverschlüsselt auf dem Handy –
    keine Titel, Ärzte, Namen oder Inhalte. */
 const SCHED='sched-gesundbox',LEADS=[7,14,30];
-const remOn=()=>!!(D&&D.meta&&D.meta.remind);
-function remLead(){const v=+(D&&D.meta&&D.meta.remindLead);return LEADS.includes(v)?v:14}
+const remOn=()=>!window.MBX_EMBED&&!!(D&&D.meta&&D.meta.remind);
+function remLead(){if(window.MBX_LEAD)return window.MBX_LEAD;const v=+(D&&D.meta&&D.meta.remindLead);return LEADS.includes(v)?v:14}
 const RMLAB={t:'Arzttermin',v:'Vorsorge',u:'Ablauf eines Dokuments',w:'Kontaktlinsen-Wechsel',n:'Kontaktlinsen nachbestellen',m:'Neues Rezept'};
 function schedItems(){const L=remLead(),td=today(),it=[];
   for(const t of D.termine){const d=String(t.datum||'').slice(0,10);if(d&&d>=td)it.push({d,t:'t',l:1})}
@@ -1388,8 +1390,10 @@ function editTermin(t,preset){
     {k:'notiz',l:'Notiz',t:'textarea'},
     {k:'fragen',l:'Fragen für den Termin',t:'textarea'},
     {k:'nachher',l:'Ergebnis / Notiz nach dem Termin',t:'textarea'},
-  ],t,async v=>{
-    Object.assign(t,v,{dauer:+v.dauer||30});
+    {k:'kosten',l:'Selbst bezahlt in € (optional, z. B. Rechnung, IGeL)',t:'decimal',ph:'z. B. 45,50'},
+  ],{...t,kosten:t.kosten!=null&&t.kosten!==''?String(t.kosten).replace('.',','):''},async(v,f)=>{
+    const ko=String(v.kosten||'').trim();if(ko&&(dnum(ko)==null||dnum(ko)<0))return ferr(f,'Bitte bei den Kosten eine Zahl eintragen.');
+    Object.assign(t,v,{dauer:+v.dauer||30,kosten:ko?dnum(ko):''});
     if(isNew)D.termine.push(t);await save();
     if(isNew&&confirm('Termin gespeichert. Gleich in den Kalender übernehmen?'))terminICS([t]);
   },{draft:{kind:'termin',id:isNew?null:t.id},del:isNew?null:async()=>{D.termine=D.termine.filter(x=>x.id!==t.id);await save()}});
@@ -1843,7 +1847,7 @@ async function handleShare(){
 
 /* ---------- Backup & Sicherheit ---------- */
 /* Sicherungsdatei: enthält den bereits verschlüsselten Tresor (Passwort beim Sichern) */
-async function deliverFile(name,text,type){
+async function deliverFile(name,text,type){if(window.MBX_CAP){window.MBX_CAP(name,text);return true}
   const file=new File([text],name,{type});
   if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:name});return true}catch(e){if(e.name==='AbortError')return false}}
   download(name,text,type);return true;
@@ -2064,7 +2068,7 @@ async function onAct(e){
     case 'goto-medis':TAB='werte';WTYP='medis';render();if(id)setTimeout(()=>flashCard('m-'+id),80);break;
     case 'm-new':case 'q-medi':TAB='werte';WTYP='medis';render();editMedi();break;
     case 'm-edit':editMedi(D.medis.find(x=>x.id===id));break;
-    case 'm-pack':{const m=D.medis.find(x=>x.id===id);if(!m)break;const i=mInfo(m),pk=dnum(m.packung)||0;m.bestand=String((i.cur||0)+pk);m.stand=today();await save();render();flashCard('m-'+id);DS.yay('Neue Packung');toast(`${m.name}: jetzt ${mFmt((i.cur||0)+pk)} ${mUnit(m)}.`);break}
+    case 'm-pack':{const m=D.medis.find(x=>x.id===id);if(!m)break;const i=mInfo(m),pk=dnum(m.packung)||0;m.bestand=String((i.cur||0)+pk);m.stand=today();m.packLog=(m.packLog||[]).concat([{datum:today(),zz:+m.zuzahlung||0}]).slice(-200);await save();render();flashCard('m-'+id);DS.yay('Neue Packung');toast(`${m.name}: jetzt ${mFmt((i.cur||0)+pk)} ${mUnit(m)}.`);break}
     case 'm-stock':{const m=D.medis.find(x=>x.id===id);if(!m)break;const i=mInfo(m);
       openForm('Bestand',[{k:'b',l:'So viele '+mUnit(m)+' sind gerade da',t:'decimal',req:true}],{b:i.cur!=null?mFmt(i.cur):''},async(v,f)=>{const b=dnum(v.b);if(b==null||b<0)return ferr(f,'Bitte eine Zahl eintragen.');m.bestand=String(b);m.stand=today();await save()},{win:true,okText:'Übernehmen'});break}
     case 'm-termin':{const m=D.medis.find(x=>x.id===id);if(!m)break;const d=new Date();d.setDate(d.getDate()+1);d.setHours(9,0,0,0);
@@ -2079,7 +2083,7 @@ async function onAct(e){
     case 'kl-wechsel':{const x=D.sehhilfen.find(y=>y.id===id);if(!x)break;const k=klInfo(x);
       x.eingesetzt=today();if(k.vorrat!=null){x.vorrat=String(Math.max(0,k.vorrat-1));x.stand=today()}
       await save();render();toast('Neues Paar eingetragen'+(k.vorrat!=null?` – noch ${Math.max(0,k.vorrat-1)} Paare auf Vorrat.`:'.'));break}
-    case 'beleg':{const x=D.sehhilfen.find(y=>y.id===id);if(!x)break;
+    case 'beleg':{const x=D.sehhilfen.find(y=>y.id===id);if(!x)break;if(window.MBXA&&MBXA.toBeleg){MBXA.toBeleg(x);break}
       window.open(belegLink(x),'_blank','noopener');if(!x.beleg){x.beleg=true;await save();render()}break}
     case 'q-vorsorge':editVorsorge();break;
     case 'pw-change':changePw();break;
@@ -2213,7 +2217,7 @@ swipeClose($('#spanel'),()=>$('#spanel'),async()=>true,()=>closeSheet());
 
 /* ---------- Start ---------- */
 if(!window.crypto?.subtle){document.body.innerHTML='<p style="padding:24px">Diese App braucht HTTPS und einen aktuellen Browser.</p>'}
-else{boot().then(()=>showLock(true));if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;
+else{boot().then(()=>{showLock(true);window.MBX_BOOTED=true});if('serviceWorker' in navigator&&!window.MBX_EMBED){const hadCtl=!!navigator.serviceWorker.controller;
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{swReg=r}).catch(()=>{});
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadCtl&&!refreshing)showUpdBar()})}}
 /* Hinweis „Neue Version“ – gleich wie in MySmartBox und MyBelegBox */

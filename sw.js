@@ -1,6 +1,6 @@
 // MyGesundBox Service Worker – Netzwerk zuerst, offline aus dem Cache.
 // Bei eingeschalteten Erinnerungen liegt zusätzlich eine Liste von Daten ohne Titel, Ärzte oder Inhalte im Cache „sched-gesundbox“.
-const CACHE = 'gesundbox-2.7.0', SCHED = 'sched-gesundbox';
+const CACHE = 'gesundbox-2.8.0', SCHED = 'sched-gesundbox';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-badge-96.png', './ds.js', './boxen/smartbox.png', './boxen/gesundbox.png', './boxen/belegbox.png'];
 
 self.addEventListener('install', e => {
